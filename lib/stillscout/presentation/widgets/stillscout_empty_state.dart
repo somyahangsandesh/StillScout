@@ -1,0 +1,528 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../../domain/stillscout_online_status.dart';
+import '../../domain/stillscout_constants.dart';
+import '../widgets/stillscout_logo.dart';
+import '../widgets/stillscout_source_sheet.dart';
+import '../widgets/stillscout_online_banner.dart';
+import '../theme/stillscout_theme.dart';
+
+typedef VideoSelectedCallback = void Function(String path);
+
+/// Native video picker — library import or in-app camera record.
+class StillScoutVideoPicker {
+  StillScoutVideoPicker({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
+
+  final ImagePicker _picker;
+
+  Future<void> pickFromGallery({
+    required BuildContext context,
+    required VideoSelectedCallback onVideoSelected,
+  }) async {
+    if (!context.mounted) return;
+
+    // Gallery uses the system picker — no pre-flight permission on iOS or Android.
+    try {
+      final file = await _picker.pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: const Duration(minutes: 10),
+      );
+      if (file != null) onVideoSelected(file.path);
+    } catch (e) {
+      if (!context.mounted) return;
+      _showPermissionSnack(
+        context,
+        'Could not open your video library. Check app permissions in Settings.',
+      );
+    }
+  }
+
+  Future<void> recordVideo({
+    required BuildContext context,
+    required VideoSelectedCallback onVideoSelected,
+  }) async {
+    // The iOS simulator has no physical camera — fail fast with a clear message.
+    if (Platform.isIOS && _isSimulator) {
+      _showPermissionSnack(
+        context,
+        'Camera is not available on the iOS Simulator. Use "Choose from Library" instead.',
+      );
+      return;
+    }
+
+    final camera = await Permission.camera.request();
+    final mic = await Permission.microphone.request();
+    if (!context.mounted) return;
+    if (!camera.isGranted || !mic.isGranted) {
+      _showPermissionSnack(context, 'Camera and microphone access are required.');
+      return;
+    }
+
+    try {
+      final file = await _picker.pickVideo(
+        source: ImageSource.camera,
+        maxDuration: const Duration(minutes: 5),
+      );
+      if (file != null) onVideoSelected(file.path);
+    } catch (e) {
+      if (!context.mounted) return;
+      _showPermissionSnack(context, 'Could not open the camera.');
+    }
+  }
+
+  /// Returns `true` when running inside the iOS Simulator.
+  bool get _isSimulator {
+    if (!Platform.isIOS) return false;
+    // The SIMULATOR_DEVICE_NAME env var is only set in the Simulator process.
+    return Platform.environment.containsKey('SIMULATOR_DEVICE_NAME') ||
+        Platform.environment.containsKey('SIMULATOR_UDID');
+  }
+
+  void _showPermissionSnack(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: StillScoutColors.slate,
+      ),
+    );
+  }
+}
+
+class StillScoutEmptyState extends StatefulWidget {
+  const StillScoutEmptyState({
+    super.key,
+    required this.onVideoSelected,
+    this.isEnabled = true,
+    this.onlineStatus = OnlineStatus.checking,
+  });
+
+  final VideoSelectedCallback onVideoSelected;
+  final bool isEnabled;
+  final OnlineStatus onlineStatus;
+
+  @override
+  State<StillScoutEmptyState> createState() => _StillScoutEmptyStateState();
+}
+
+class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
+    with SingleTickerProviderStateMixin {
+  final _picker = StillScoutVideoPicker();
+  late final AnimationController _pulseCtrl;
+  bool _isDragOver = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxHeight < 680;
+        final uploadHeight = compact ? 240.0 : 300.0;
+        final titleSize = compact ? 28.0 : 32.0;
+
+        final canScout = widget.onlineStatus == OnlineStatus.online;
+        final enabled = widget.isEnabled && canScout;
+        final isChecking = widget.onlineStatus == OnlineStatus.checking;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const StillScoutLogo(size: 56, animateGlow: true, glowStrength: 0.28),
+                const SizedBox(height: StillScoutSpacing.m),
+                Text(
+                  'Scout → Polish → Post',
+                  style: StillScoutTextStyles.display.copyWith(fontSize: titleSize),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: StillScoutSpacing.s),
+                Text(
+                  'AI ranks your sharpest frames. Auto Polish makes them post-ready.',
+                  style: StillScoutTextStyles.body,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: StillScoutSpacing.m),
+                StillScoutOnlineRequirementChip(status: widget.onlineStatus),
+                const SizedBox(height: StillScoutSpacing.m),
+                const _HowItWorksStrip(),
+                SizedBox(height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
+                DragTarget<String>(
+                  onWillAcceptWithDetails: (_) => enabled,
+                  onMove: (_) {
+                    if (enabled) setState(() => _isDragOver = true);
+                  },
+                  onLeave: (_) => setState(() => _isDragOver = false),
+                  onAcceptWithDetails: (details) => widget.onVideoSelected(details.data),
+                  builder: (context, candidate, rejected) {
+                    return GestureDetector(
+                      onTap: enabled ? () => _showSourceSheet(context) : null,
+                      child: AnimatedBuilder(
+                        animation: _pulseCtrl,
+                        builder: (context, child) {
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: double.infinity,
+                            height: uploadHeight,
+                            decoration: StillScoutDecorations.glassCard(
+                              borderColor: _isDragOver
+                                  ? StillScoutColors.accent
+                                  : StillScoutColors.silver.withValues(alpha: 0.35),
+                              borderWidth: _isDragOver ? 2 : 1,
+                            ),
+                            child: child,
+                          );
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              canScout
+                                  ? Icons.movie_filter_outlined
+                                  : isChecking
+                                      ? Icons.sync_rounded
+                                      : Icons.wifi_off_rounded,
+                              size: compact ? 48 : 56,
+                              color: canScout
+                                  ? StillScoutColors.chalk.withValues(alpha: 0.9)
+                                  : StillScoutColors.silver.withValues(alpha: 0.55),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              canScout
+                                  ? 'Tap to upload video'
+                                  : isChecking
+                                      ? 'Checking connection…'
+                                      : 'Connect to the internet',
+                              style: StillScoutTextStyles.title.copyWith(fontSize: 18),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              canScout
+                                  ? 'or drop a clip here'
+                                  : isChecking
+                                      ? 'Verifying AI scouting is available'
+                                      : 'AI scouting needs Wi‑Fi or mobile data',
+                              style: StillScoutTextStyles.caption,
+                              textAlign: TextAlign.center,
+                            ),
+                            if (canScout) ...[
+                              const SizedBox(height: 18),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _QuickImportChip(
+                                    icon: Icons.photo_library_rounded,
+                                    label: 'Gallery',
+                                    accent: const Color(0xFFB8A4FF),
+                                    onTap: enabled
+                                        ? () => _runPickerAfterSheet(() {
+                                              _picker.pickFromGallery(
+                                                context: context,
+                                                onVideoSelected: widget.onVideoSelected,
+                                              );
+                                            })
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _QuickImportChip(
+                                    icon: Icons.videocam_rounded,
+                                    label: 'Record',
+                                    accent: StillScoutColors.accent,
+                                    onTap: enabled
+                                        ? () => _runPickerAfterSheet(() {
+                                              _picker.recordVideo(
+                                                context: context,
+                                                onVideoSelected: widget.onVideoSelected,
+                                              );
+                                            })
+                                        : null,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                'AI-ranked stills · works on clips up to 10 minutes',
+                                style: StillScoutTextStyles.caption.copyWith(
+                                  color: StillScoutColors.silver.withValues(alpha: 0.7),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
+                if (!compact) ...[
+                  const _DemoPreviewRow(),
+                  const SizedBox(height: StillScoutSpacing.m),
+                ],
+                Text(
+                  'AI ranks your sharpest frames — ${StillScoutConstants.freeScoutsPerWeek} free scouts per week, clean exports.',
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.silver.withValues(alpha: 0.8),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _runPickerAfterSheet(void Function() action) async {
+    // Let the bottom sheet finish closing before launching a native picker.
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted) return;
+    action();
+  }
+
+  Future<void> _showSourceSheet(BuildContext context) async {
+    await StillScoutSourceSheet.show(
+      context,
+      onGallery: () => _runPickerAfterSheet(() {
+        _picker.pickFromGallery(
+          context: context,
+          onVideoSelected: widget.onVideoSelected,
+        );
+      }),
+      onCamera: () => _runPickerAfterSheet(() {
+        _picker.recordVideo(
+          context: context,
+          onVideoSelected: widget.onVideoSelected,
+        );
+      }),
+    );
+  }
+}
+
+class _HowItWorksStrip extends StatelessWidget {
+  const _HowItWorksStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Expanded(child: _HowItWorksStep(icon: Icons.upload_rounded, label: 'Import')),
+        _HowItWorksArrow(),
+        Expanded(child: _HowItWorksStep(icon: Icons.auto_awesome, label: 'AI Scout')),
+        _HowItWorksArrow(),
+        Expanded(child: _HowItWorksStep(icon: Icons.ios_share_rounded, label: 'Export')),
+      ],
+    );
+  }
+}
+
+class _HowItWorksArrow extends StatelessWidget {
+  const _HowItWorksArrow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Icon(
+        Icons.arrow_forward_rounded,
+        size: 14,
+        color: StillScoutColors.silver.withValues(alpha: 0.45),
+      ),
+    );
+  }
+}
+
+class _HowItWorksStep extends StatelessWidget {
+  const _HowItWorksStep({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: StillScoutColors.filmGray,
+            border: Border.all(
+              color: StillScoutColors.silver.withValues(alpha: 0.25),
+            ),
+          ),
+          child: Icon(icon, size: 18, color: StillScoutColors.accent),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: StillScoutTextStyles.caption.copyWith(
+            color: StillScoutColors.silver.withValues(alpha: 0.85),
+            fontSize: 11,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickImportChip extends StatelessWidget {
+  const _QuickImportChip({
+    required this.icon,
+    required this.label,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color accent;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onTap!();
+              },
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: accent.withValues(alpha: 0.12),
+            border: Border.all(color: accent.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: accent),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: StillScoutTextStyles.label.copyWith(color: accent),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DemoPreviewRow extends StatelessWidget {
+  const _DemoPreviewRow();
+
+  static const _mockScores = ['92', '87', '71'];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 120,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.s),
+        itemCount: _mockScores.length,
+        separatorBuilder: (_, __) => const SizedBox(width: StillScoutSpacing.s),
+        itemBuilder: (context, i) {
+          return _MockFrameCard(score: _mockScores[i]);
+        },
+      ),
+    );
+  }
+}
+
+class _MockFrameCard extends StatelessWidget {
+  const _MockFrameCard({required this.score});
+
+  final String score;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(StillScoutRadius.m),
+      child: Container(
+        width: 80,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [StillScoutColors.filmGray, StillScoutColors.slate],
+          ),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    StillScoutColors.voidBlack.withValues(alpha: 0.7),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              left: StillScoutSpacing.s,
+              bottom: StillScoutSpacing.s,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: StillScoutSpacing.s,
+                  vertical: StillScoutSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: StillScoutColors.voidBlack.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(StillScoutRadius.s),
+                  border: Border.all(
+                    color: StillScoutColors.accent.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Text(
+                  score,
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.accent,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

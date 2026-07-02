@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="stillscout_void">#FF050505</color>
+    <color name="stillscout_film">#FF121212</color>
+    <color name="stillscout_accent">#FFE8C97A</color>
+</resources>
