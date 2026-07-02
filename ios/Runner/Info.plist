@@ -69,5 +69,9 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<!-- Only standard HTTPS/TLS is used (Supabase, RevenueCat, AI providers) —
+	     this skips App Store Connect's export-compliance prompt on every build. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

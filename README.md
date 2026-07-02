@@ -120,6 +120,33 @@ $ANDROID_HOME/build-tools/<version>/apksigner verify --print-certs \
 repo.** Losing it means you can never publish an update to the same Play
 Store listing.
 
+## iOS notes
+
+- Portrait-locked on iPhone and iPad (`UISupportedInterfaceOrientations*` in `Info.plist`)
+- `ITSAppUsesNonExemptEncryption = false` — app only uses standard HTTPS/TLS, so this skips the export-compliance prompt on every App Store Connect upload
+- No background execution (Apple doesn't allow it for this kind of work) — `WakelockPlus` keeps the screen awake during a scout instead; see `stillscout_scout_background.dart`
+- `google_mlkit_*` requires **iOS 15.5+** — `Podfile`'s `platform :ios, '15.5'` must stay in sync with `IPHONEOS_DEPLOYMENT_TARGET` in Xcode, or `pod install` fails to resolve
+- MLKit's transitive pods ship no arm64 simulator slice — the `Podfile` post-install hook forces those to `EXCLUDED_ARCHS[sdk=iphonesimulator*]` so `flutter run` still works on Apple Silicon Macs
+- Branded app icon + launch screen are generated (not hand-drawn assets) — see `tool/generate_branding_assets.py`
+
+### Signing
+
+`CODE_SIGN_STYLE` is set to `Automatic` for the Runner target, but Xcode still
+needs **your** Apple Developer Team selected once before it can sign anything
+(this is tied to your Apple ID/paid membership — nothing in this repo can
+supply it):
+
+1. Open `ios/Runner.xcworkspace` in Xcode (not `.xcodeproj`).
+2. Select the **Runner** target → **Signing & Capabilities**.
+3. Pick your **Team** from the dropdown (Automatically manage signing should
+   already be checked).
+4. Do the same for the **RunnerTests** target if you plan to run tests on a
+   device.
+
+After that, `flutter run --release` / building for a physical device or
+TestFlight works normally. Building for the simulator (`flutter build ios
+--simulator`) never needs signing.
+
 ## Tests
 
 ```bash
@@ -136,4 +163,5 @@ lib/stillscout/presentation/providers/stillscout_notifier.dart
 lib/stillscout/services/frame_scoring_service.dart
 lib/stillscout/services/stillscout_export_service.dart
 lib/config/secrets.local.dart                      # Gitignored keys
+tool/generate_branding_assets.py                   # Regenerates app icons + launch image
 ```

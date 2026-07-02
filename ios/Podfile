@@ -1,5 +1,7 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+# google_mlkit_commons (face/eye detection) requires iOS 15.5+ — this must
+# match IPHONEOS_DEPLOYMENT_TARGET in the Xcode project or `pod install`
+# fails to resolve dependencies.
+platform :ios, '15.5'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +41,12 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # google_mlkit_face_detection's transitive MLKit pods don't ship an
+    # arm64 slice for the simulator, which breaks `flutter run` on Apple
+    # Silicon Macs. Force those to build/run under Rosetta on simulator.
+    target.build_configurations.each do |config|
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+    end
   end
 end
