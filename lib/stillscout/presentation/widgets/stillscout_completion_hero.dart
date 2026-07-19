@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../domain/stillscout_constants.dart';
+import '../providers/stillscout_notifier.dart';
 import '../theme/stillscout_theme.dart';
 
 /// One-shot post-scout hero — celebrates the top pick and export allowance.
@@ -15,8 +16,9 @@ class StillScoutCompletionHero extends StatefulWidget {
     required this.aiScoredCount,
     required this.totalFrames,
     this.isAiProTrial = false,
-    this.geminiReached = true,
+    this.cloudScoringOutcome = CloudScoringOutcome.notApplicable,
     this.onRetryCloudAi,
+    this.onUpgradeAiPro,
   });
 
   final double topScore;
@@ -26,13 +28,15 @@ class StillScoutCompletionHero extends StatefulWidget {
   final int totalFrames;
   final bool isAiProTrial;
 
-  /// False when this scout requested cloud AI but Gemini was unreachable and
-  /// Vision-only scores were shown instead (soft-degrade, W1.2).
-  final bool geminiReached;
+  /// Distinguishes full Gemini success from soft-degrade vs daily quota.
+  final CloudScoringOutcome cloudScoringOutcome;
 
   /// Called when the user taps "Retry with Gemini" on the degraded banner.
   /// Null hides the Retry CTA (e.g. while a retry is already in flight).
   final VoidCallback? onRetryCloudAi;
+
+  /// Optional upgrade path when daily AI quota is exhausted (free/trial).
+  final VoidCallback? onUpgradeAiPro;
 
   @override
   State<StillScoutCompletionHero> createState() =>
@@ -70,6 +74,11 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
     super.dispose();
   }
 
+  bool get _usedCloudAi =>
+      widget.isPro ||
+      widget.isAiProTrial ||
+      widget.cloudScoringOutcome != CloudScoringOutcome.notApplicable;
+
   @override
   Widget build(BuildContext context) {
     final polishLabel = widget.isPro
@@ -80,8 +89,10 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
                 ? '${widget.exportsRemaining}/${StillScoutConstants.freeExportsPerScout} saves left this scout'
                 : 'All saves used — upgrade for unlimited';
 
-    final showDegradedBanner =
-        !widget.geminiReached && (widget.isPro || widget.isAiProTrial);
+    final outcome = widget.cloudScoringOutcome;
+    final showOutcomeBanner = _usedCloudAi &&
+        (outcome == CloudScoringOutcome.degraded ||
+            outcome == CloudScoringOutcome.quotaExceeded);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -116,86 +127,96 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                children: [
-                  _GoldPulseBadge(
-                    score: widget.topScore,
-                    shimmer: _shimmer,
-                    pulse: _idlePulse,
-                  ),
-                  const SizedBox(width: StillScoutSpacing.m),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                    children: [
+                      _GoldPulseBadge(
+                        score: widget.topScore,
+                        shimmer: _shimmer,
+                        pulse: _idlePulse,
+                      ),
+                      const SizedBox(width: StillScoutSpacing.m),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              widget.isPro
-                                  ? 'AI Pro scout complete'
-                                  : widget.isAiProTrial
-                                      ? 'AI Trial scout complete'
-                                      : 'Scout complete',
-                              style: StillScoutTextStyles.subtitle.copyWith(
-                                color: StillScoutColors.scoutGold,
-                              ),
-                            ),
-                            if (widget.isAiProTrial) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: StillScoutColors.scoutGold
-                                      .withValues(alpha: 0.18),
-                                  borderRadius:
-                                      BorderRadius.circular(StillScoutRadius.pill),
-                                  border: Border.all(
-                                    color: StillScoutColors.scoutGold
-                                        .withValues(alpha: 0.6),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    widget.isPro
+                                        ? 'AI Pro scout complete'
+                                        : widget.isAiProTrial
+                                            ? 'AI Trial scout complete'
+                                            : 'Scout complete',
+                                    style:
+                                        StillScoutTextStyles.subtitle.copyWith(
+                                      color: StillScoutColors.scoutGold,
+                                    ),
                                   ),
                                 ),
-                                child: Text(
-                                  'TRIAL',
-                                  style: StillScoutTextStyles.badge.copyWith(
-                                    color: StillScoutColors.scoutGold,
-                                    fontSize: 9,
+                                if (widget.isAiProTrial) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: StillScoutColors.scoutGold
+                                          .withValues(alpha: 0.18),
+                                      borderRadius: BorderRadius.circular(
+                                          StillScoutRadius.pill),
+                                      border: Border.all(
+                                        color: StillScoutColors.scoutGold
+                                            .withValues(alpha: 0.6),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'TRIAL',
+                                      style:
+                                          StillScoutTextStyles.badge.copyWith(
+                                        color: StillScoutColors.scoutGold,
+                                        fontSize: 9,
+                                      ),
+                                    ),
                                   ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              polishLabel,
+                              style: StillScoutTextStyles.caption.copyWith(
+                                color: StillScoutColors.chalk,
+                              ),
+                            ),
+                            if (widget.totalFrames > 0) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.isPro || widget.isAiProTrial
+                                    ? '${widget.aiScoredCount} of ${widget.totalFrames} frames Gemini-scored'
+                                    : '${widget.totalFrames} frames ranked on-device · upgrade for Gemini',
+                                style: StillScoutTextStyles.caption.copyWith(
+                                  color: StillScoutColors.silver,
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          polishLabel,
-                          style: StillScoutTextStyles.caption.copyWith(
-                            color: StillScoutColors.chalk,
-                          ),
-                        ),
-                        if (widget.totalFrames > 0) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.isPro || widget.isAiProTrial
-                                ? '${widget.aiScoredCount} of ${widget.totalFrames} frames Gemini-scored'
-                                : '${widget.totalFrames} frames ranked on-device · upgrade for Gemini',
-                            style: StillScoutTextStyles.caption.copyWith(
-                              color: StillScoutColors.silver,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                      ),
+                      Icon(
+                        Icons.auto_fix_high_rounded,
+                        color: StillScoutColors.accent.withValues(alpha: 0.9),
+                      ),
+                    ],
                   ),
-                  Icon(
-                    Icons.auto_fix_high_rounded,
-                    color: StillScoutColors.accent.withValues(alpha: 0.9),
-                  ),
-                ],
-                  ),
-                  if (showDegradedBanner) ...[
+                  if (showOutcomeBanner) ...[
                     const SizedBox(height: StillScoutSpacing.s),
-                    _DegradedGeminiBanner(onRetry: widget.onRetryCloudAi),
+                    if (outcome == CloudScoringOutcome.quotaExceeded)
+                      _QuotaExceededBanner(
+                        isPro: widget.isPro,
+                        onUpgrade: widget.isPro ? null : widget.onUpgradeAiPro,
+                      )
+                    else
+                      _DegradedGeminiBanner(onRetry: widget.onRetryCloudAi),
                   ],
                 ],
               ),
@@ -207,9 +228,7 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
   }
 }
 
-/// Shown on the completion hero when a Pro/trial scout requested Gemini but
-/// fell back to on-device Vision scores (W1.2 soft-degrade). Offers a Retry
-/// CTA that re-scores the already-extracted frames with Gemini (W2.4).
+/// Soft-degrade: Gemini failed but quota remains — Retry is appropriate.
 class _DegradedGeminiBanner extends StatelessWidget {
   const _DegradedGeminiBanner({this.onRetry});
 
@@ -217,50 +236,120 @@ class _DegradedGeminiBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: StillScoutSpacing.s + 2,
-        vertical: StillScoutSpacing.s,
-      ),
-      decoration: BoxDecoration(
-        color: StillScoutColors.slate.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(StillScoutRadius.s),
-        border: Border.all(
-          color: StillScoutColors.silver.withValues(alpha: 0.18),
+    return _OutcomeBanner(
+      icon: Icons.cloud_off_rounded,
+      accent: StillScoutColors.silver,
+      message: 'Gemini was unavailable — showing on-device picks',
+      actionLabel: onRetry == null ? null : 'Retry',
+      onAction: onRetry,
+      semanticsLabel: onRetry == null
+          ? 'Gemini was unavailable. Showing on-device picks.'
+          : 'Gemini was unavailable. Showing on-device picks. Double tap to retry.',
+    );
+  }
+}
+
+/// Daily / server AI quota hit — never offer Retry; upgrade or wait.
+class _QuotaExceededBanner extends StatelessWidget {
+  const _QuotaExceededBanner({
+    required this.isPro,
+    this.onUpgrade,
+  });
+
+  final bool isPro;
+  final VoidCallback? onUpgrade;
+
+  @override
+  Widget build(BuildContext context) {
+    final message = isPro
+        ? 'Daily AI quota reached — showing on-device picks. Try again tomorrow.'
+        : 'Daily AI quota reached — showing on-device picks. Upgrade for priority access.';
+    return _OutcomeBanner(
+      icon: Icons.hourglass_top_rounded,
+      accent: StillScoutColors.scoutGold,
+      message: message,
+      actionLabel: (!isPro && onUpgrade != null) ? 'Upgrade' : null,
+      onAction: onUpgrade,
+      semanticsLabel: (!isPro && onUpgrade != null)
+          ? '$message Double tap to upgrade.'
+          : message,
+    );
+  }
+}
+
+class _OutcomeBanner extends StatelessWidget {
+  const _OutcomeBanner({
+    required this.icon,
+    required this.accent,
+    required this.message,
+    required this.semanticsLabel,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final Color accent;
+  final String message;
+  final String semanticsLabel;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: semanticsLabel,
+      button: onAction != null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: StillScoutSpacing.s + 2,
+          vertical: StillScoutSpacing.s,
         ),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.cloud_off_rounded,
-            size: 16,
-            color: StillScoutColors.silver,
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(StillScoutRadius.s),
+          border: Border.all(
+            color: accent.withValues(alpha: 0.28),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Gemini was unavailable — showing on-device picks',
-              style: StillScoutTextStyles.caption.copyWith(
-                color: StillScoutColors.chalk,
-                fontSize: 11,
-              ),
-            ),
-          ),
-          if (onRetry != null) ...[
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: accent),
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: onRetry,
+            Expanded(
               child: Text(
-                'Retry',
+                message,
                 style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.accent,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
+                  color: StillScoutColors.chalk,
+                  fontSize: 11,
                 ),
               ),
             ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onAction,
+                  borderRadius: BorderRadius.circular(StillScoutRadius.pill),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      actionLabel!,
+                      style: StillScoutTextStyles.caption.copyWith(
+                        color: StillScoutColors.accent,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

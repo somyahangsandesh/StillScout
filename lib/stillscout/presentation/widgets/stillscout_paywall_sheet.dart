@@ -570,7 +570,7 @@ class _HeroBadge extends StatelessWidget {
 }
 
 class _FeatureBullets extends StatelessWidget {
-  static const _features = [
+  static List<(IconData, String, String)> get _features => [
     (
       Icons.auto_awesome,
       'Deeper AI analysis',
@@ -583,8 +583,8 @@ class _FeatureBullets extends StatelessWidget {
     ),
     (
       Icons.workspace_premium_rounded,
-      '20 Top Picks per scout',
-      'See every ranked keeper — not just the first 5',
+      '${StillScoutConstants.proKeeperLimit} Top Picks per scout',
+      'See every ranked keeper — not just the first ${StillScoutConstants.freeKeeperLimit}',
     ),
     (
       Icons.access_time_filled_rounded,

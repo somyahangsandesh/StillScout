@@ -176,8 +176,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         .shouldShow(StillScoutCoachMarkKeys.contextChips);
     if (showChips && mounted) {
       setState(() => _showContextChipsMark = true);
-      await _coachMarkTracker
-          .markShown(StillScoutCoachMarkKeys.contextChips);
+      await _coachMarkTracker.markShown(StillScoutCoachMarkKeys.contextChips);
     }
   }
 
@@ -205,9 +204,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         : <ScoredFrame>[];
     final bestLockedScore = lockedFrames.isEmpty
         ? null
-        : lockedFrames
-            .map((f) => f.score)
-            .reduce((a, b) => a > b ? a : b);
+        : lockedFrames.map((f) => f.score).reduce((a, b) => a > b ? a : b);
 
     await StillScoutPaywallSheet.show(
       context,
@@ -267,23 +264,30 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
           next.phase == StillScoutPhase.complete &&
           next.frames.isNotEmpty) {
         HapticFeedback.heavyImpact();
-                setState(() => _celebrateCompletion = true);
-                unawaited(_loadScoutQuota());
-                unawaited(_maybeShowCoachMarks());
+        setState(() => _celebrateCompletion = true);
+        unawaited(_loadScoutQuota());
+        unawaited(_maybeShowCoachMarks());
         unawaited(_loadTierLabel());
-        // Warn AI Pro and trial users when Gemini fell back to Vision scores.
-        if ((next.isPro || next.isAiProTrial) && !next.geminiReachedOnLastScout) {
+        // Warn when cloud AI was requested but Gemini didn't land.
+        // Quota vs soft-degrade get different copy — never suggest Retry on quota.
+        final outcome = next.cloudScoringOutcome;
+        if ((next.isPro || next.isAiProTrial) &&
+            (outcome == CloudScoringOutcome.degraded ||
+                outcome == CloudScoringOutcome.quotaExceeded)) {
+          final snack = outcome == CloudScoringOutcome.quotaExceeded
+              ? (next.isPro
+                  ? 'Daily AI quota reached — showing on-device estimates. Try again tomorrow.'
+                  : 'Daily AI quota reached — showing on-device estimates.')
+              : 'Gemini was unreachable — showing on-device estimates. '
+                  'Reconnect and retry for AI results.';
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 behavior: SnackBarBehavior.floating,
                 backgroundColor: StillScoutColors.slate,
-                duration: Duration(seconds: 5),
-                content: Text(
-                  'Gemini was unreachable — showing on-device estimates. '
-                  'Reconnect and re-scout for AI results.',
-                ),
+                duration: const Duration(seconds: 5),
+                content: Text(snack),
               ),
             );
           });
@@ -525,9 +529,11 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
             setState(() => _showContextChipsMark = false);
           },
           celebrateCompletion: _celebrateCompletion,
-          geminiReached: state.geminiReachedOnLastScout,
-          onRetryCloudAi: () =>
-              ref.read(stillScoutProvider.notifier).rescoreWithCloudAi(),
+          cloudScoringOutcome: state.cloudScoringOutcome,
+          onRetryCloudAi: state.cloudScoringOutcome ==
+                  CloudScoringOutcome.degraded
+              ? () => ref.read(stillScoutProvider.notifier).rescoreWithCloudAi()
+              : null,
           onUpgradeAiPro: () => _showPaywall(
             reason: state.isAiProTrial
                 ? 'You just used Gemini. Keep AI Pro for unlimited scouts, '
@@ -648,8 +654,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
       initialIndex: rank,
       onExportPressed: _handleExport,
       onUnlockAiPro: () => _showPaywall(
-        reason:
-            'AI Auto Polish and Gemini Flash scoring unlock with AI Pro.',
+        reason: 'AI Auto Polish and Gemini Flash scoring unlock with AI Pro.',
       ),
     );
   }
@@ -741,9 +746,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         state.frames.where((f) => _selectedIds.contains(f.frame.id)).where((f) {
       final rank = state.frames.indexWhere((x) => x.frame.id == f.frame.id);
       return StillScoutAccessPolicy.canExportFrame(
-          rank: rank,
-          isPro: state.isPro,
-          isFirstScout: state.isFirstScout);
+          rank: rank, isPro: state.isPro, isFirstScout: state.isFirstScout);
     }).toList();
     if (frames.isEmpty) return;
 

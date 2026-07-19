@@ -173,7 +173,7 @@ class _StillScoutOnboardingScreenState
                 headline: 'Export in\nseconds.',
                 subline: 'On-device scouting works offline.',
                 body:
-                    'Your first scout includes a free Gemini AI trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for unlimited Gemini and native 4K.',
+                    'Includes a one-time free Gemini AI trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for unlimited Gemini and native 4K.',
               ),
               _ProUpsellStep(fade: _stepFades[3]),
             ],

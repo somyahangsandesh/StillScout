@@ -8,6 +8,7 @@ import 'package:stillscout/config/stillscout_config.dart';
 import 'package:stillscout/services/stillscout_purchase_service.dart';
 
 import '../../domain/repositories/session_repository.dart';
+import '../../domain/stillscout_constants.dart';
 import '../../services/stillscout_cache_janitor.dart';
 import '../../services/stillscout_diagnostics_log.dart';
 import '../../services/stillscout_score_cache.dart';
@@ -108,7 +109,10 @@ class _StillScoutSettingsScreenState
                   ? 'Unlimited scouts · ${StillScoutConfig.geminiModelDisplayName} · Auto Polish'
                   : storeUnavailable
                       ? 'Store unavailable — Pro benefits paused until verified'
-                      : '2 free scouts/day · 5 keepers (8 on first scout) · 3 exports',
+                      : '${StillScoutConstants.freeScoutsPerDay} free scouts/day · '
+                          '${StillScoutConstants.freeKeeperLimit} keepers '
+                          '(${StillScoutConstants.freeKeeperLimit + StillScoutConstants.firstScoutBonusKeepers} on first scout) · '
+                          '${StillScoutConstants.freeExportsPerScout} exports',
             ),
             _SettingsTile(
               icon: Icons.restore_rounded,
@@ -230,9 +234,7 @@ class _StillScoutSettingsScreenState
     try {
       final result = await StillScoutPurchaseService.restorePurchases();
       if (result.hasPro) {
-        ref
-            .read(stillScoutProvider.notifier)
-            .onPurchaseCompleted(hasPro: true);
+        ref.read(stillScoutProvider.notifier).onPurchaseCompleted(hasPro: true);
       } else {
         await ref.read(stillScoutProvider.notifier).refreshSubscriptionState();
       }
@@ -414,7 +416,8 @@ class _SettingsTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: StillScoutColors.accent),
-      title: Text(title, style: StillScoutTextStyles.subtitle.copyWith(fontSize: 15)),
+      title: Text(title,
+          style: StillScoutTextStyles.subtitle.copyWith(fontSize: 15)),
       subtitle: subtitle == null
           ? null
           : Text(
@@ -426,7 +429,8 @@ class _SettingsTile extends StatelessWidget {
       trailing: trailing ??
           (onTap == null
               ? null
-              : const Icon(Icons.chevron_right, color: StillScoutColors.silver)),
+              : const Icon(Icons.chevron_right,
+                  color: StillScoutColors.silver)),
       onTap: onTap,
     );
   }

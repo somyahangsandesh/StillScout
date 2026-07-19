@@ -7,6 +7,7 @@ import '../../data/models/frame_score_metadata.dart';
 import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
 import '../../domain/stillscout_constants.dart';
+import '../providers/stillscout_notifier.dart';
 import '../theme/stillscout_theme.dart';
 import 'stillscout_ai_pro_upgrade.dart';
 import 'stillscout_coach_mark.dart';
@@ -34,7 +35,7 @@ class StillScoutResultsGallery extends StatefulWidget {
     this.processingTimeMs,
     this.exportsUsedThisSession = 0,
     this.celebrateCompletion = false,
-    this.geminiReached = true,
+    this.cloudScoringOutcome = CloudScoringOutcome.notApplicable,
     this.onRetryCloudAi,
     this.onUpgradeAiPro,
     this.videoContext = StillScoutVideoContext.auto,
@@ -60,12 +61,11 @@ class StillScoutResultsGallery extends StatefulWidget {
   final int exportsUsedThisSession;
   final bool celebrateCompletion;
 
-  /// False when the last scout requested Gemini but fell back to Vision-only
-  /// scores (soft-degrade). Drives the completion hero's degraded banner.
-  final bool geminiReached;
+  /// Full / degraded / quotaExceeded — drives completion-hero outcome banner.
+  final CloudScoringOutcome cloudScoringOutcome;
 
   /// Called when the user taps "Retry" on the degraded banner. Null hides
-  /// the Retry CTA.
+  /// the Retry CTA. Must not be set for [CloudScoringOutcome.quotaExceeded].
   final VoidCallback? onRetryCloudAi;
   final VoidCallback? onUpgradeAiPro;
 
@@ -154,8 +154,12 @@ class _StillScoutResultsGalleryState extends State<StillScoutResultsGallery> {
               exportsRemaining: exportsLeft,
               aiScoredCount: aiScored,
               totalFrames: widget.frames.length,
-              geminiReached: widget.geminiReached,
-              onRetryCloudAi: widget.onRetryCloudAi,
+              cloudScoringOutcome: widget.cloudScoringOutcome,
+              onRetryCloudAi:
+                  widget.cloudScoringOutcome == CloudScoringOutcome.degraded
+                      ? widget.onRetryCloudAi
+                      : null,
+              onUpgradeAiPro: widget.onUpgradeAiPro,
             ),
           ),
         // Post-trial conversion: strike while Gemini quality is fresh.
@@ -321,9 +325,7 @@ class _StillScoutResultsGalleryState extends State<StillScoutResultsGallery> {
                               widget.onFrameTap(frame, rank);
                             }
                           },
-                          onLockedTap: locked
-                              ? widget.onLockedFrameTap
-                              : null,
+                          onLockedTap: locked ? widget.onLockedFrameTap : null,
                           onLongPress: locked
                               ? null
                               : () => widget.onFrameLongPress(frame),
@@ -545,9 +547,10 @@ class _ContextChip extends StatelessWidget {
               Text(
                 context.label,
                 style: StillScoutTextStyles.caption.copyWith(
-                  color: selected ? StillScoutColors.chalk : StillScoutColors.silver,
-                  fontWeight:
-                      selected ? FontWeight.w700 : FontWeight.w400,
+                  color: selected
+                      ? StillScoutColors.chalk
+                      : StillScoutColors.silver,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                 ),
               ),
             ],

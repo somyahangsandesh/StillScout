@@ -139,109 +139,116 @@ class _PodiumCard extends StatelessWidget {
       isPro: isPro,
       formattedTimestamp: frame.frame.formattedTimestamp,
     );
+    final scoreLabel =
+        frame.score >= 10.0 ? '10' : frame.score.toStringAsFixed(1);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: width,
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: StillScoutRadius.card,
-                  border: Border.all(
-                    color: rankColor,
-                    width: rank == 1 ? 2.5 : 1.5,
-                  ),
-                  boxShadow: [
-                    if (rank == 1)
-                      StillScoutColors.goldGlow(
-                        alpha: 0.4,
-                        blur: StillScoutSpacing.m + 2,
-                      )
-                    else
-                      BoxShadow(
-                        color: rankColor.withValues(alpha: 0.18),
-                        blurRadius: StillScoutSpacing.s + 2,
-                      ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: StillScoutRadius.tile,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.file(
-                        File(frame.frame.filePath),
-                        key: ValueKey(frame.frame.filePath),
-                        fit: BoxFit.cover,
-                        gaplessPlayback: true,
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          padding: StillScoutSpacing.tileOverlay,
-                          decoration: const BoxDecoration(
-                            gradient: StillScoutColors.frameShadow,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  footer,
-                                  style: StillScoutTextStyles.caption
-                                      .copyWith(color: StillScoutColors.chalk),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              StillScoutScoreBadge(
-                                score: frame.score,
-                                size: isHero
-                                    ? StillScoutScoreBadgeSize.large
-                                    : StillScoutScoreBadgeSize.medium,
-                                metadata: frame.metadata,
-                              ),
-                            ],
-                          ),
+    return Semantics(
+      label: 'Top pick #$rank, score $scoreLabel out of 10, $footer',
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: SizedBox(
+          width: width,
+          child: Column(
+            children: [
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: StillScoutRadius.card,
+                    border: Border.all(
+                      color: rankColor,
+                      width: rank == 1 ? 2.5 : 1.5,
+                    ),
+                    boxShadow: [
+                      if (rank == 1)
+                        StillScoutColors.goldGlow(
+                          alpha: 0.4,
+                          blur: StillScoutSpacing.m + 2,
+                        )
+                      else
+                        BoxShadow(
+                          color: rankColor.withValues(alpha: 0.18),
+                          blurRadius: StillScoutSpacing.s + 2,
                         ),
-                      ),
-                      Positioned(
-                        top: StillScoutSpacing.s + 2,
-                        left: StillScoutSpacing.s + 2,
-                        child: Container(
-                          width: StillScoutSpacing.l + 4,
-                          height: StillScoutSpacing.l + 4,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: rankColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: rankColor.withValues(alpha: 0.5),
-                                blurRadius: StillScoutSpacing.s,
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            '#$rank',
-                            style: StillScoutTextStyles.badge
-                                .copyWith(fontSize: 10),
-                          ),
-                        ),
-                      ),
                     ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: StillScoutRadius.tile,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.file(
+                          File(frame.frame.filePath),
+                          key: ValueKey(frame.frame.filePath),
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: StillScoutSpacing.tileOverlay,
+                            decoration: const BoxDecoration(
+                              gradient: StillScoutColors.frameShadow,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    footer,
+                                    style: StillScoutTextStyles.caption
+                                        .copyWith(
+                                            color: StillScoutColors.chalk),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                StillScoutScoreBadge(
+                                  score: frame.score,
+                                  size: isHero
+                                      ? StillScoutScoreBadgeSize.large
+                                      : StillScoutScoreBadgeSize.medium,
+                                  metadata: frame.metadata,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: StillScoutSpacing.s + 2,
+                          left: StillScoutSpacing.s + 2,
+                          child: Container(
+                            width: StillScoutSpacing.l + 4,
+                            height: StillScoutSpacing.l + 4,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: rankColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: rankColor.withValues(alpha: 0.5),
+                                  blurRadius: StillScoutSpacing.s,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '#$rank',
+                              style: StillScoutTextStyles.badge
+                                  .copyWith(fontSize: 10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
