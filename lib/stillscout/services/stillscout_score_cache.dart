@@ -35,17 +35,30 @@ class StillScoutScoreCache {
   static Future<String> videoHash(String videoPath) async {
     try {
       final file = File(videoPath);
-      final length = await file.length();
+      final stat = await file.stat();
+      final length = stat.size;
       final digest = AccumulatorSink<Digest>();
       final input = md5.startChunkedConversion(digest);
 
+      // Include mtime + mid sample so same-size clips with similar head/tail
+      // are less likely to collide and poison LLM cache hits across videos.
       input.add(utf8.encode('len:$length'));
+      input.add(
+        utf8.encode('mtime:${stat.modified.millisecondsSinceEpoch}'),
+      );
 
       final raf = await file.open();
       try {
         final headLen = length < _sampleBytes ? length : _sampleBytes;
         final head = await raf.read(headLen);
         input.add(head);
+
+        if (length > _sampleBytes * 2) {
+          final midStart = (length ~/ 2) - (_sampleBytes ~/ 2);
+          await raf.setPosition(midStart.clamp(0, length - 1));
+          final mid = await raf.read(_sampleBytes);
+          input.add(mid);
+        }
 
         if (length > _sampleBytes) {
           final tailStart = length - _sampleBytes;
