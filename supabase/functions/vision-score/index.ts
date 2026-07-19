@@ -17,6 +17,8 @@ import {
   MAX_BATCH_IMAGES,
   MAX_IMAGE_BASE64_CHARS,
   noteIpRequest,
+  planQuotaFirstFlow,
+  planQuotaFirstSingleFlow,
   resolveDeviceKey,
   resolvePickCount,
   validateBatchImages,
@@ -26,6 +28,13 @@ const DAILY_CAP = 200;
 
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const GEMINI_MODEL = "gemini-3.1-flash-lite";
+
+function serviceClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+}
 
 const SYSTEM_PROMPT = `\
 You are a meticulous photo scout helping a short-form video creator pick the \
@@ -111,34 +120,38 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-async function tryConsumeQuota(deviceId: string): Promise<boolean> {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
-
-  const { data, error } = await supabase.rpc("try_consume_vision_quota", {
+/** Atomically reserve [count] daily units before calling Gemini. */
+/** Atomically reserve [count] daily units before calling Gemini. */
+async function tryReserveQuota(
+  deviceId: string,
+  count: number,
+): Promise<boolean> {
+  const { data, error } = await serviceClient().rpc("try_reserve_vision_quota", {
     p_device_id: deviceId,
+    p_count: count,
     p_cap: DAILY_CAP,
   });
 
   if (error) {
-    // Fail closed — never allow unlimited proxy use when the DB is down.
-    console.warn("[vision-score] quota RPC error — failing closed:", error.message);
+    console.warn(
+      "[vision-score] reserve RPC error — failing closed:",
+      error.message,
+    );
     return false;
   }
 
   return data === true;
 }
 
-async function tryConsumeQuotaBatch(
-  deviceId: string,
-  count: number,
-): Promise<boolean> {
-  for (let i = 0; i < count; i++) {
-    if (!await tryConsumeQuota(deviceId)) return false;
+/** Refund reserved units when Gemini fails so honest clients are not charged. */
+async function releaseQuota(deviceId: string, count: number): Promise<void> {
+  const { error } = await serviceClient().rpc("release_vision_quota", {
+    p_device_id: deviceId,
+    p_count: count,
+  });
+  if (error) {
+    console.warn("[vision-score] release RPC error:", error.message);
   }
-  return true;
 }
 
 interface ScoreResult {
@@ -356,8 +369,25 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "gemini_not_configured" }, 503);
     }
 
+    // Reserve-before-Gemini: reject 429 without spending API tokens when
+    // the device is already at the daily cap. On Gemini failure, release
+    // so honest clients are not charged for failed scores.
+    const reserved = await tryReserveQuota(deviceKey, pickCount);
+    const deny = planQuotaFirstFlow({ reserveOk: reserved });
+    if (!deny.calledGemini) {
+      return jsonResponse(
+        { error: deny.error, code: deny.code },
+        deny.httpStatus,
+      );
+    }
+
     const batchResult = await tryGeminiBatch(images, pickCount, context);
     if (!batchResult.ok) {
+      const outcome = batchResult.incomplete ? "incomplete" : "failed";
+      const plan = planQuotaFirstFlow({ reserveOk: true, scoring: outcome });
+      if (plan.releaseReservation) {
+        await releaseQuota(deviceKey, pickCount);
+      }
       if (batchResult.incomplete) {
         return jsonResponse(
           {
@@ -368,14 +398,6 @@ Deno.serve(async (req) => {
         );
       }
       return jsonResponse({ error: "batch_failed" }, 503);
-    }
-
-    const quotaOk = await tryConsumeQuotaBatch(deviceKey, pickCount);
-    if (!quotaOk) {
-      return jsonResponse(
-        { error: "quota_exceeded", code: "DAILY_CAP_REACHED" },
-        429,
-      );
     }
 
     return jsonResponse(batchResult.batch);
@@ -393,17 +415,26 @@ Deno.serve(async (req) => {
     );
   }
 
-  const score = await tryGeminiSingle(image, context);
-  if (!score) {
-    return jsonResponse({ error: "gemini_failed" }, 503);
+  if (!GEMINI_KEY) {
+    return jsonResponse({ error: "gemini_not_configured" }, 503);
   }
 
-  const allowed = await tryConsumeQuota(deviceKey);
-  if (!allowed) {
+  const reservedSingle = await tryReserveQuota(deviceKey, 1);
+  const denySingle = planQuotaFirstSingleFlow({ reserveOk: reservedSingle });
+  if (!denySingle.calledGemini) {
     return jsonResponse(
-      { error: "quota_exceeded", code: "DAILY_CAP_REACHED" },
-      429,
+      { error: denySingle.error, code: denySingle.code },
+      denySingle.httpStatus,
     );
+  }
+
+  const score = await tryGeminiSingle(image, context);
+  if (!score) {
+    const plan = planQuotaFirstSingleFlow({ reserveOk: true, scoreOk: false });
+    if (plan.releaseReservation) {
+      await releaseQuota(deviceKey, 1);
+    }
+    return jsonResponse({ error: "gemini_failed" }, 503);
   }
 
   return jsonResponse(score);

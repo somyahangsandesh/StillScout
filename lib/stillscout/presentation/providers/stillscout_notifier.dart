@@ -22,6 +22,7 @@ import '../../services/stillscout_connectivity.dart';
 import '../../services/stillscout_scout_background.dart';
 import '../../services/stillscout_scout_quota_tracker.dart';
 import '../../services/stillscout_subscription_manager.dart';
+import '../../services/stillscout_gallery_cap.dart';
 import '../../services/stillscout_top_picks_selector.dart';
 import '../../services/stillscout_vision_client.dart';
 import 'stillscout_connectivity_provider.dart';
@@ -289,20 +290,33 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
     );
   }
 
-  /// Records gallery export(s) against this scout session for free users
-  /// and persists the counter so History can't reset the cap.
-  Future<void> consumeSessionExports(int count) async {
-    if (state.isPro || count <= 0) return;
+  /// Reserves [count] free-tier export slots synchronously before I/O.
+  Future<bool> tryReserveSessionExports(int count) async {
+    if (state.isPro || count <= 0) return true;
     if (!StillScoutAccessPolicy.canExportThisSession(
       isPro: false,
       exportsUsedThisSession: state.exportsUsedThisSession,
       count: count,
     )) {
-      return;
+      return false;
     }
     final next = state.exportsUsedThisSession + count;
     state = state.copyWith(exportsUsedThisSession: next);
     await _persistExportsUsed(next);
+    return true;
+  }
+
+  /// Refunds slots reserved by [tryReserveSessionExports] when export fails.
+  Future<void> releaseSessionExports(int count) async {
+    if (state.isPro || count <= 0) return;
+    final next = (state.exportsUsedThisSession - count).clamp(0, 1 << 30);
+    state = state.copyWith(exportsUsedThisSession: next);
+    await _persistExportsUsed(next);
+  }
+
+  /// Records gallery export(s). Prefer [tryReserveSessionExports] before I/O.
+  Future<void> consumeSessionExports(int count) async {
+    await tryReserveSessionExports(count);
   }
 
   Future<void> _persistExportsUsed(int exportsUsed) async {
@@ -452,6 +466,12 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
 
   Future<void> processVideo(String videoPath) async {
     _abortingForOffline = false;
+    // Await Keychain-backed trackers so trial/quota are never read while null.
+    await Future.wait([
+      StillScoutFirstScoutTracker.load(),
+      StillScoutAiProTrialTracker.load(),
+      StillScoutScoutQuotaTracker.load(),
+    ]);
     await _refreshSubscriptionState();
     if (!mounted) return;
 
@@ -608,25 +628,8 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
         }
       }
 
-      // Cap the gallery to the top [maxGalleryFrames] frames by score so the
-      // UI stays clean regardless of video length. Frames are already sorted
-      // descending by score, so a simple sublist is sufficient.
-      // Guarantee that every isTopScout frame is retained even if it would
-      // otherwise fall outside the cap (rare but possible on Vision-only scouts
-      // where Gemini picks arrived from a previous cached result).
-      if (finalFrames.length > StillScoutConstants.maxGalleryFrames) {
-        final topN = finalFrames.sublist(0, StillScoutConstants.maxGalleryFrames);
-        final alreadyIncludedIds = topN.map((f) => f.frame.id).toSet();
-        final missedTopScouts = finalFrames
-            .skip(StillScoutConstants.maxGalleryFrames)
-            .where((f) => f.isTopScout && !alreadyIncludedIds.contains(f.frame.id))
-            .toList(growable: false);
-        // Re-sort so the gallery is always in descending score order even after
-        // we re-insert Gemini-picked frames that were beyond the cap boundary.
-        final combined = [...topN, ...missedTopScouts]
-          ..sort((a, b) => b.score.compareTo(a.score));
-        finalFrames = combined;
-      }
+      // Cap to maxGalleryFrames while preferring Gemini isTopScout keepers.
+      finalFrames = StillScoutGalleryCap.cap(finalFrames);
 
       // Prefer Gemini's explicit picks for the carousel, in Gemini's
       // best-first order (geminiPickRank). Fall back to score-based diversity.
@@ -810,20 +813,7 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
       if (!mounted) return;
       _throwIfCancelled(cancelToken);
 
-      var finalFrames = scored;
-      if (finalFrames.length > StillScoutConstants.maxGalleryFrames) {
-        final topN =
-            finalFrames.sublist(0, StillScoutConstants.maxGalleryFrames);
-        final alreadyIncludedIds = topN.map((f) => f.frame.id).toSet();
-        final missedTopScouts = finalFrames
-            .skip(StillScoutConstants.maxGalleryFrames)
-            .where((f) =>
-                f.isTopScout && !alreadyIncludedIds.contains(f.frame.id))
-            .toList(growable: false);
-        final combined = [...topN, ...missedTopScouts]
-          ..sort((a, b) => b.score.compareTo(a.score));
-        finalFrames = combined;
-      }
+      var finalFrames = StillScoutGalleryCap.cap(scored);
 
       final geminiPicks =
           StillScoutTopPicksSelector.geminiOrderedTopPicks(finalFrames);

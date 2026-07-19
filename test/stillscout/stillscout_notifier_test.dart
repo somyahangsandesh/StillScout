@@ -14,10 +14,12 @@ import 'package:stillscout/stillscout/presentation/providers/stillscout_connecti
 import 'package:stillscout/stillscout/presentation/providers/stillscout_notifier.dart';
 import 'package:stillscout/stillscout/presentation/providers/stillscout_repository_providers.dart';
 import 'package:stillscout/stillscout/domain/stillscout_online_status.dart';
+import 'package:stillscout/stillscout/services/stillscout_cloud_quota_tracker.dart';
 import 'package:stillscout/stillscout/services/stillscout_connectivity.dart';
 import 'package:stillscout/stillscout/services/stillscout_scout_background.dart';
 import 'package:stillscout/stillscout/services/stillscout_cancel_token.dart';
 import 'package:stillscout/stillscout/services/stillscout_scout_quota_tracker.dart';
+import 'package:stillscout/stillscout/services/stillscout_vision_client.dart';
 import 'package:stillscout/stillscout/services/video_frame_extractor.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,6 +44,20 @@ const _mockScored = ScoredFrame(
     lightingScore: 85,
     openEyesScore: 90,
     compositionScore: 85,
+  ),
+  isTopScout: true,
+);
+
+const _mockLlmScored = ScoredFrame(
+  frame: _mockFrame,
+  score: 9.1,
+  metadata: FrameScoreMetadata(
+    blurScore: 88,
+    lightingScore: 90,
+    openEyesScore: 92,
+    compositionScore: 89,
+    source: ScoreSource.llm,
+    summary: 'Sharp eyes and balanced framing',
   ),
   isTopScout: true,
 );
@@ -373,6 +389,7 @@ void main() {
         // Make the AI trial available (group setUp consumes it by default).
         await StillScoutAiProTrialTracker.resetForTests();
         await StillScoutFirstScoutTracker.resetForTests();
+        StillScoutVisionClient.resetSessionDisabledForTests();
         addTearDown(StillScoutAiProTrialTracker.consumeTrial);
         addTearDown(StillScoutFirstScoutTracker.markFirstScoutDone);
 
@@ -390,7 +407,11 @@ void main() {
         // FakeScoringRepository returns heuristic-source frames — Gemini
         // never "reached" even though the trial requested cloud AI.
         expect(state.geminiReachedOnLastScout, isFalse);
-        expect(state.cloudScoringOutcome, CloudScoringOutcome.degraded);
+        expect(
+          state.cloudScoringOutcome,
+          CloudScoringOutcome.degraded,
+          reason: 'local cloud quota remains — soft degrade, not 429',
+        );
 
         final usedAfter = await StillScoutScoutQuotaTracker.usedToday();
         expect(
@@ -408,6 +429,88 @@ void main() {
           StillScoutFirstScoutTracker.isFirstScout,
           isTrue,
           reason: 'failed trial must preserve the first-scout keeper bonus',
+        );
+      },
+    );
+
+
+    test(
+      'server 429 (lastBatchQuotaExceeded) surfaces as quotaExceeded, not degraded',
+      () async {
+        await StillScoutAiProTrialTracker.resetForTests();
+        addTearDown(StillScoutAiProTrialTracker.consumeTrial);
+        StillScoutVisionClient.debugSetLastBatchQuotaExceeded(true);
+        addTearDown(StillScoutVisionClient.resetSessionDisabledForTests);
+
+        final container = _makeContainer();
+        addTearDown(container.dispose);
+
+        await container
+            .read(stillScoutProvider.notifier)
+            .processVideo('/fake/video.mp4');
+
+        final state = container.read(stillScoutProvider);
+        expect(state.phase, StillScoutPhase.complete);
+        expect(state.geminiReachedOnLastScout, isFalse);
+        expect(
+          state.cloudScoringOutcome,
+          CloudScoringOutcome.quotaExceeded,
+          reason: 'Supabase DAILY_CAP_REACHED must not look like a soft degrade',
+        );
+      },
+    );
+
+    test(
+      'exhausted local cloud quota without Gemini is quotaExceeded',
+      () async {
+        await StillScoutAiProTrialTracker.resetForTests();
+        addTearDown(StillScoutAiProTrialTracker.consumeTrial);
+        StillScoutVisionClient.resetSessionDisabledForTests();
+        for (var i = 0;
+            i < StillScoutConstants.maxCloudFramesPerDeviceDay;
+            i++) {
+          await StillScoutCloudQuotaTracker.tryConsumeFrame();
+        }
+        addTearDown(StillScoutCloudQuotaTracker.resetForDebug);
+
+        final container = _makeContainer();
+        addTearDown(container.dispose);
+
+        await container
+            .read(stillScoutProvider.notifier)
+            .processVideo('/fake/video.mp4');
+
+        final state = container.read(stillScoutProvider);
+        expect(state.phase, StillScoutPhase.complete);
+        expect(state.geminiReachedOnLastScout, isFalse);
+        expect(state.cloudScoringOutcome, CloudScoringOutcome.quotaExceeded);
+      },
+    );
+
+    test(
+      'successful Gemini trial sets cloudScoringOutcome to full and consumes trial',
+      () async {
+        await StillScoutAiProTrialTracker.resetForTests();
+        StillScoutVisionClient.resetSessionDisabledForTests();
+        addTearDown(StillScoutAiProTrialTracker.consumeTrial);
+
+        final container = _makeContainer(
+          scoringRepo: FakeScoringRepository(results: [_mockLlmScored]),
+        );
+        addTearDown(container.dispose);
+
+        await container
+            .read(stillScoutProvider.notifier)
+            .processVideo('/fake/video.mp4');
+
+        final state = container.read(stillScoutProvider);
+        expect(state.phase, StillScoutPhase.complete);
+        expect(state.geminiReachedOnLastScout, isTrue);
+        expect(state.cloudScoringOutcome, CloudScoringOutcome.full);
+        expect(
+          StillScoutAiProTrialTracker.isTrialAvailable,
+          isFalse,
+          reason: 'experienced Gemini trial must be permanently consumed',
         );
       },
     );

@@ -3,7 +3,7 @@
 
 export const MAX_BATCH_IMAGES = 48;
 
-/// Max decoded JPEG bytes per image in a batch (~512 KB raw ≈ ~700 KB base64).
+/** Max decoded JPEG bytes per image in a batch (~512 KB raw ≈ ~700 KB base64). */
 export const MAX_IMAGE_BASE64_CHARS = 700_000;
 
 const UUID_RE =
@@ -32,7 +32,6 @@ export function resolveDeviceKey(
   return clientIp(headers);
 }
 
-// Log-only per-IP rate note (in-memory; resets on cold start).
 const ipWindows = new Map<string, { count: number; windowStart: number }>();
 const RATE_WINDOW_MS = 60_000;
 const RATE_WARN_THRESHOLD = 30;
@@ -52,7 +51,6 @@ export function noteIpRequest(ip: string): void {
   }
 }
 
-/** Validates batch image strings — count, type, and per-image size cap. */
 export function validateBatchImages(
   images: unknown,
 ): { ok: true; images: string[] } | { ok: false; error: string } {
@@ -74,14 +72,78 @@ export function validateBatchImages(
   return { ok: true, images: strings };
 }
 
-/** Clamps pick_count to a sane range and never above frame count. */
 export function resolvePickCount(
   raw: unknown,
   imageCount: number,
 ): number {
-  const requested = typeof raw === "number"
-    ? Math.round(raw)
-    : 10;
+  const requested = typeof raw === "number" ? Math.round(raw) : 10;
   const clamped = Math.max(1, Math.min(48, requested));
   return Math.min(clamped, imageCount);
+}
+
+export type ScoringOutcome = "success" | "failed" | "incomplete";
+
+export interface QuotaFirstFlowResult {
+  calledGemini: boolean;
+  releaseReservation: boolean;
+  httpStatus: number;
+  error?: string;
+  code?: string;
+}
+
+export function planQuotaFirstFlow(opts: {
+  reserveOk: boolean;
+  scoring?: ScoringOutcome;
+}): QuotaFirstFlowResult {
+  if (!opts.reserveOk) {
+    return {
+      calledGemini: false,
+      releaseReservation: false,
+      httpStatus: 429,
+      error: "quota_exceeded",
+      code: "DAILY_CAP_REACHED",
+    };
+  }
+  const scoring = opts.scoring ?? "failed";
+  if (scoring === "success") {
+    return { calledGemini: true, releaseReservation: false, httpStatus: 200 };
+  }
+  if (scoring === "incomplete") {
+    return {
+      calledGemini: true,
+      releaseReservation: true,
+      httpStatus: 422,
+      error: "incomplete_batch_scores",
+    };
+  }
+  return {
+    calledGemini: true,
+    releaseReservation: true,
+    httpStatus: 503,
+    error: "batch_failed",
+  };
+}
+
+export function planQuotaFirstSingleFlow(opts: {
+  reserveOk: boolean;
+  scoreOk?: boolean;
+}): QuotaFirstFlowResult {
+  if (!opts.reserveOk) {
+    return {
+      calledGemini: false,
+      releaseReservation: false,
+      httpStatus: 429,
+      error: "quota_exceeded",
+      code: "DAILY_CAP_REACHED",
+    };
+  }
+  if (opts.scoreOk) {
+    return { calledGemini: true, releaseReservation: false, httpStatus: 200 };
+  }
+  return {
+    calledGemini: true,
+    releaseReservation: true,
+    httpStatus: 503,
+    error: "gemini_failed",
+  };
 }

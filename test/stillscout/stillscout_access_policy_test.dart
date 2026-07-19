@@ -74,6 +74,16 @@ void main() {
       );
     });
 
+    test('freePlanLimitsSummary matches constants', () {
+      expect(
+        StillScoutAccessPolicy.freePlanLimitsSummary,
+        '${StillScoutConstants.freeScoutsPerDay} free scouts/day · '
+        '${StillScoutConstants.freeKeeperLimit} keepers '
+        '(${StillScoutConstants.freeKeeperLimit + StillScoutConstants.firstScoutBonusKeepers} on first scout) · '
+        '${StillScoutConstants.freeExportsPerScout} exports',
+      );
+    });
+
     test('cloud AI gate is Pro-only (trial is granted separately)', () {
       expect(StillScoutAccessPolicy.canUseCloudAi(isPro: true), isTrue);
       expect(StillScoutAccessPolicy.canUseCloudAi(isPro: false), isFalse);

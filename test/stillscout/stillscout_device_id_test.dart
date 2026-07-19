@@ -35,7 +35,18 @@ void main() {
 
     expect(prefs.getString('stillscout_device_id'), isNull);
   });
+
+  test('concurrent first get() calls share one identity', () async {
+    await StillScoutDeviceId.resetForTests();
+    final results = await Future.wait([
+      StillScoutDeviceId.get(),
+      StillScoutDeviceId.get(),
+      StillScoutDeviceId.get(),
+    ]);
+    expect(results.toSet(), hasLength(1));
+  });
 }
+
 
 void _setupSecureStorageMock() {
   final store = <String, String>{};

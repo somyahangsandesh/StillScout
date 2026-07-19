@@ -174,7 +174,7 @@ class StillScoutAiProTrialTracker {
   /// Uses `!= true` rather than `== false` so the trial is granted when
   /// [load] has not yet completed (_used is still null) — avoids a race
   /// where processVideo starts before the async _init() finishes.
-  static bool get isTrialAvailable => _used != true;
+  static bool get isTrialAvailable => _used == false;
 
   /// Permanently consumes the trial. Safe to call multiple times.
   static Future<void> consumeTrial() async {

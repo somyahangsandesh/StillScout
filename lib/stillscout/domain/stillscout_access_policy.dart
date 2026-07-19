@@ -158,6 +158,15 @@ class StillScoutAccessPolicy {
     return '$scoutsRemainingToday free scout${scoutsRemainingToday == 1 ? '' : 's'} left today';
   }
 
+  /// Settings / marketing blurb for free-plan limits (single source of truth).
+  static String get freePlanLimitsSummary {
+    final firstScoutKeepers = keeperLimit(isPro: false, isFirstScout: true);
+    return '${StillScoutConstants.freeScoutsPerDay} free scouts/day · '
+        '${StillScoutConstants.freeKeeperLimit} keepers '
+        '($firstScoutKeepers on first scout) · '
+        '${StillScoutConstants.freeExportsPerScout} exports';
+  }
+
   /// Ranks the user may browse in detail (gallery + swipe carousel).
   static List<int> browsableRanks({
     required int totalFrames,

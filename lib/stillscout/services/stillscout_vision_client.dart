@@ -58,6 +58,12 @@ class StillScoutVisionClient {
   @visibleForTesting
   static void resetSessionDisabledForTests() => _orchestrator.resetForTests();
 
+  /// Test hook — simulates a Supabase/direct 429 without running a batch.
+  @visibleForTesting
+  static void debugSetLastBatchQuotaExceeded(bool value) {
+    _orchestrator.lastBatchQuotaExceeded = value;
+  }
+
   @visibleForTesting
   static FrameScoreMetadata? parseResponseForTests(String raw) =>
       parseVisionResponse(raw);
