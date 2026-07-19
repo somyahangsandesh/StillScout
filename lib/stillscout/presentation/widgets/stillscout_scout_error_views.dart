@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/stillscout_theme.dart';
+import 'stillscout_status_view.dart';
 
 /// Full-screen error state shown when a scout fails.
 ///
@@ -17,34 +18,14 @@ class StillScoutScoutErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(StillScoutSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline,
-                color: StillScoutColors.danger, size: 48),
-            const SizedBox(height: StillScoutSpacing.m),
-            Text(message,
-                style: StillScoutTextStyles.body, textAlign: TextAlign.center),
-            const SizedBox(height: StillScoutSpacing.l),
-            Semantics(
-              label: 'Try again',
-              button: true,
-              child: OutlinedButton(
-                onPressed: onRetry,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: StillScoutColors.chalk,
-                  side: const BorderSide(color: StillScoutColors.accent),
-                  minimumSize: const Size(0, 48),
-                ),
-                child: const Text('Try again'),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return StillScoutStatusView(
+      icon: Icons.error_outline_rounded,
+      iconColor: StillScoutColors.danger,
+      title: 'Scout hit a snag',
+      body: message,
+      primaryLabel: 'Try again',
+      primaryIcon: Icons.refresh_rounded,
+      onPrimary: onRetry,
     );
   }
 }
@@ -59,39 +40,14 @@ class StillScoutScoutCancelledView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(StillScoutSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.cancel_outlined,
-                color: StillScoutColors.silver, size: 48),
-            const SizedBox(height: StillScoutSpacing.m),
-            Text('Scout cancelled', style: StillScoutTextStyles.title),
-            const SizedBox(height: StillScoutSpacing.s),
-            Text(
-              'No frames were saved. Pick a clip whenever you\'re ready.',
-              style: StillScoutTextStyles.body,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: StillScoutSpacing.l),
-            Semantics(
-              label: 'Start over',
-              button: true,
-              child: OutlinedButton(
-                onPressed: onStartOver,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: StillScoutColors.chalk,
-                  side: const BorderSide(color: StillScoutColors.accent),
-                  minimumSize: const Size(0, 48),
-                ),
-                child: const Text('Start over'),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return StillScoutStatusView(
+      icon: Icons.cancel_outlined,
+      iconColor: StillScoutColors.silver,
+      title: 'Scout cancelled',
+      body: 'No frames were saved. Pick a clip whenever you\'re ready.',
+      primaryLabel: 'Start over',
+      primaryIcon: Icons.movie_filter_outlined,
+      onPrimary: onStartOver,
     );
   }
 }

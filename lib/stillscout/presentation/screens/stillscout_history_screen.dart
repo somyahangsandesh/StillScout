@@ -8,6 +8,7 @@ import '../../domain/repositories/session_repository.dart';
 import '../screens/stillscout_session_detail_screen.dart';
 import '../theme/stillscout_theme.dart';
 import '../widgets/stillscout_skeleton.dart';
+import '../widgets/stillscout_status_view.dart';
 
 class StillScoutHistoryScreen extends StatefulWidget {
   const StillScoutHistoryScreen({
@@ -88,38 +89,14 @@ class _ErrorHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(StillScoutSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: StillScoutColors.danger.withValues(alpha: 0.8),
-            ),
-            const SizedBox(height: StillScoutSpacing.m),
-            Text('Could not load history.', style: StillScoutTextStyles.subtitle),
-            const SizedBox(height: StillScoutSpacing.s),
-            Text(
-              'Check your storage and try again.',
-              style: StillScoutTextStyles.body,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: StillScoutSpacing.l),
-            OutlinedButton(
-              onPressed: onRetry,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: StillScoutColors.chalk,
-                side: const BorderSide(color: StillScoutColors.accent),
-                minimumSize: const Size(0, 48),
-              ),
-              child: const Text('Try again'),
-            ),
-          ],
-        ),
-      ),
+    return StillScoutStatusView(
+      icon: Icons.error_outline_rounded,
+      iconColor: StillScoutColors.danger,
+      title: 'Could not load history',
+      body: 'Check your storage and try again.',
+      primaryLabel: 'Try again',
+      primaryIcon: Icons.refresh_rounded,
+      onPrimary: onRetry,
     );
   }
 }
@@ -129,28 +106,11 @@ class _EmptyHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(StillScoutSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.history_edu_rounded,
-              size: 64,
-              color: StillScoutColors.silver.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: StillScoutSpacing.m),
-            Text('No past scouts yet', style: StillScoutTextStyles.subtitle),
-            const SizedBox(height: StillScoutSpacing.s),
-            Text(
-              'Completed scouts appear here so you can revisit them anytime.',
-              style: StillScoutTextStyles.body,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    return const StillScoutStatusView(
+      icon: Icons.history_edu_rounded,
+      iconColor: StillScoutColors.silver,
+      title: 'No past scouts yet',
+      body: 'Completed scouts appear here so you can revisit them anytime.',
     );
   }
 }
