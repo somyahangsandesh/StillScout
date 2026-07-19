@@ -303,6 +303,23 @@ void main() {
       );
       expect(lockedView.frame.timestampMs, 0);
       expect(lockedView.frame.sourceVideoPath, isEmpty);
+
+      // First-scout bonus unlocks ranks up through freeKeeperLimit + bonus - 1.
+      final firstScoutView = StillScoutAccessPolicy.fromPersistedJson(
+        lockedJson,
+        isPro: false,
+        rank: 5,
+        isFirstScout: true,
+      );
+      expect(firstScoutView.frame.timestampMs, 12500);
+      expect(firstScoutView.frame.sourceVideoPath, '/videos/clip.mp4');
+    });
+
+    test('restore messaging is shared across paywall and settings', () {
+      expect(
+        StillScoutAccessPolicy.noActiveProSubscriptionMessage,
+        'No active AI Pro subscription found.',
+      );
     });
   });
 }

@@ -74,6 +74,7 @@ class _StillScoutSessionDetailScreenState
             Map<String, dynamic>.from(e.value),
             isPro: isPro,
             rank: e.key,
+            isFirstScout: _session.usedFirstScoutBonus,
           ),
         )
         .toList(growable: false);
@@ -97,6 +98,7 @@ class _StillScoutSessionDetailScreenState
     final lockedCount = StillScoutAccessPolicy.lockedCount(
       totalFrames: _frames.length,
       isPro: false,
+      isFirstScout: _session.usedFirstScoutBonus,
     );
     final lockedFrames = _frames.length > lockedCount
         ? _frames.skip(_frames.length - lockedCount)
@@ -179,6 +181,7 @@ class _StillScoutSessionDetailScreenState
                   videoDurationMs: _session.videoDurationMs,
                   processingTimeMs: _session.processingTimeMs,
                   isPro: state.isPro,
+                  isFirstScout: _session.usedFirstScoutBonus,
                   exportsUsedThisSession: _exportsUsedThisView,
                   onUpgradeAiPro: () => _showPaywall(
                     reason:
@@ -186,16 +189,17 @@ class _StillScoutSessionDetailScreenState
                   ),
                   onLockedFrameTap: () => _showPaywall(
                     reason:
-                        'Unlock Gemini judgment, 20 keepers, and native 4K.',
+                        'Unlock Gemini judgment, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
                   ),
                   onFrameTap: (frame, rank) {
                     if (StillScoutAccessPolicy.isLocked(
                       rank: rank,
                       isPro: state.isPro,
+                      isFirstScout: _session.usedFirstScoutBonus,
                     )) {
                       _showPaywall(
                         reason:
-                            'Unlock Gemini judgment, 20 keepers, and native 4K.',
+                            'Unlock Gemini judgment, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
                       );
                     } else {
                       _onFrameTap(frame, state.isPro, frames, rank);
@@ -214,7 +218,11 @@ class _StillScoutSessionDetailScreenState
     List<ScoredFrame> allFrames,
     int rank,
   ) async {
-    if (StillScoutAccessPolicy.isLocked(rank: rank, isPro: isPro)) {
+    if (StillScoutAccessPolicy.isLocked(
+      rank: rank,
+      isPro: isPro,
+      isFirstScout: _session.usedFirstScoutBonus,
+    )) {
       await _showPaywall();
       return;
     }
@@ -223,6 +231,7 @@ class _StillScoutSessionDetailScreenState
       frame: frame,
       tierLabel: _tierLabel,
       isPro: isPro,
+      isFirstScout: _session.usedFirstScoutBonus,
       rank: rank,
       allFrames: allFrames,
       initialIndex: rank,

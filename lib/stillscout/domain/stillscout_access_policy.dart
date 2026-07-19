@@ -167,6 +167,10 @@ class StillScoutAccessPolicy {
         '${StillScoutConstants.freeExportsPerScout} exports';
   }
 
+  /// Shown when Restore Purchases succeeds but no AI Pro entitlement is active.
+  static const String noActiveProSubscriptionMessage =
+      'No active AI Pro subscription found.';
+
   /// Ranks the user may browse in detail (gallery + swipe carousel).
   static List<int> browsableRanks({
     required int totalFrames,
@@ -192,8 +196,10 @@ class StillScoutAccessPolicy {
     Map<String, dynamic> json, {
     required bool isPro,
     required int rank,
+    bool isFirstScout = false,
   }) {
-    final locked = !isPro && isLocked(rank: rank, isPro: false);
+    final locked = !isPro &&
+        isLocked(rank: rank, isPro: false, isFirstScout: isFirstScout);
     if (locked) {
       json = Map<String, dynamic>.from(json)
         ..['timestampMs'] = 0

@@ -20,6 +20,7 @@ class StillScoutSessionWriter {
     required int processingTimeMs,
     required int? videoDurationMs,
     required int exportsUsedThisSession,
+    bool usedFirstScoutBonus = false,
   }) async {
     if (scored.isEmpty) return;
     final capped = StillScoutGalleryCap.cap(scored);
@@ -41,6 +42,7 @@ class StillScoutSessionWriter {
         exportsUsed: exportsUsedThisSession,
         topPickFrameIds:
             topPicks.map((f) => f.frame.id).toList(growable: false),
+        usedFirstScoutBonus: usedFirstScoutBonus,
       );
       await _sessionRepo.saveSession(session);
       await _sessionRepo.evictOldSessions();

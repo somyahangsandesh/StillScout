@@ -16,6 +16,7 @@ class StillScoutSession {
     this.topFrameSnapshots = const [],
     this.exportsUsed = 0,
     this.topPickFrameIds = const [],
+    this.usedFirstScoutBonus = false,
   });
 
   /// Unique identifier — also the name of the persistent frame cache dir
@@ -52,6 +53,10 @@ class StillScoutSession {
   /// Ordered frame IDs for the Top Picks carousel (matches live scout).
   final List<String> topPickFrameIds;
 
+  /// Whether this scout used the one-time first-scout keeper bonus.
+  /// History reopen must honor this so ranks unlocked at save stay unlocked.
+  final bool usedFirstScoutBonus;
+
   StillScoutSession copyWith({
     String? id,
     String? videoPath,
@@ -64,6 +69,7 @@ class StillScoutSession {
     List<Map<String, dynamic>>? topFrameSnapshots,
     int? exportsUsed,
     List<String>? topPickFrameIds,
+    bool? usedFirstScoutBonus,
   }) =>
       StillScoutSession(
         id: id ?? this.id,
@@ -77,6 +83,7 @@ class StillScoutSession {
         topFrameSnapshots: topFrameSnapshots ?? this.topFrameSnapshots,
         exportsUsed: exportsUsed ?? this.exportsUsed,
         topPickFrameIds: topPickFrameIds ?? this.topPickFrameIds,
+        usedFirstScoutBonus: usedFirstScoutBonus ?? this.usedFirstScoutBonus,
       );
 
   Map<String, dynamic> toJson() => {
@@ -91,6 +98,7 @@ class StillScoutSession {
         'topFrameSnapshots': topFrameSnapshots,
         'exportsUsed': exportsUsed,
         'topPickFrameIds': topPickFrameIds,
+        'usedFirstScoutBonus': usedFirstScoutBonus,
       };
 
   factory StillScoutSession.fromJson(Map<dynamic, dynamic> json) {
@@ -117,6 +125,7 @@ class StillScoutSession {
       topFrameSnapshots: snapshots,
       exportsUsed: json['exportsUsed'] as int? ?? 0,
       topPickFrameIds: _parseStringList(json['topPickFrameIds']),
+      usedFirstScoutBonus: json['usedFirstScoutBonus'] == true,
     );
   }
 

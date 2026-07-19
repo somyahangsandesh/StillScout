@@ -235,7 +235,7 @@ class _StillScoutSettingsScreenState
           : result.success
               ? (result.hasPro
                   ? 'AI Pro restored on this device.'
-                  : 'No active subscription found.')
+                  : StillScoutAccessPolicy.noActiveProSubscriptionMessage)
               : (result.error ?? 'Could not restore purchases.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

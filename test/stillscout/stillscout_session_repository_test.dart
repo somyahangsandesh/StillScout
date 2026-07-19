@@ -88,6 +88,19 @@ void main() {
     expect(sessions.single.exportsUsed, 2);
   });
 
+  test('usedFirstScoutBonus round-trips through Hive', () async {
+    final repo = SessionRepositoryImpl();
+    await repo.saveSession(
+      _session('first').copyWith(usedFirstScoutBonus: true),
+    );
+    final sessions = await repo.getSessions();
+    expect(sessions.single.usedFirstScoutBonus, isTrue);
+
+    await repo.saveSession(_session('legacy'));
+    final legacy = (await repo.getSessions()).firstWhere((s) => s.id == 'legacy');
+    expect(legacy.usedFirstScoutBonus, isFalse);
+  });
+
   test('evictOldSessions keeps only maxCachedSessions', () async {
     final repo = SessionRepositoryImpl();
     // Seed more sessions than the limit.

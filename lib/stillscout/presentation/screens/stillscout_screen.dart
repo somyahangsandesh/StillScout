@@ -537,12 +537,12 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
           onUpgradeAiPro: () => _showPaywall(
             reason: state.isAiProTrial
                 ? 'You just used Gemini. Keep AI Pro for unlimited scouts, '
-                    '20 keepers, and Auto Polish.'
+                    '${StillScoutConstants.proKeeperLimit} keepers, and Auto Polish.'
                 : 'AI finds your best moment and turns it into a professional photo.',
           ),
           onLockedFrameTap: () => _showPaywall(
             reason:
-                'Unlock Gemini judgment, 20 keepers, timecodes, and native 4K.',
+                'Unlock Gemini judgment, ${StillScoutConstants.proKeeperLimit} keepers, timecodes, and native 4K.',
           ),
           onFrameTap: (frame, rank) {
             if (_selectedIds.isNotEmpty) {
