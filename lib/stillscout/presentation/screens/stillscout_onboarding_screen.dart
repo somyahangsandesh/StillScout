@@ -122,7 +122,8 @@ class _StillScoutOnboardingScreenState
     await StillScoutPaywallSheet.show(
       context,
       exportsRemaining: StillScoutConstants.freeExportsPerScout,
-      reason: 'Scout smarter. No daily cap, 20 keepers per scout, native 4K exports.',
+      reason:
+          'Scout smarter. No daily cap, ${StillScoutConstants.proKeeperLimit} keepers per scout, native 4K exports.',
       onPurchased: () {}, // Subscription state refreshes on main screen load.
     );
     if (!mounted) return;
@@ -289,10 +290,13 @@ class _OnboardingStep extends StatelessWidget {
 
 // ── Pro upsell step (page 4) ──────────────────────────────────────────────────
 
-const _kProFeatures = [
+final _kProFeatures = [
   ('Unlimited scouts — no daily cap', Icons.all_inclusive_rounded),
   ('Gemini scores your best frames', Icons.psychology_rounded),
-  ('20 keepers unlocked per scout', Icons.workspace_premium_rounded),
+  (
+    '${StillScoutConstants.proKeeperLimit} keepers unlocked per scout',
+    Icons.workspace_premium_rounded,
+  ),
   ('Auto-polish at export', Icons.auto_fix_high_rounded),
   ('4K export at full quality', Icons.hd_rounded),
 ];

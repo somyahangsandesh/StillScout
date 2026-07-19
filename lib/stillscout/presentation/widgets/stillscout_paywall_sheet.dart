@@ -170,7 +170,7 @@ class _StillScoutPaywallSheetState extends ConsumerState<StillScoutPaywallSheet>
                 ] else if (exportsLeft > 0)
                   Text(
                     'You have $exportsLeft save${exportsLeft != 1 ? 's' : ''} left this scout. '
-                    'Go Pro for unlimited scouts, 20 keepers, and native 4K.',
+                    'Go Pro for unlimited scouts, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
                     style: StillScoutTextStyles.body,
                     textAlign: TextAlign.center,
                   )
@@ -376,7 +376,9 @@ class _StillScoutPaywallSheetState extends ConsumerState<StillScoutPaywallSheet>
       return;
     }
     if (result.success) {
-      setState(() => _error = 'No active Pro subscription found.');
+      setState(
+        () => _error = StillScoutAccessPolicy.noActiveProSubscriptionMessage,
+      );
     } else {
       setState(() => _error = result.error ?? 'Could not restore purchases.');
     }
