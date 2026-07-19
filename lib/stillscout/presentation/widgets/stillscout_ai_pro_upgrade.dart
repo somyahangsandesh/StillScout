@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:stillscout/config/stillscout_config.dart';
 
+import '../../domain/stillscout_constants.dart';
 import '../theme/stillscout_theme.dart';
 import 'stillscout_buttons.dart';
 import 'stillscout_glass_surface.dart';
@@ -103,7 +104,7 @@ class StillScoutAiProUpgradeCard extends StatelessWidget {
           const SizedBox(height: StillScoutSpacing.xs),
           Text(
             afterTrial
-                ? 'Keep ${StillScoutConfig.geminiModelDisplayName} judgment on every scout, unlock all 20 keepers, '
+                ? 'Keep ${StillScoutConfig.geminiModelDisplayName} judgment on every scout, unlock all ${StillScoutConstants.proKeeperLimit} keepers, '
                     'AI Auto Polish, and unlimited scouts with '
                     '${StillScoutConfig.aiProDisplayName}.'
                 : 'Upgrade for ${StillScoutConfig.geminiModelDisplayName} judgment, photo quality scores with '

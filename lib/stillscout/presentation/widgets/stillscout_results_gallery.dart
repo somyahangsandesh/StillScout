@@ -517,43 +517,55 @@ class _ContextChip extends StatelessWidget {
     const accent = StillScoutColors.accent;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: selected
-                ? accent.withValues(alpha: 0.18)
-                : StillScoutColors.slateLight.withValues(alpha: 0.35),
-            border: Border.all(
-              color: selected
-                  ? accent.withValues(alpha: 0.75)
-                  : StillScoutColors.silver.withValues(alpha: 0.18),
-              width: 1.2,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                context.icon,
-                size: 14,
-                color: selected ? accent : StillScoutColors.silver,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                context.label,
-                style: StillScoutTextStyles.caption.copyWith(
+      child: Semantics(
+        label: '${context.label} scene type${selected ? ', selected' : ''}',
+        button: true,
+        selected: selected,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(StillScoutRadius.pill),
+            child: AnimatedContainer(
+              duration: StillScoutMotion.fast,
+              curve: StillScoutMotion.toggle,
+              constraints: const BoxConstraints(minHeight: 44),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(StillScoutRadius.pill),
+                color: selected
+                    ? accent.withValues(alpha: 0.18)
+                    : StillScoutColors.slateLight.withValues(alpha: 0.35),
+                border: Border.all(
                   color: selected
-                      ? StillScoutColors.chalk
-                      : StillScoutColors.silver,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                      ? accent.withValues(alpha: 0.75)
+                      : StillScoutColors.silver.withValues(alpha: 0.18),
+                  width: 1.2,
                 ),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    context.icon,
+                    size: 14,
+                    color: selected ? accent : StillScoutColors.silver,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    context.label,
+                    style: StillScoutTextStyles.caption.copyWith(
+                      color: selected
+                          ? StillScoutColors.chalk
+                          : StillScoutColors.silver,
+                      fontWeight:
+                          selected ? FontWeight.w700 : FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

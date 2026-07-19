@@ -72,8 +72,8 @@ class StillScoutFrameDetailSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: StillScoutColors.filmGray,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: StillScoutRadius.sheet,
       ),
       builder: (_) => StillScoutFrameDetailSheet(
         frame: frame,

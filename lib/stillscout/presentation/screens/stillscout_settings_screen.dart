@@ -8,7 +8,7 @@ import 'package:stillscout/config/stillscout_config.dart';
 import 'package:stillscout/services/stillscout_purchase_service.dart';
 
 import '../../domain/repositories/session_repository.dart';
-import '../../domain/stillscout_constants.dart';
+import '../../domain/stillscout_access_policy.dart';
 import '../../services/stillscout_cache_janitor.dart';
 import '../../services/stillscout_diagnostics_log.dart';
 import '../../services/stillscout_score_cache.dart';
@@ -82,13 +82,7 @@ class _StillScoutSettingsScreenState
             StillScoutSpacing.xl,
           ),
           children: [
-            Text(
-              'Subscription',
-              style: StillScoutTextStyles.caption.copyWith(
-                color: StillScoutColors.silver,
-              ),
-            ),
-            const SizedBox(height: StillScoutSpacing.s),
+            const _SectionLabel('Subscription'),
             if (storeUnavailable) ...[
               _StoreStatusCard(
                 message: storeMsg.isNotEmpty
@@ -100,97 +94,94 @@ class _StillScoutSettingsScreenState
               ),
               const SizedBox(height: StillScoutSpacing.s),
             ],
-            _SettingsTile(
-              icon: Icons.workspace_premium_outlined,
-              title: isPro
-                  ? 'AI Pro active'
-                  : (storeUnavailable ? 'Plan unknown' : 'Free plan'),
-              subtitle: isPro
-                  ? 'Unlimited scouts · ${StillScoutConfig.geminiModelDisplayName} · Auto Polish'
-                  : storeUnavailable
-                      ? 'Store unavailable — Pro benefits paused until verified'
-                      : '${StillScoutConstants.freeScoutsPerDay} free scouts/day · '
-                          '${StillScoutConstants.freeKeeperLimit} keepers '
-                          '(${StillScoutConstants.freeKeeperLimit + StillScoutConstants.firstScoutBonusKeepers} on first scout) · '
-                          '${StillScoutConstants.freeExportsPerScout} exports',
-            ),
-            _SettingsTile(
-              icon: Icons.restore_rounded,
-              title: 'Restore purchases',
-              subtitle: 'Recover AI Pro on this device',
-              trailing: _restoring
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : null,
-              onTap: _restoring ? null : _restore,
-            ),
-            _SettingsTile(
-              icon: Icons.manage_accounts_outlined,
-              title: 'Manage subscription',
-              subtitle: 'Apple ID → Subscriptions',
-              onTap: _openManageSubscriptions,
+            _SettingsGroup(
+              children: [
+                _SettingsTile(
+                  icon: Icons.workspace_premium_outlined,
+                  title: isPro
+                      ? 'AI Pro active'
+                      : (storeUnavailable ? 'Plan unknown' : 'Free plan'),
+                  subtitle: isPro
+                      ? 'Unlimited scouts · ${StillScoutConfig.geminiModelDisplayName} · Auto Polish'
+                      : storeUnavailable
+                          ? 'Store unavailable — Pro benefits paused until verified'
+                      : StillScoutAccessPolicy.freePlanLimitsSummary,
+                ),
+                _SettingsTile(
+                  icon: Icons.restore_rounded,
+                  title: 'Restore purchases',
+                  subtitle: 'Recover AI Pro on this device',
+                  trailing: _restoring
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap: _restoring ? null : _restore,
+                ),
+                _SettingsTile(
+                  icon: Icons.manage_accounts_outlined,
+                  title: 'Manage subscription',
+                  subtitle: 'Apple ID → Subscriptions',
+                  onTap: _openManageSubscriptions,
+                ),
+              ],
             ),
             const SizedBox(height: StillScoutSpacing.l),
-            Text(
-              'Support & legal',
-              style: StillScoutTextStyles.caption.copyWith(
-                color: StillScoutColors.silver,
-              ),
-            ),
-            const SizedBox(height: StillScoutSpacing.s),
-            _SettingsTile(
-              icon: Icons.privacy_tip_outlined,
-              title: 'Privacy Policy',
-              onTap: () => StillScoutLegalScreen.open(
-                context,
-                document: StillScoutLegalDocument.privacyPolicy,
-              ),
-            ),
-            _SettingsTile(
-              icon: Icons.gavel_outlined,
-              title: 'Terms of Use',
-              onTap: () => StillScoutLegalScreen.open(
-                context,
-                document: StillScoutLegalDocument.termsOfUse,
-              ),
-            ),
-            _SettingsTile(
-              icon: Icons.support_agent_outlined,
-              title: 'Support',
-              subtitle: StillScoutConfig.supportUrl,
-              onTap: () => _launch(StillScoutConfig.supportUrl),
-            ),
-            _SettingsTile(
-              icon: Icons.bug_report_outlined,
-              title: 'Copy diagnostics',
-              subtitle: 'Recent app logs for support (no full file paths)',
-              onTap: _copyDiagnostics,
+            const _SectionLabel('Support & legal'),
+            _SettingsGroup(
+              children: [
+                _SettingsTile(
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Privacy Policy',
+                  onTap: () => StillScoutLegalScreen.open(
+                    context,
+                    document: StillScoutLegalDocument.privacyPolicy,
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.gavel_outlined,
+                  title: 'Terms of Use',
+                  onTap: () => StillScoutLegalScreen.open(
+                    context,
+                    document: StillScoutLegalDocument.termsOfUse,
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.support_agent_outlined,
+                  title: 'Support',
+                  subtitle: StillScoutConfig.supportUrl,
+                  onTap: () => _launch(StillScoutConfig.supportUrl),
+                ),
+                _SettingsTile(
+                  icon: Icons.bug_report_outlined,
+                  title: 'Copy diagnostics',
+                  subtitle: 'Recent app logs for support (no full file paths)',
+                  onTap: _copyDiagnostics,
+                ),
+              ],
             ),
             const SizedBox(height: StillScoutSpacing.m),
             const StillScoutLegalLinks(preferExternalUrls: true),
             const SizedBox(height: StillScoutSpacing.l),
-            Text(
-              'Storage',
-              style: StillScoutTextStyles.caption.copyWith(
-                color: StillScoutColors.silver,
-              ),
-            ),
-            const SizedBox(height: StillScoutSpacing.s),
-            _SettingsTile(
-              icon: Icons.cleaning_services_outlined,
-              title: 'Clear cache',
-              subtitle: 'Removes orphaned frame thumbnails and score cache',
-              trailing: _clearing
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : null,
-              onTap: _clearing ? null : _clearCache,
+            const _SectionLabel('Storage'),
+            _SettingsGroup(
+              children: [
+                _SettingsTile(
+                  icon: Icons.cleaning_services_outlined,
+                  title: 'Clear cache',
+                  subtitle: 'Removes orphaned frame thumbnails and score cache',
+                  trailing: _clearing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap: _clearing ? null : _clearCache,
+                ),
+              ],
             ),
             const SizedBox(height: StillScoutSpacing.xl),
             Text(
@@ -396,6 +387,48 @@ class _StoreStatusCard extends StatelessWidget {
   }
 }
 
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: StillScoutSpacing.s),
+      child: Text(
+        label.toUpperCase(),
+        style: StillScoutTextStyles.caption.copyWith(
+          color: StillScoutColors.silver,
+          letterSpacing: 1.1,
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: StillScoutDecorations.surfaceCard(
+        borderColor: StillScoutColors.silver.withValues(alpha: 0.14),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: StillScoutSpacing.m,
+        vertical: StillScoutSpacing.xs,
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
 class _SettingsTile extends StatelessWidget {
   const _SettingsTile({
     required this.icon,
@@ -415,9 +448,12 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
+      minVerticalPadding: 12,
       leading: Icon(icon, color: StillScoutColors.accent),
-      title: Text(title,
-          style: StillScoutTextStyles.subtitle.copyWith(fontSize: 15)),
+      title: Text(
+        title,
+        style: StillScoutTextStyles.subtitle.copyWith(fontSize: 15),
+      ),
       subtitle: subtitle == null
           ? null
           : Text(
