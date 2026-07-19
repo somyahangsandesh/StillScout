@@ -79,17 +79,14 @@ export PATH="${HOME}/.gem/ruby/2.6.0/bin:${PATH}"
 echo "==> flutter build ipa (TestFlight / App Store Connect export)"
 # Default: Supabase proxy only (release-safe). Opt-in client Gemini keys:
 #   STILLSCOUT_ALLOW_DIRECT_AI_KEYS=1 bash tool/upload_testflight.sh
-DART_DEFINES=( )
+BUILD_ARGS=( build ipa --release --export-options-plist=ios/ExportOptions-TestFlight.plist )
 if [[ "${STILLSCOUT_ALLOW_DIRECT_AI_KEYS:-}" == "1" ]]; then
   echo "    AI keys: DIRECT (ALLOW_DIRECT_AI_KEYS=true) — debug/emergency only"
-  DART_DEFINES+=( --dart-define=ALLOW_DIRECT_AI_KEYS=true )
+  BUILD_ARGS+=( --dart-define=ALLOW_DIRECT_AI_KEYS=true )
 else
   echo "    AI keys: Supabase proxy only (set STILLSCOUT_ALLOW_DIRECT_AI_KEYS=1 to override)"
 fi
-flutter build ipa \
-  --release \
-  "${DART_DEFINES[@]}" \
-  --export-options-plist=ios/ExportOptions-TestFlight.plist
+flutter "${BUILD_ARGS[@]}"
 
 IPA="$(ls -1 build/ios/ipa/*.ipa 2>/dev/null | head -1 || true)"
 if [[ -z "$IPA" ]]; then
