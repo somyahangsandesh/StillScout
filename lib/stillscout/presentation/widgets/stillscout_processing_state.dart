@@ -358,37 +358,34 @@ class _BackgroundScoutTipCarouselState
   }
 
   List<_ScoutTip> _buildTips() {
+    // Three tips max — keeps the processing screen calm instead of a long
+    // carousel competing with the progress ring.
     return [
       if (widget.isCloudScout)
         const _ScoutTip(
           icon: Icons.stay_current_portrait_rounded,
           title: 'Keep StillScout nearby',
           body:
-              'Cloud AI scouting works best while StillScout stays open. Brief app switches are OK, but don\'t force-quit.',
+              'Cloud AI works best while the app stays open. Brief switches are OK — don\'t force-quit.',
+        )
+      else
+        const _ScoutTip(
+          icon: Icons.center_focus_strong_outlined,
+          title: 'Steadier footage scores higher',
+          body:
+              'A few seconds of still or gimbal footage gives sharper candidates to choose from.',
         ),
       const _ScoutTip(
-        icon: Icons.center_focus_strong_outlined,
-        title: 'Steadier footage scores higher',
-        body:
-            'A few seconds of tripod-still or gimbal footage gives the AI scout sharper candidates to choose from.',
-      ),
-      const _ScoutTip(
         icon: Icons.auto_awesome_outlined,
-        title: 'It judges more than brightness',
+        title: 'More than brightness',
         body:
-            'Composition, expression, and sharpness all factor into every frame\'s score — not just exposure.',
-      ),
-      const _ScoutTip(
-        icon: Icons.grid_view_rounded,
-        title: 'Every frame gets a look',
-        body:
-            'We sample the whole clip, not just keyframes — great stills often hide mid-motion.',
+            'Composition, expression, and sharpness all factor into every frame\'s score.',
       ),
       const _ScoutTip(
         icon: Icons.emoji_events_outlined,
         title: 'Top picks balance variety',
         body:
-            'Your best shots are chosen for a mix of angles and moments, not just the single highest score.',
+            'Best shots mix angles and moments — not just the single highest score.',
       ),
     ];
   }

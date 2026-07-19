@@ -34,7 +34,7 @@ class StillScoutTopPicksCarousel extends StatelessWidget {
         StillScoutSpacing.m,
         StillScoutSpacing.xs,
         StillScoutSpacing.m,
-        StillScoutSpacing.l + 4,
+        StillScoutSpacing.l,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +52,7 @@ class StillScoutTopPicksCarousel extends StatelessWidget {
           ),
           const SizedBox(height: StillScoutSpacing.xs),
           Text(
-            'Our scout\'s confident calls — the best shots, ranked.',
+            'Best shots, ranked.',
             style: StillScoutTextStyles.caption,
           ),
           const SizedBox(height: StillScoutSpacing.m),
@@ -62,7 +62,7 @@ class StillScoutTopPicksCarousel extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemCount: topPicks.length,
               separatorBuilder: (_, __) =>
-                  const SizedBox(width: StillScoutSpacing.s + 6),
+                  const SizedBox(width: StillScoutSpacing.m),
               itemBuilder: (context, index) {
                 final frame = topPicks[index];
                 final rank = rankFor(frame);
@@ -75,8 +75,8 @@ class StillScoutTopPicksCarousel extends StatelessWidget {
                     isHero ? carouselHeight : carouselHeight * 0.82;
                 return TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 380 + index * 90),
-                  curve: Curves.easeOutCubic,
+                  duration: Duration(milliseconds: 300 + index * 70),
+                  curve: StillScoutMotion.entrance,
                   builder: (context, value, child) {
                     return Transform.scale(
                       scale: 0.9 + (value * 0.1),

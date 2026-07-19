@@ -315,14 +315,13 @@ class _OnboardingStep extends StatelessWidget {
 // ── Pro upsell step (page 4) ──────────────────────────────────────────────────
 
 final _kProFeatures = [
-  ('Unlimited scouts — no daily cap', Icons.all_inclusive_rounded),
-  ('Gemini scores your best frames', Icons.psychology_rounded),
+  ('Gemini judgment on every scout', Icons.psychology_rounded),
+  ('AI Auto Polish with before/after', Icons.auto_fix_high_rounded),
   (
-    '${StillScoutConstants.proKeeperLimit} keepers unlocked per scout',
+    '${StillScoutConstants.proKeeperLimit} keepers · exact timecodes',
     Icons.workspace_premium_rounded,
   ),
-  ('Auto-polish at export', Icons.auto_fix_high_rounded),
-  ('4K export at full quality', Icons.hd_rounded),
+  ('Unlimited scouts · native 4K', Icons.all_inclusive_rounded),
 ];
 
 class _ProUpsellStep extends StatelessWidget {

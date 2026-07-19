@@ -167,7 +167,7 @@ class _StillScoutSourceSheetState extends State<StillScoutSourceSheet>
                                 Color(0xFF2A2340),
                                 Color(0xFF171322),
                               ],
-                              accent: StillScoutColors.secondaryAccent,
+                              accent: StillScoutColors.scoutGold,
                               onTap: () => _pick(widget.onGallery),
                             ),
                             const SizedBox(height: StillScoutSpacing.s + 4),

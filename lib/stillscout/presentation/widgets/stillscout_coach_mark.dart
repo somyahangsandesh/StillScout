@@ -77,9 +77,9 @@ class _StillScoutCoachMarkState extends State<StillScoutCoachMark>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: StillScoutMotion.base,
     );
-    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _fade = CurvedAnimation(parent: _ctrl, curve: StillScoutMotion.entrance);
     if (widget.visible) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _show());
     }
@@ -164,70 +164,77 @@ class _CoachMarkOverlay extends StatelessWidget {
     final tipX = (targetRect.left + targetRect.right) / 2;
     final bubbleX = (tipX - 100).clamp(16.0, screen.width - 216.0);
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onDismiss,
-      child: Stack(
-        children: [
-          // Semi-transparent scrim.
-          Container(color: Colors.black.withValues(alpha: 0.45)),
-          // Clear spotlight around target.
-          Positioned.fromRect(
-            rect: targetRect.inflate(6),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: StillScoutColors.scoutGold.withValues(alpha: 0.6),
-                  width: 1.5,
-                ),
-              ),
-            ),
-          ),
-          // Tooltip bubble.
-          Positioned(
-            top: tipY,
-            left: bubbleX,
-            width: 200,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: StillScoutSpacing.m,
-                  vertical: StillScoutSpacing.s,
-                ),
+    return Semantics(
+      label: '$message. Tap anywhere to dismiss.',
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onDismiss,
+        child: Stack(
+          children: [
+            Container(color: Colors.black.withValues(alpha: 0.50)),
+            Positioned.fromRect(
+              rect: targetRect.inflate(8),
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: StillScoutColors.scoutGold,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  message,
-                  style: StillScoutTextStyles.caption.copyWith(
-                    color: StillScoutColors.voidBlack,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                  borderRadius: BorderRadius.circular(StillScoutRadius.s),
+                  border: Border.all(
+                    color: StillScoutColors.scoutGold.withValues(alpha: 0.75),
+                    width: 2,
                   ),
-                  textAlign: TextAlign.center,
+                  boxShadow: [
+                    BoxShadow(
+                      color: StillScoutColors.scoutGold.withValues(alpha: 0.28),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-          // "Tap to dismiss" hint.
-          Positioned(
-            bottom: 48,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                'Tap anywhere to dismiss',
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.silver.withValues(alpha: 0.7),
-                  fontSize: 11,
+            Positioned(
+              top: tipY,
+              left: bubbleX,
+              width: 200,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: StillScoutSpacing.m,
+                    vertical: StillScoutSpacing.s,
+                  ),
+                  decoration: BoxDecoration(
+                    color: StillScoutColors.scoutGold,
+                    borderRadius: BorderRadius.circular(StillScoutRadius.s),
+                  ),
+                  child: Text(
+                    message,
+                    style: StillScoutTextStyles.caption.copyWith(
+                      color: StillScoutColors.voidBlack,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            Positioned(
+              bottom: StillScoutSpacing.xxl,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  'Tap anywhere to dismiss',
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.silver.withValues(alpha: 0.7),
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
