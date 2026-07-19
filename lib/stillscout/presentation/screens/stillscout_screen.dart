@@ -682,21 +682,23 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
   }) async {
     final state = ref.read(stillScoutProvider);
     final faceDetector = ref.read(faceDetectorProvider);
+    final notifier = ref.read(stillScoutProvider.notifier);
 
-    if (!state.isPro) {
-      if (!StillScoutAccessPolicy.canExportThisSession(
-        isPro: false,
-        exportsUsedThisSession: state.exportsUsedThisSession,
-      )) {
-        if (!mounted) return;
-        await _showPaywall(
-          reason:
-              'You\'ve used all ${StillScoutConstants.freeExportsPerScout} saves for this scout.',
-        );
-        return;
-      }
+    // Reserve free-tier slots before I/O so concurrent taps can't overshoot.
+    if (!await notifier.tryReserveSessionExports(1)) {
+      if (!mounted) return;
+      await _showPaywall(
+        reason:
+            'You\'ve used all ${StillScoutConstants.freeExportsPerScout} saves for this scout.',
+      );
+      return;
+    }
+    if (!mounted) {
+      await notifier.releaseSessionExports(1);
+      return;
     }
 
+    final shareOrigin = _shareOriginRect(context);
     final result = action == StillScoutExportAction.saveToGallery
         ? await StillScoutExportService.saveToGallery(
             frame,
@@ -714,14 +716,14 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
             applyPolish: applyPolish,
             faceDetector: faceDetector,
             precomputedPolishPath: precomputedPolishPath,
-            shareOrigin: _shareOriginRect(context),
+            shareOrigin: shareOrigin,
           );
 
     if (result.isSuccess) {
-      if (!state.isPro) {
-        await ref.read(stillScoutProvider.notifier).consumeSessionExports(1);
-      }
       HapticFeedback.mediumImpact();
+    } else {
+      // Keep reservation on success; refund cancelled / denied / failed I/O.
+      await notifier.releaseSessionExports(1);
     }
 
     await _loadTierLabel();
@@ -750,22 +752,23 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
     }).toList();
     if (frames.isEmpty) return;
 
-    if (!state.isPro) {
-      if (!StillScoutAccessPolicy.canExportThisSession(
-        isPro: false,
-        exportsUsedThisSession: state.exportsUsedThisSession,
-        count: frames.length,
-      )) {
-        if (!mounted) return;
-        await _showPaywall(
-          reason: 'Batch export needs Pro or fewer frames selected.',
-        );
-        return;
-      }
+    final notifier = ref.read(stillScoutProvider.notifier);
+    final reserved = frames.length;
+    if (!await notifier.tryReserveSessionExports(reserved)) {
+      if (!mounted) return;
+      await _showPaywall(
+        reason: 'Batch export needs Pro or fewer frames selected.',
+      );
+      return;
+    }
+    if (!mounted) {
+      await notifier.releaseSessionExports(reserved);
+      return;
     }
 
     setState(() => _batchExportBusy = true);
     final faceDetector = ref.read(faceDetectorProvider);
+    final shareOrigin = _shareOriginRect(context);
 
     if (action == StillScoutExportAction.saveToGallery) {
       final summary = await StillScoutExportService.saveBatchToGallery(
@@ -774,13 +777,13 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         faceDetector: faceDetector,
         permissionContext: context,
       );
+      // Refund slots that never produced a successful save.
+      final unused = reserved - summary.succeeded;
+      if (unused > 0) {
+        await notifier.releaseSessionExports(unused);
+      }
       if (!mounted) return;
       if (summary.hasAnySuccess) {
-        if (!state.isPro) {
-          await ref
-              .read(stillScoutProvider.notifier)
-              .consumeSessionExports(summary.succeeded);
-        }
         HapticFeedback.mediumImpact();
       }
       setState(() {
@@ -798,18 +801,14 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         frames,
         isPro: state.isPro,
         faceDetector: faceDetector,
-        shareOrigin: _shareOriginRect(context),
+        shareOrigin: shareOrigin,
       );
-      if (!mounted) return;
       if (result.isSuccess) {
-        // Sharing counts against the free export quota the same as saving.
-        if (!state.isPro) {
-          await ref
-              .read(stillScoutProvider.notifier)
-              .consumeSessionExports(frames.length);
-        }
         HapticFeedback.mediumImpact();
+      } else {
+        await notifier.releaseSessionExports(reserved);
       }
+      if (!mounted) return;
       setState(() {
         _batchExportBusy = false;
         _selectedIds.clear();

@@ -112,9 +112,9 @@ class _StillScoutPaywallSheetState extends ConsumerState<StillScoutPaywallSheet>
       ),
       child: DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.92,
+        initialChildSize: 0.82,
         minChildSize: 0.35,
-        maxChildSize: 0.96,
+        maxChildSize: 0.94,
         shouldCloseOnMinExtent: true,
         builder: (context, scrollController) {
           return Material(
@@ -570,88 +570,57 @@ class _HeroBadge extends StatelessWidget {
 }
 
 class _FeatureBullets extends StatelessWidget {
-  static List<(IconData, String, String)> get _features => [
-    (
-      Icons.auto_awesome,
-      'Deeper AI analysis',
-      'Cloud AI picks the single best frame and explains exactly why',
-    ),
-    (
-      Icons.photo_filter_rounded,
-      'AI Auto Polish',
-      'Lighting, color, and sharpness with before/after compare',
-    ),
-    (
-      Icons.workspace_premium_rounded,
-      '${StillScoutConstants.proKeeperLimit} Top Picks per scout',
-      'See every ranked keeper — not just the first ${StillScoutConstants.freeKeeperLimit}',
-    ),
-    (
-      Icons.access_time_filled_rounded,
-      'Exact timecodes',
-      'Copy precise timestamps to re-find the moment in your editor',
-    ),
-    (
-      Icons.all_inclusive_rounded,
-      'Unlimited scouts',
-      'Scout as many videos as you need — no daily cap',
-    ),
-    (
-      Icons.photo_size_select_large_rounded,
-      'Native 4K saves',
-      'Full-resolution re-extract from your source video',
-    ),
-  ];
+  /// Four punchy lines — keeps the purchase CTA above the fold on most phones.
+  static List<(IconData, String)> get _features => [
+        (Icons.auto_awesome, 'Gemini judgment on every scout'),
+        (Icons.photo_filter_rounded, 'AI Auto Polish with before/after'),
+        (
+          Icons.workspace_premium_rounded,
+          '${StillScoutConstants.proKeeperLimit} keepers · exact timecodes',
+        ),
+        (
+          Icons.all_inclusive_rounded,
+          'Unlimited scouts · native 4K saves',
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(StillScoutSpacing.m),
+      padding: const EdgeInsets.fromLTRB(
+        StillScoutSpacing.m,
+        StillScoutSpacing.s + 2,
+        StillScoutSpacing.m,
+        StillScoutSpacing.s + 2,
+      ),
       decoration: StillScoutDecorations.surfaceCard(),
       child: Column(
-        children: _features
-            .map(
-              (f) => Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: StillScoutSpacing.s,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: StillScoutColors.accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(StillScoutRadius.s),
-                      ),
-                      child: Icon(f.$1, size: 18, color: StillScoutColors.accent),
-                    ),
-                    const SizedBox(width: StillScoutSpacing.m),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            f.$2,
-                            style: StillScoutTextStyles.bodySmall.copyWith(
-                              color: StillScoutColors.chalk,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(f.$3, style: StillScoutTextStyles.caption),
-                        ],
+        children: [
+          for (final f in _features)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              child: Row(
+                children: [
+                  Icon(f.$1, size: 18, color: StillScoutColors.accent),
+                  const SizedBox(width: StillScoutSpacing.m),
+                  Expanded(
+                    child: Text(
+                      f.$2,
+                      style: StillScoutTextStyles.bodySmall.copyWith(
+                        color: StillScoutColors.chalk,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      size: 18,
-                      color: StillScoutColors.success,
-                    ),
-                  ],
-                ),
+                  ),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: StillScoutColors.success,
+                  ),
+                ],
               ),
-            )
-            .toList(),
+            ),
+        ],
       ),
     );
   }

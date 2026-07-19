@@ -244,6 +244,8 @@ class _StillScoutSessionDetailScreenState
     final isPro = ref.read(stillScoutProvider).isPro;
     final faceDetector = ref.read(faceDetectorProvider);
 
+    // Past-scout exports are tracked on the session row (not the live notifier).
+    var reserved = false;
     if (!isPro) {
       if (!StillScoutAccessPolicy.canExportThisSession(
         isPro: false,
@@ -251,12 +253,30 @@ class _StillScoutSessionDetailScreenState
       )) {
         if (!mounted) return;
         await _showPaywall(
-          reason: 'You\'ve used all ${StillScoutConstants.freeExportsPerScout} saves for this past scout.',
+          reason:
+              'You\'ve used all ${StillScoutConstants.freeExportsPerScout} saves for this past scout.',
         );
         return;
       }
+      final next = _exportsUsedThisView + 1;
+      setState(() => _exportsUsedThisView = next);
+      final reservedSession = _session.copyWith(exportsUsed: next);
+      await ref.read(sessionRepositoryProvider).saveSession(reservedSession);
+      if (mounted) setState(() => _session = reservedSession);
+      reserved = true;
+    }
+    if (!mounted) {
+      if (reserved) {
+        final next = (_exportsUsedThisView - 1).clamp(0, 1 << 30);
+        _exportsUsedThisView = next;
+        final refunded = _session.copyWith(exportsUsed: next);
+        await ref.read(sessionRepositoryProvider).saveSession(refunded);
+        _session = refunded;
+      }
+      return;
     }
 
+    final shareOrigin = _shareOriginRect();
     final result = action == StillScoutExportAction.saveToGallery
         ? await StillScoutExportService.saveToGallery(
             frame,
@@ -274,14 +294,15 @@ class _StillScoutSessionDetailScreenState
             applyPolish: applyPolish,
             faceDetector: faceDetector,
             precomputedPolishPath: precomputedPolishPath,
-            shareOrigin: _shareOriginRect(),
+            shareOrigin: shareOrigin,
           );
 
-    if (result.isSuccess && !isPro) {
-      setState(() => _exportsUsedThisView++);
-      final updated = _session.copyWith(exportsUsed: _exportsUsedThisView);
-      await ref.read(sessionRepositoryProvider).saveSession(updated);
-      if (mounted) setState(() => _session = updated);
+    if (!result.isSuccess && reserved) {
+      final next = (_exportsUsedThisView - 1).clamp(0, 1 << 30);
+      setState(() => _exportsUsedThisView = next);
+      final refunded = _session.copyWith(exportsUsed: next);
+      await ref.read(sessionRepositoryProvider).saveSession(refunded);
+      if (mounted) setState(() => _session = refunded);
     }
 
     await _loadTierLabel();

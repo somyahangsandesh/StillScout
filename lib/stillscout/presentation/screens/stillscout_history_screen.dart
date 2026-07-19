@@ -66,7 +66,11 @@ class _StillScoutHistoryScreenState extends State<StillScoutHistoryScreen> {
                 return _ErrorHistory(onRetry: _reload);
               }
               final sessions = snap.data ?? [];
-              if (sessions.isEmpty) return const _EmptyHistory();
+              if (sessions.isEmpty) {
+                return _EmptyHistory(
+                  onStartScout: () => Navigator.of(context).pop(),
+                );
+              }
               return _SessionGrid(
                 sessions: sessions,
                 onRefresh: _reload,
@@ -102,15 +106,20 @@ class _ErrorHistory extends StatelessWidget {
 }
 
 class _EmptyHistory extends StatelessWidget {
-  const _EmptyHistory();
+  const _EmptyHistory({required this.onStartScout});
+
+  final VoidCallback onStartScout;
 
   @override
   Widget build(BuildContext context) {
-    return const StillScoutStatusView(
+    return StillScoutStatusView(
       icon: Icons.history_edu_rounded,
       iconColor: StillScoutColors.silver,
       title: 'No past scouts yet',
       body: 'Completed scouts appear here so you can revisit them anytime.',
+      primaryLabel: 'Start a scout',
+      primaryIcon: Icons.movie_filter_outlined,
+      onPrimary: onStartScout,
     );
   }
 }

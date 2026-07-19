@@ -488,34 +488,18 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
               ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         _ScoreSourceBadge(source: widget.frame.metadata.source),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _AiSummaryCard(summary: summary),
-        const SizedBox(height: 20),
-        Text('AI Breakdown', style: StillScoutTextStyles.title),
         const SizedBox(height: 12),
-        _ScoreBar(
-          label: 'Sharpness',
-          value: widget.frame.metadata.blurScore,
-          icon: Icons.blur_off_outlined,
+        _CompactScoreGrid(
+          sharpness: widget.frame.metadata.blurScore,
+          lighting: widget.frame.metadata.lightingScore,
+          openEyes: widget.frame.metadata.openEyesScore,
+          composition: widget.frame.metadata.compositionScore,
         ),
-        _ScoreBar(
-          label: 'Lighting',
-          value: widget.frame.metadata.lightingScore,
-          icon: Icons.wb_sunny_outlined,
-        ),
-        _ScoreBar(
-          label: 'Open Eyes',
-          value: widget.frame.metadata.openEyesScore,
-          icon: Icons.remove_red_eye_outlined,
-        ),
-        _ScoreBar(
-          label: 'Composition',
-          value: widget.frame.metadata.compositionScore,
-          icon: Icons.crop_free_outlined,
-        ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 10),
         Row(
           children: [
             Text(widget.tierLabel, style: StillScoutTextStyles.caption),
@@ -541,7 +525,7 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
             ],
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
@@ -720,57 +704,92 @@ class _AiSummaryCard extends StatelessWidget {
   }
 }
 
-class _ScoreBar extends StatelessWidget {
-  const _ScoreBar({
-    required this.label,
-    required this.value,
-    required this.icon,
+class _CompactScoreGrid extends StatelessWidget {
+  const _CompactScoreGrid({
+    required this.sharpness,
+    required this.lighting,
+    required this.openEyes,
+    required this.composition,
   });
 
-  final String label;
-  final int value;
-  final IconData icon;
+  final int sharpness;
+  final int lighting;
+  final int openEyes;
+  final int composition;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+    final cells = [
+      (Icons.blur_off_outlined, 'Sharp', sharpness),
+      (Icons.wb_sunny_outlined, 'Light', lighting),
+      (Icons.remove_red_eye_outlined, 'Eyes', openEyes),
+      (Icons.crop_free_outlined, 'Comp', composition),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: StillScoutDecorations.surfaceCard(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: StillScoutColors.silver),
-              const SizedBox(width: 8),
-              Text(label, style: StillScoutTextStyles.caption),
-              const Spacer(),
-              Text(
-                '$value',
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.chalk,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: value / 100,
-              minHeight: 6,
-              backgroundColor: StillScoutColors.slate,
-              color: _colorForScore(value),
+          for (var row = 0; row < 2; row++) ...[
+            if (row > 0) const SizedBox(height: 8),
+            Row(
+              children: [
+                for (var col = 0; col < 2; col++) ...[
+                  if (col > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: _ScoreCell(
+                      icon: cells[row * 2 + col].$1,
+                      label: cells[row * 2 + col].$2,
+                      value: cells[row * 2 + col].$3,
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
+}
 
-  Color _colorForScore(int score) {
-    if (score >= 80) return StillScoutColors.scoutGold;
-    if (score >= 60) return StillScoutColors.accent;
-    return StillScoutColors.silver;
+class _ScoreCell extends StatelessWidget {
+  const _ScoreCell({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = value >= 80
+        ? StillScoutColors.scoutGold
+        : value >= 60
+            ? StillScoutColors.accent
+            : StillScoutColors.silver;
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: StillScoutTextStyles.caption.copyWith(fontSize: 11),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Text(
+          '$value',
+          style: StillScoutTextStyles.caption.copyWith(
+            color: StillScoutColors.chalk,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
   }
 }

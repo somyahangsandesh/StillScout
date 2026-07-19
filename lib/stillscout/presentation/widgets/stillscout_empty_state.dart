@@ -199,12 +199,11 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
             ),
             const SizedBox(height: StillScoutSpacing.s),
             Text(
-              'Instant offline frame ranking. AI Pro adds deeper analysis and polish.',
+              'On-device ranking · ${StillScoutConstants.freeScoutsPerDay} free scouts/day · '
+              'AI Pro adds Gemini & polish',
               style: StillScoutTextStyles.body,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: StillScoutSpacing.m),
-            const _HowItWorksStrip(),
             SizedBox(
                 height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
             DragTarget<String>(
@@ -332,7 +331,7 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
                                 ),
                                 const SizedBox(height: 14),
                                 Text(
-                                  'Ranked stills · works on clips up to 10 minutes',
+                                  'Clips up to 10 minutes',
                                   style: StillScoutTextStyles.caption.copyWith(
                                     color: StillScoutColors.silver
                                         .withValues(alpha: 0.7),
@@ -349,20 +348,7 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
                 );
               },
             ),
-            SizedBox(
-                height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
-            if (!compact) ...[
-              const _DemoPreviewRow(),
-              const SizedBox(height: StillScoutSpacing.m),
-            ],
-            Text(
-              'On-device Vision ranks your sharpest frames — ${StillScoutConstants.freeScoutsPerDay} free scouts per day.',
-              style: StillScoutTextStyles.caption.copyWith(
-                color: StillScoutColors.silver.withValues(alpha: 0.8),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: StillScoutSpacing.m),
+            const SizedBox(height: StillScoutSpacing.l),
             const StillScoutLegalLinks(compact: true),
           ],
         ),
@@ -447,81 +433,6 @@ class _AmbientGlow extends StatelessWidget {
   }
 }
 
-class _HowItWorksStrip extends StatelessWidget {
-  const _HowItWorksStrip();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(
-            child:
-                _HowItWorksStep(icon: Icons.upload_rounded, label: 'Import')),
-        _HowItWorksArrow(),
-        Expanded(
-            child:
-                _HowItWorksStep(icon: Icons.auto_awesome, label: 'AI Scout')),
-        _HowItWorksArrow(),
-        Expanded(
-            child: _HowItWorksStep(
-                icon: Icons.ios_share_rounded, label: 'Export')),
-      ],
-    );
-  }
-}
-
-class _HowItWorksArrow extends StatelessWidget {
-  const _HowItWorksArrow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Icon(
-        Icons.arrow_forward_rounded,
-        size: 14,
-        color: StillScoutColors.silver.withValues(alpha: 0.45),
-      ),
-    );
-  }
-}
-
-class _HowItWorksStep extends StatelessWidget {
-  const _HowItWorksStep({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: StillScoutColors.filmGray,
-            border: Border.all(
-              color: StillScoutColors.silver.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Icon(icon, size: 18, color: StillScoutColors.accent),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: StillScoutTextStyles.caption.copyWith(
-            color: StillScoutColors.silver.withValues(alpha: 0.85),
-            fontSize: 11,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-}
-
 class _QuickImportChip extends StatelessWidget {
   const _QuickImportChip({
     required this.icon,
@@ -565,92 +476,6 @@ class _QuickImportChip extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DemoPreviewRow extends StatelessWidget {
-  const _DemoPreviewRow();
-
-  static const _mockScores = ['92', '87', '71'];
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 120,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.s),
-        itemCount: _mockScores.length,
-        separatorBuilder: (_, __) => const SizedBox(width: StillScoutSpacing.s),
-        itemBuilder: (context, i) {
-          return _MockFrameCard(score: _mockScores[i]);
-        },
-      ),
-    );
-  }
-}
-
-class _MockFrameCard extends StatelessWidget {
-  const _MockFrameCard({required this.score});
-
-  final String score;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(StillScoutRadius.m),
-      child: Container(
-        width: 80,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [StillScoutColors.filmGray, StillScoutColors.slate],
-          ),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    StillScoutColors.voidBlack.withValues(alpha: 0.7),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              left: StillScoutSpacing.s,
-              bottom: StillScoutSpacing.s,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: StillScoutSpacing.s,
-                  vertical: StillScoutSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: StillScoutColors.voidBlack.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(StillScoutRadius.s),
-                  border: Border.all(
-                    color: StillScoutColors.accent.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Text(
-                  score,
-                  style: StillScoutTextStyles.caption.copyWith(
-                    color: StillScoutColors.accent,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
