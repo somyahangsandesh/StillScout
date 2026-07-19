@@ -27,13 +27,15 @@ class StillScoutViewToggle extends StatelessWidget {
       button: true,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 280),
-        height: StillScoutSpacing.l + StillScoutSpacing.s + 4,
+        // 44pt minimum tap target height (was 36pt).
+        height: 44,
         decoration: BoxDecoration(
           color: StillScoutColors.slate,
           borderRadius: StillScoutRadius.chip,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Flexible(
               child: _Tab(
@@ -95,6 +97,7 @@ class _Tab extends StatelessWidget {
           color: selected ? StillScoutColors.accent : Colors.transparent,
           borderRadius: StillScoutRadius.chip,
         ),
+        alignment: Alignment.center,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
