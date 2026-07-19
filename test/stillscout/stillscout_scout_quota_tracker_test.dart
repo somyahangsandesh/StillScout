@@ -15,7 +15,7 @@ void main() {
     await StillScoutScoutQuotaTracker.resetForTests();
   });
 
-  test('free user starts with full weekly allowance', () async {
+  test('free user starts with full daily allowance', () async {
     expect(
       await StillScoutScoutQuotaTracker.remainingToday(isPro: false),
       StillScoutConstants.freeScoutsPerDay,
@@ -30,7 +30,7 @@ void main() {
     expect(await StillScoutScoutQuotaTracker.canStartScout(isPro: true), isTrue);
   });
 
-  test('completed scout decrements weekly allowance', () async {
+  test('completed scout decrements daily allowance', () async {
     await StillScoutScoutQuotaTracker.recordCompletedScout(isPro: false);
     expect(
       await StillScoutScoutQuotaTracker.remainingToday(isPro: false),
@@ -38,12 +38,28 @@ void main() {
     );
   });
 
-  test('cannot start when weekly allowance exhausted', () async {
+  test('cannot start when daily allowance exhausted', () async {
     for (var i = 0; i < StillScoutConstants.freeScoutsPerDay; i++) {
       await StillScoutScoutQuotaTracker.recordCompletedScout(isPro: false);
     }
     expect(await StillScoutScoutQuotaTracker.canStartScout(isPro: false), isFalse);
     expect(await StillScoutScoutQuotaTracker.remainingToday(isPro: false), 0);
+  });
+
+  test('AI Pro trial is available once then permanently consumed', () async {
+    await StillScoutAiProTrialTracker.resetForTests();
+    expect(StillScoutAiProTrialTracker.isTrialAvailable, isTrue);
+    await StillScoutAiProTrialTracker.consumeTrial();
+    expect(StillScoutAiProTrialTracker.isTrialAvailable, isFalse);
+    await StillScoutAiProTrialTracker.consumeTrial(); // idempotent
+    expect(StillScoutAiProTrialTracker.isTrialAvailable, isFalse);
+  });
+
+  test('first-scout tracker flips only after markFirstScoutDone', () async {
+    await StillScoutFirstScoutTracker.resetForTests();
+    expect(StillScoutFirstScoutTracker.isFirstScout, isTrue);
+    await StillScoutFirstScoutTracker.markFirstScoutDone();
+    expect(StillScoutFirstScoutTracker.isFirstScout, isFalse);
   });
 }
 

@@ -12,26 +12,30 @@ class StillScoutQuotaCoordinator {
   /// Callers are expected to only invoke this when the scout actually
   /// produced frames for a non-Pro user — see [StillScoutNotifier.processVideo].
   ///
-  /// - Skips [StillScoutScoutQuotaTracker.recordCompletedScout] when the
-  ///   trial was active but Gemini never reached — the user didn't get the
-  ///   trial experience, so they shouldn't lose a free scout credit.
+  /// A scout is **credit-worthy** unless the user was on the one-time AI trial
+  /// and Gemini never reached — they didn't get the trial experience, so they
+  /// keep their free scout credit, trial token, and first-scout keeper bonus.
+  ///
+  /// - Skips [StillScoutScoutQuotaTracker.recordCompletedScout] when not
+  ///   credit-worthy.
   /// - Consumes the AI Pro trial only when it was active AND Gemini actually
   ///   scored frames.
-  /// - Marks the first-scout tracker done whenever this was the first scout,
-  ///   independent of trial/Gemini state.
+  /// - Marks the first-scout tracker done only for credit-worthy free scouts
+  ///   (same fairness rule as the daily quota).
   Future<void> recordScoutCompletion({
     required bool isPro,
     required bool trialActive,
     required bool geminiReached,
     required bool isFirstScout,
   }) async {
-    if (!(trialActive && !geminiReached)) {
+    final creditWorthy = !(trialActive && !geminiReached);
+    if (creditWorthy) {
       await StillScoutScoutQuotaTracker.recordCompletedScout(isPro: isPro);
     }
     if (trialActive && geminiReached) {
       await StillScoutAiProTrialTracker.consumeTrial();
     }
-    if (isFirstScout) {
+    if (!isPro && isFirstScout && creditWorthy) {
       await StillScoutFirstScoutTracker.markFirstScoutDone();
     }
   }

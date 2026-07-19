@@ -42,7 +42,7 @@
   <p>When you use AI Pro while online, selected still frames (downsized JPEGs) may be sent to our scoring proxy (Supabase Edge Functions), which forwards them to Google Gemini Flash to return quality scores and a short explanation. Free on-device scouting uses Apple Vision and local heuristics entirely on your device and does not upload frames for AI scoring. Providers process images according to their policies and our server configuration.</p>
   <p>Purchases are processed by Apple and RevenueCat under their privacy policies.</p>
   <h2>4. On-device processing</h2>
-  <p>Face and eye quality checks may run on-device with Apple Vision. That analysis stays on your device unless a frame is also sent for cloud scoring as described above.</p>
+  <p>Face and eye quality checks run on-device using Apple Vision framework. That analysis stays entirely on your device and is never uploaded.</p>
   <h2>5. Data retention</h2>
   <p>Scout history and frame caches live on your device until you clear app data, uninstall, or the app evicts old sessions under its storage limits. Server-side quota counters tied to the random device id are retained only as needed to enforce limits.</p>
   <h2>6. Your choices</h2>

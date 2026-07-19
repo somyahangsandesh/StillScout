@@ -18,6 +18,90 @@ void main() {
       );
     });
 
+    test('first-scout bonus unlocks 8 keepers for free users', () {
+      expect(
+        StillScoutAccessPolicy.keeperLimit(isPro: false, isFirstScout: true),
+        StillScoutConstants.freeKeeperLimit +
+            StillScoutConstants.firstScoutBonusKeepers,
+      );
+      expect(
+        StillScoutAccessPolicy.canViewFrame(
+          rank: 7,
+          isPro: false,
+          isFirstScout: true,
+        ),
+        isTrue,
+      );
+      expect(
+        StillScoutAccessPolicy.canViewFrame(
+          rank: 8,
+          isPro: false,
+          isFirstScout: true,
+        ),
+        isFalse,
+      );
+      expect(
+        StillScoutAccessPolicy.browsableRanks(
+          totalFrames: 20,
+          isPro: false,
+          isFirstScout: true,
+        ).length,
+        8,
+      );
+      // First-scout bonus never exceeds Pro visibility.
+      expect(
+        StillScoutAccessPolicy.keeperLimit(isPro: false, isFirstScout: true),
+        lessThanOrEqualTo(StillScoutConstants.proKeeperLimit),
+      );
+    });
+
+    test('AI polish is Pro-only — free AI trial does not unlock it', () {
+      expect(
+        StillScoutAccessPolicy.canUseAiPolish(isPro: true),
+        isTrue,
+      );
+      expect(
+        StillScoutAccessPolicy.canUseAiPolish(isPro: false),
+        isFalse,
+      );
+      expect(
+        StillScoutAccessPolicy.canUseAiPolish(
+          isPro: false,
+          isAiProTrial: true,
+        ),
+        isFalse,
+        reason: 'trial is scoring-only; polish stays behind paid Pro',
+      );
+    });
+
+    test('cloud AI gate is Pro-only (trial is granted separately)', () {
+      expect(StillScoutAccessPolicy.canUseCloudAi(isPro: true), isTrue);
+      expect(StillScoutAccessPolicy.canUseCloudAi(isPro: false), isFalse);
+    });
+
+    test('export rank gate follows keeper visibility including first scout', () {
+      expect(
+        StillScoutAccessPolicy.canExportFrame(
+          rank: 7,
+          isPro: false,
+          isFirstScout: true,
+        ),
+        isTrue,
+      );
+      expect(
+        StillScoutAccessPolicy.canExportFrame(rank: 7, isPro: false),
+        isFalse,
+      );
+      // Per-scout save cap is independent of keeper visibility.
+      expect(
+        StillScoutAccessPolicy.canExportThisSession(
+          isPro: false,
+          exportsUsedThisSession: StillScoutConstants.freeExportsPerScout,
+        ),
+        isFalse,
+      );
+    });
+
     test('free users cannot view frames beyond rank 4 (limit is now 5)', () {
       expect(StillScoutAccessPolicy.canViewFrame(rank: 0, isPro: false), isTrue);
       expect(StillScoutAccessPolicy.canViewFrame(rank: 4, isPro: false), isTrue);

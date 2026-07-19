@@ -17,6 +17,10 @@ void main() {
         StillScoutLegalCopy.termsOfUseBody.toLowerCase(),
         contains('subscription'),
       );
+      expect(
+        StillScoutLegalCopy.termsOfUseBody.toLowerCase(),
+        contains('restore purchases'),
+      );
     });
 
     test('legal URLs are https GitHub Pages defaults', () {
@@ -38,12 +42,27 @@ void main() {
       );
     });
 
+    test('HOSTED_URLS.txt matches StillScoutConfig defaults', () {
+      final hosted = File('docs/legal/HOSTED_URLS.txt').readAsStringSync();
+      expect(hosted, contains(StillScoutConfig.privacyPolicyUrl));
+      expect(hosted, contains(StillScoutConfig.termsOfUseUrl));
+      expect(hosted, contains(StillScoutConfig.supportUrl));
+    });
+
     test('direct AI keys are gated off in release by default', () {
       expect(StillScoutConfig.allowDirectAiKeysInRelease, isFalse);
     });
 
     test('privacy copy is Gemini-only (no legacy vision vendors)', () {
-      const staleVendors = ['Groq', 'Grok', 'OpenRouter', 'groq', 'grok'];
+      const staleVendors = [
+        'Groq',
+        'Grok',
+        'OpenRouter',
+        'OpenAI',
+        'GPT-4',
+        'groq',
+        'grok',
+      ];
       const privacy = StillScoutLegalCopy.privacyPolicyBody;
       for (final vendor in staleVendors) {
         expect(
@@ -56,9 +75,9 @@ void main() {
       expect(privacy.toLowerCase(), contains('supabase'));
     });
 
-    test('hosted privacy.html matches Gemini-only policy', () {
+    test('hosted privacy.html matches in-app Gemini-only policy', () {
       final html = File('docs/legal/privacy.html').readAsStringSync();
-      const staleVendors = ['Groq', 'Grok', 'OpenRouter'];
+      const staleVendors = ['Groq', 'Grok', 'OpenRouter', 'OpenAI', 'GPT-4'];
       for (final vendor in staleVendors) {
         expect(
           html.contains(vendor),
@@ -68,6 +87,28 @@ void main() {
       }
       expect(html.toLowerCase(), contains('gemini'));
       expect(html.toLowerCase(), contains('supabase'));
+      expect(
+        html,
+        contains(
+          'That analysis stays entirely on your device and is never uploaded.',
+        ),
+        reason: 'hosted privacy §4 must match StillScoutLegalCopy',
+      );
+      expect(html, contains(StillScoutLegalCopy.lastUpdated));
+    });
+
+    test('legacy Groq/Grok/OpenAI provider files are gone', () {
+      final dir = Directory('lib/stillscout/services/vision/providers');
+      final names = dir
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.uri.pathSegments.last)
+          .toList()
+        ..sort();
+      expect(names, [
+        'gemini_vision_client.dart',
+        'supabase_vision_client.dart',
+      ]);
     });
   });
 }

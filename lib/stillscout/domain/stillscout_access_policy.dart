@@ -134,11 +134,14 @@ class StillScoutAccessPolicy {
   }) =>
       isPro || isAiProTrialAvailable;
 
-  /// AI Auto Polish — AI Pro only (not available on the free trial).
+  /// AI Auto Polish — paid AI Pro only (not available on the free AI trial).
   /// Polish runs automatically on all top picks after each Pro scout, and is
   /// available as a per-frame toggle in the detail sheet.
-  static bool canUseAiPolish({required bool isPro, bool isAiProTrial = false}) =>
-      isPro;
+  static bool canUseAiPolish({required bool isPro, bool isAiProTrial = false}) {
+    // Trial unlocks Gemini scoring only — polish stays behind paid Pro.
+    if (isAiProTrial && !isPro) return false;
+    return isPro;
+  }
 
   static String scoutsAllowanceLabel({
     required bool isPro,

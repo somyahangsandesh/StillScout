@@ -56,13 +56,15 @@ flutter run \
 | | Free | AI Pro |
 |---|------|--------|
 | Scouts | **2 / day** (UTC) | Unlimited |
-| Visible keepers | Top **5** ranks (**8** on first scout) | **20** ranks |
+| Cloud AI | **1×** complimentary Gemini scout (needs internet; not consumed if Gemini never reaches) | Unlimited Gemini via Supabase |
+| Visible keepers | Top **5** ranks (**8** on first successful free scout) | **20** ranks |
+| AI Auto Polish | Locked | Unlocked |
 | Polished exports / scout | **3** | Unlimited |
 | Timestamps | Hidden (rank labels) | Exact timecodes |
 | Timeline view | Locked | Unlocked |
 | Export quality | Thumbnail res | Native **4K** re-extract |
 
-No watermarks on exports.
+No watermarks on exports. Free AI trial unlocks Gemini scoring only — polish stays Pro.
 
 RevenueCat entitlement: `pro` · Products: `stillscout_pro_monthly`, `stillscout_pro_yearly`
 

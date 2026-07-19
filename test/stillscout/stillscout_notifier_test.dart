@@ -305,7 +305,7 @@ void main() {
       expect(state.frames, isEmpty);
     });
 
-    test('processVideo fails when weekly scout quota exhausted', () async {
+    test('processVideo fails when daily scout quota exhausted', () async {
       for (var i = 0; i < StillScoutConstants.freeScoutsPerDay; i++) {
         await StillScoutScoutQuotaTracker.recordCompletedScout(isPro: false);
       }
@@ -368,11 +368,13 @@ void main() {
 
     test(
       'trial scout that never reaches Gemini does not consume a free scout '
-      'credit, and the trial remains available for a retry',
+      'credit, trial token, or first-scout bonus',
       () async {
         // Make the AI trial available (group setUp consumes it by default).
         await StillScoutAiProTrialTracker.resetForTests();
+        await StillScoutFirstScoutTracker.resetForTests();
         addTearDown(StillScoutAiProTrialTracker.consumeTrial);
+        addTearDown(StillScoutFirstScoutTracker.markFirstScoutDone);
 
         final container = _makeContainer();
         addTearDown(container.dispose);
@@ -401,6 +403,11 @@ void main() {
           isTrue,
           reason: 'the trial was never actually experienced, so it should '
               'still be available',
+        );
+        expect(
+          StillScoutFirstScoutTracker.isFirstScout,
+          isTrue,
+          reason: 'failed trial must preserve the first-scout keeper bonus',
         );
       },
     );

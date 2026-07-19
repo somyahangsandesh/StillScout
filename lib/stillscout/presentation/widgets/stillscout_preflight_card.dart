@@ -119,7 +119,7 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
             if (trialAvailable) ...[
               const SizedBox(height: StillScoutSpacing.s),
               Text(
-                'Your first scout uses Gemini (one-time free trial) · internet required',
+                'One-time free Gemini AI trial · internet required',
                 style: StillScoutTextStyles.caption.copyWith(
                   color: StillScoutColors.scoutGold,
                   fontWeight: FontWeight.w600,
