@@ -23,6 +23,7 @@ import '../../services/stillscout_scout_background.dart';
 import '../../services/stillscout_scout_quota_tracker.dart';
 import '../../services/stillscout_subscription_manager.dart';
 import '../../services/stillscout_top_picks_selector.dart';
+import '../../services/stillscout_vision_client.dart';
 import 'stillscout_connectivity_provider.dart';
 import 'stillscout_quota_coordinator.dart';
 import 'stillscout_repository_providers.dart';
@@ -752,6 +753,9 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
   }) async {
     if (!useCloudAi) return CloudScoringOutcome.notApplicable;
     if (geminiReached) return CloudScoringOutcome.full;
+    if (StillScoutVisionClient.lastBatchQuotaExceeded) {
+      return CloudScoringOutcome.quotaExceeded;
+    }
     final hasQuota = await StillScoutCloudQuotaTracker.hasRemaining();
     return hasQuota
         ? CloudScoringOutcome.degraded

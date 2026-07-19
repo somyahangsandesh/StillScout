@@ -202,6 +202,57 @@ Here is the batch result:
 
       expect(result, isA<VisionBatchFailure>());
     });
+
+    test('sets lastBatchQuotaExceeded on Supabase rate limit', () async {
+      final supabase = _MockVisionClient(
+        name: 'Supabase',
+        configured: true,
+        batchResult: const VisionBatchRateLimit(),
+      );
+
+      final orchestrator = VisionCascadeOrchestrator.withProviders(
+        supabaseClient: supabase,
+        geminiClient: _MockVisionClient(name: 'Gemini', configured: false),
+      );
+
+      final result = await orchestrator.batchScoreFrames(
+        base64Jpegs: ['jpeg1'],
+        pickCount: 1,
+      );
+
+      expect(result, isA<VisionBatchFailure>());
+      expect(orchestrator.lastBatchQuotaExceeded, isTrue);
+    });
+
+    test('clears lastBatchQuotaExceeded on successful batch', () async {
+      final orchestrator = VisionCascadeOrchestrator.withProviders(
+        supabaseClient: _MockVisionClient(
+          name: 'Supabase',
+          configured: true,
+          batchResult: const VisionBatchSuccess(
+            scores: {
+              0: VisionBatchFrameScore(
+                index: 0,
+                blurScore: 80,
+                lightingScore: 70,
+                openEyesScore: 90,
+                compositionScore: 75,
+              ),
+            },
+            picks: [0],
+          ),
+        ),
+        geminiClient: _MockVisionClient(name: 'Gemini', configured: false),
+      );
+
+      orchestrator.lastBatchQuotaExceeded = true;
+      await orchestrator.batchScoreFrames(
+        base64Jpegs: ['jpeg1'],
+        pickCount: 1,
+      );
+
+      expect(orchestrator.lastBatchQuotaExceeded, isFalse);
+    });
   });
 }
 

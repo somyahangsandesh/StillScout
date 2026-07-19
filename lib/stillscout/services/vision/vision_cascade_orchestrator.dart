@@ -27,6 +27,10 @@ class VisionCascadeOrchestrator {
   final VisionScoringClient _geminiClient;
   final Map<String, _ProviderState> _states = {};
 
+  /// Set when the most recent [batchScoreFrames] failed because a daily cloud
+  /// quota was exhausted (Supabase 429 or local direct-Gemini cap).
+  bool lastBatchQuotaExceeded = false;
+
   static const Duration _rateLimitCooldown = Duration(minutes: 5);
 
   _ProviderState _stateFor(VisionScoringClient p) =>
@@ -39,6 +43,8 @@ class VisionCascadeOrchestrator {
     required int pickCount,
     StillScoutVideoContext videoContext = StillScoutVideoContext.auto,
   }) async {
+    lastBatchQuotaExceeded = false;
+
     // ── Supabase batch (production) ───────────────────────────────────────
     if (_supabaseClient.isConfigured) {
       final state = _stateFor(_supabaseClient);
@@ -58,6 +64,7 @@ class VisionCascadeOrchestrator {
             StillScoutDiagnosticsLog.log('Gemini', 'Supabase batch succeeded.');
             return result;
           case VisionBatchRateLimit():
+            lastBatchQuotaExceeded = true;
             // Short cooldown — a 24h lockout bricks a demo device after one 429.
             state.markRateLimited(const Duration(minutes: 5));
             StillScoutDiagnosticsLog.log('Gemini', 'Supabase batch quota reached.');
@@ -81,6 +88,7 @@ class VisionCascadeOrchestrator {
 
     final remaining = await StillScoutCloudQuotaTracker.remainingToday();
     if (remaining < pickCount) {
+      lastBatchQuotaExceeded = true;
       StillScoutDiagnosticsLog.log(
         'Gemini',
         'Device quota insufficient ($remaining < $pickCount).',
@@ -114,6 +122,7 @@ class VisionCascadeOrchestrator {
         StillScoutDiagnosticsLog.log('Gemini', 'Direct batch succeeded.');
         return result;
       case VisionBatchRateLimit():
+        lastBatchQuotaExceeded = true;
         geminiState.markRateLimited(_rateLimitCooldown);
         return result;
       case VisionBatchAuthError():
@@ -249,6 +258,7 @@ class VisionCascadeOrchestrator {
   }
 
   void resetForTests() {
+    lastBatchQuotaExceeded = false;
     _states.clear();
     _supabaseClient.resetForTests();
     _geminiClient.resetForTests();

@@ -51,6 +51,10 @@ class StillScoutVisionClient {
 
   static String get providerStatusSummary => _orchestrator.statusSummary;
 
+  /// True when the last [batchScoreFrames] failed due to daily cloud quota.
+  static bool get lastBatchQuotaExceeded =>
+      _orchestrator.lastBatchQuotaExceeded;
+
   @visibleForTesting
   static void resetSessionDisabledForTests() => _orchestrator.resetForTests();
 

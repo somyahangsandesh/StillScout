@@ -3,6 +3,9 @@
 
 export const MAX_BATCH_IMAGES = 48;
 
+/// Max decoded JPEG bytes per image in a batch (~512 KB raw ≈ ~700 KB base64).
+export const MAX_IMAGE_BASE64_CHARS = 700_000;
+
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -47,4 +50,38 @@ export function noteIpRequest(ip: string): void {
       `[vision-score] high request rate from ${ip}: ${entry.count}/min`,
     );
   }
+}
+
+/** Validates batch image strings — count, type, and per-image size cap. */
+export function validateBatchImages(
+  images: unknown,
+): { ok: true; images: string[] } | { ok: false; error: string } {
+  if (!Array.isArray(images)) {
+    return { ok: false, error: "missing_images" };
+  }
+  const strings = images.filter((i) => typeof i === "string") as string[];
+  if (strings.length === 0) {
+    return { ok: false, error: "missing_images" };
+  }
+  if (strings.length > MAX_BATCH_IMAGES) {
+    return { ok: false, error: "too_many_images" };
+  }
+  for (let i = 0; i < strings.length; i++) {
+    if (strings[i].length > MAX_IMAGE_BASE64_CHARS) {
+      return { ok: false, error: "image_too_large" };
+    }
+  }
+  return { ok: true, images: strings };
+}
+
+/** Clamps pick_count to a sane range and never above frame count. */
+export function resolvePickCount(
+  raw: unknown,
+  imageCount: number,
+): number {
+  const requested = typeof raw === "number"
+    ? Math.round(raw)
+    : 10;
+  const clamped = Math.max(1, Math.min(48, requested));
+  return Math.min(clamped, imageCount);
 }

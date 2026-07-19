@@ -3,8 +3,11 @@ import {
   clientIp,
   isUuidish,
   MAX_BATCH_IMAGES,
+  MAX_IMAGE_BASE64_CHARS,
   noteIpRequest,
   resolveDeviceKey,
+  resolvePickCount,
+  validateBatchImages,
 } from "./lib.ts";
 
 Deno.test("isUuidish accepts standard UUID v4", () => {
@@ -45,4 +48,21 @@ Deno.test("MAX_BATCH_IMAGES is 48", () => {
 Deno.test("noteIpRequest is safe to call repeatedly", () => {
   noteIpRequest("127.0.0.1");
   noteIpRequest("127.0.0.1");
+});
+
+Deno.test("validateBatchImages rejects empty and oversized payloads", () => {
+  assertEquals(validateBatchImages([]), { ok: false, error: "missing_images" });
+  assertEquals(
+    validateBatchImages(["a".repeat(MAX_IMAGE_BASE64_CHARS + 1)]),
+    { ok: false, error: "image_too_large" },
+  );
+  const ok = validateBatchImages(["abc", "def"]);
+  assertEquals(ok.ok, true);
+  if (ok.ok) assertEquals(ok.images, ["abc", "def"]);
+});
+
+Deno.test("resolvePickCount clamps to image count", () => {
+  assertEquals(resolvePickCount(99, 3), 3);
+  assertEquals(resolvePickCount(0, 5), 1);
+  assertEquals(resolvePickCount(undefined, 10), 10);
 });

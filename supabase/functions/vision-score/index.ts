@@ -15,8 +15,11 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   clientIp,
   MAX_BATCH_IMAGES,
+  MAX_IMAGE_BASE64_CHARS,
   noteIpRequest,
   resolveDeviceKey,
+  resolvePickCount,
+  validateBatchImages,
 } from "./lib.ts";
 
 const DAILY_CAP = 200;
@@ -334,21 +337,20 @@ Deno.serve(async (req) => {
 
   // ── Batch path (AI Pro) ───────────────────────────────────────────────────
   if (Array.isArray(body.images)) {
-    const images = body.images.filter((i) => typeof i === "string") as string[];
-    const pickCount = typeof body.pick_count === "number"
-      ? Math.max(1, Math.min(48, Math.round(body.pick_count)))
-      : 10;
-
-    if (images.length === 0) {
-      return jsonResponse({ error: "missing_images" }, 400);
+    const validated = validateBatchImages(body.images);
+    if (!validated.ok) {
+      const payload: Record<string, unknown> = { error: validated.error };
+      if (validated.error === "too_many_images") {
+        payload.max = MAX_BATCH_IMAGES;
+      }
+      if (validated.error === "image_too_large") {
+        payload.max_base64_chars = MAX_IMAGE_BASE64_CHARS;
+      }
+      return jsonResponse(payload, 400);
     }
 
-    if (images.length > MAX_BATCH_IMAGES) {
-      return jsonResponse(
-        { error: "too_many_images", max: MAX_BATCH_IMAGES },
-        400,
-      );
-    }
+    const images = validated.images;
+    const pickCount = resolvePickCount(body.pick_count, images.length);
 
     if (!GEMINI_KEY) {
       return jsonResponse({ error: "gemini_not_configured" }, 503);
@@ -383,6 +385,12 @@ Deno.serve(async (req) => {
   const image = body.image;
   if (!image || typeof image !== "string") {
     return jsonResponse({ error: "missing_image" }, 400);
+  }
+  if (image.length > MAX_IMAGE_BASE64_CHARS) {
+    return jsonResponse(
+      { error: "image_too_large", max_base64_chars: MAX_IMAGE_BASE64_CHARS },
+      400,
+    );
   }
 
   const score = await tryGeminiSingle(image, context);

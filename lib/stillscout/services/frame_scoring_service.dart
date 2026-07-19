@@ -509,13 +509,17 @@ class FrameScoringService {
     visionDetector?.clearCache();
 
     const maxConcurrent = 2;
-    final queue = List<ExtractedFrame>.from(frames);
+    var nextIndex = 0;
 
     Future<void> worker() async {
-      while (queue.isNotEmpty) {
+      while (true) {
         cancelToken?.throwIfCancelled();
-        final frame = queue.removeAt(0);
-        analyses[frame.filePath] = await _faceDetector.analyzeFrame(frame.filePath);
+        final index = nextIndex;
+        if (index >= frames.length) return;
+        nextIndex = index + 1;
+        final frame = frames[index];
+        analyses[frame.filePath] =
+            await _faceDetector.analyzeFrame(frame.filePath);
       }
     }
 
