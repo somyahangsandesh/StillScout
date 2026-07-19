@@ -287,13 +287,24 @@ void main() {
         ),
       );
 
-      final lockedJson = StillScoutAccessPolicy.toPersistedJson(frame: frame);
+      final lockedJson = StillScoutAccessPolicy.toPersistedJson(
+        frame: frame,
+        rank: 5,
+        isPro: false,
+      );
       expect(lockedJson['timestampMs'], 12500);
       expect(lockedJson['sourceVideoPath'], '/videos/clip.mp4');
+      expect(lockedJson['persistedLocked'], isTrue);
 
-      final unlockedJson = StillScoutAccessPolicy.toPersistedJson(frame: frame);
+      final unlockedJson = StillScoutAccessPolicy.toPersistedJson(
+        frame: frame,
+        rank: 5,
+        isPro: false,
+        isFirstScout: true,
+      );
       expect(unlockedJson['timestampMs'], 12500);
       expect(unlockedJson['sourceVideoPath'], '/videos/clip.mp4');
+      expect(unlockedJson['persistedLocked'], isFalse);
 
       // rank 5 is still locked (freeKeeperLimit = 5, so ranks 0-4 are unlocked).
       final lockedView = StillScoutAccessPolicy.fromPersistedJson(

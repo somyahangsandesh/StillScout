@@ -21,18 +21,35 @@ class StillScoutSessionWriter {
     required int? videoDurationMs,
     required int exportsUsedThisSession,
     bool usedFirstScoutBonus = false,
+    bool isPro = false,
+    bool isFirstScout = false,
   }) async {
     if (scored.isEmpty) return;
     final capped = StillScoutGalleryCap.cap(scored);
     final best = capped.first;
     try {
+      final existing = await _sessionRepo.getSession(sessionId);
+      final effectiveFirstScout = isPro
+          ? false
+          : (isFirstScout ||
+              usedFirstScoutBonus ||
+              (existing?.usedFirstScoutBonus ?? false));
       final topSnapshots = capped
-          .map((frame) => StillScoutAccessPolicy.toPersistedJson(frame: frame))
+          .asMap()
+          .entries
+          .map(
+            (entry) => StillScoutAccessPolicy.toPersistedJson(
+              frame: entry.value,
+              rank: entry.key,
+              isPro: isPro,
+              isFirstScout: effectiveFirstScout,
+            ),
+          )
           .toList(growable: false);
       final session = StillScoutSession(
         id: sessionId,
         videoPath: videoPath,
-        createdAt: DateTime.now(),
+        createdAt: existing?.createdAt ?? DateTime.now(),
         frameCount: capped.length,
         topScore: best.score,
         topFrameThumbPath: best.frame.filePath,
@@ -42,7 +59,7 @@ class StillScoutSessionWriter {
         exportsUsed: exportsUsedThisSession,
         topPickFrameIds:
             topPicks.map((f) => f.frame.id).toList(growable: false),
-        usedFirstScoutBonus: usedFirstScoutBonus,
+        usedFirstScoutBonus: effectiveFirstScout,
       );
       await _sessionRepo.saveSession(session);
       await _sessionRepo.evictOldSessions();

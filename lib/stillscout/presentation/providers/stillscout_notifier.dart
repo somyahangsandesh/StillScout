@@ -689,6 +689,8 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
         exportsUsedThisSession: state.exportsUsedThisSession,
         // Persist before quota coordinator clears the live first-scout flag.
         usedFirstScoutBonus: state.isFirstScout,
+        isPro: state.isPro,
+        isFirstScout: state.isFirstScout,
       );
 
       if (!state.isPro && scored.isNotEmpty) {
@@ -852,6 +854,8 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
           videoDurationMs: state.videoDurationMs,
           exportsUsedThisSession: state.exportsUsedThisSession,
           usedFirstScoutBonus: state.isFirstScout,
+          isPro: state.isPro,
+          isFirstScout: state.isFirstScout,
         );
       }
 

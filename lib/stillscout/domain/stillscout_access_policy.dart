@@ -184,9 +184,22 @@ class StillScoutAccessPolicy {
     ];
   }
 
-  /// Hive snapshot — always stores full frame data; UI gates locked fields.
-  static Map<String, dynamic> toPersistedJson({required ScoredFrame frame}) =>
-      frame.toJson();
+  /// Hive snapshot — stores full frame data plus [persistedLocked] so History
+  /// can tell which ranks were unlocked when the scout was saved.
+  static Map<String, dynamic> toPersistedJson({
+    required ScoredFrame frame,
+    required int rank,
+    required bool isPro,
+    bool isFirstScout = false,
+  }) =>
+      {
+        ...frame.toJson(),
+        'persistedLocked': isLocked(
+          rank: rank,
+          isPro: isPro,
+          isFirstScout: isFirstScout,
+        ),
+      };
 
   static bool isPersistedLocked(Map<String, dynamic> json) =>
       json['persistedLocked'] == true;

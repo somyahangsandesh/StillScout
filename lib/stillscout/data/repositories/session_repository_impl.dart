@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../../domain/stillscout_constants.dart';
 import '../../services/stillscout_cache_janitor.dart';
+import '../../services/stillscout_session_bonus_migration.dart';
 import '../models/stillscout_session.dart';
 
 /// Hive-backed session store. Uses a plain dynamic box (no codegen) keyed
@@ -13,19 +14,7 @@ class SessionRepositoryImpl implements SessionRepository {
 
   @override
   Future<List<StillScoutSession>> getSessions() async {
-    final sessions = <StillScoutSession>[];
-    for (final key in _box.keys) {
-      try {
-        final raw = _box.get(key);
-        if (raw is Map) {
-          sessions.add(StillScoutSession.fromJson(raw));
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[SessionRepo] Failed to parse session $key: $e');
-        }
-      }
-    }
+    final sessions = await _loadSessions(migrate: true);
     sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sessions;
   }
@@ -37,15 +26,60 @@ class SessionRepositoryImpl implements SessionRepository {
 
   @override
   Future<StillScoutSession?> getSession(String id) async {
-    try {
-      final raw = _box.get(id);
-      if (raw is Map) return StillScoutSession.fromJson(raw);
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[SessionRepo] Failed to parse session $id: $e');
-      }
+    final sessions = await _loadSessions(migrate: true);
+    for (final session in sessions) {
+      if (session.id == id) return session;
     }
     return null;
+  }
+
+  Future<List<StillScoutSession>> _loadSessions({required bool migrate}) async {
+    final parsed = <StillScoutSession>[];
+    for (final key in _box.keys) {
+      try {
+        final raw = _box.get(key);
+        if (raw is Map) {
+          parsed.add(StillScoutSession.fromJson(raw));
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[SessionRepo] Failed to parse session $key: $e');
+        }
+      }
+    }
+
+    if (!migrate) return parsed;
+
+    final migrated = parsed
+        .map(
+          (session) => _migrateSessionIfNeeded(
+            session: session,
+            allSessions: parsed,
+          ),
+        )
+        .toList(growable: false);
+
+    for (var i = 0; i < migrated.length; i++) {
+      final before = parsed[i];
+      final after = migrated[i];
+      if (after.usedFirstScoutBonus != before.usedFirstScoutBonus) {
+        await _box.put(after.id, after.toJson());
+      }
+    }
+
+    return migrated;
+  }
+
+  StillScoutSession _migrateSessionIfNeeded({
+    required StillScoutSession session,
+    required List<StillScoutSession> allSessions,
+  }) {
+    final resolved = StillScoutSessionBonusMigration.resolveUsedFirstScoutBonus(
+      session: session,
+      allSessions: allSessions,
+    );
+    if (resolved == session.usedFirstScoutBonus) return session;
+    return session.copyWith(usedFirstScoutBonus: resolved);
   }
 
   @override

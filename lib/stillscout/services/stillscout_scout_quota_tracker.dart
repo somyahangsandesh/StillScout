@@ -241,6 +241,9 @@ class StillScoutFirstScoutTracker {
   /// Returns true (show bonus) if [load] has not been called yet — safe default.
   static bool get isFirstScout => _done != true;
 
+  /// True once [load] has run and the user has completed at least one scout.
+  static bool get isFirstScoutDone => _done == true;
+
   /// Call after a free scout completes successfully.
   static Future<void> markFirstScoutDone() async {
     if (_done == true) return;
@@ -255,4 +258,10 @@ class StillScoutFirstScoutTracker {
     _done = false;
     await _keychain.write(key: _keychainKey, value: 'false');
   }
+
+  @visibleForTesting
+  static void markDoneInMemoryForTests() => _done = true;
+
+  @visibleForTesting
+  static void resetInMemoryForTests() => _done = false;
 }

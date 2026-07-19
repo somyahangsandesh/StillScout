@@ -5,6 +5,7 @@ import 'package:stillscout/stillscout/data/repositories/session_repository_impl.
 import 'package:stillscout/stillscout/domain/stillscout_constants.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:stillscout/stillscout/services/stillscout_scout_quota_tracker.dart';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ void main() {
   setUp(() async {
     final box = Hive.box(StillScoutConstants.sessionCacheBoxName);
     await box.clear();
+    StillScoutFirstScoutTracker.resetInMemoryForTests();
   });
 
   tearDownAll(() async {
@@ -99,6 +101,31 @@ void main() {
     await repo.saveSession(_session('legacy'));
     final legacy = (await repo.getSessions()).firstWhere((s) => s.id == 'legacy');
     expect(legacy.usedFirstScoutBonus, isFalse);
+  });
+
+  test('legacy first-scout session migrates on load', () async {
+    StillScoutFirstScoutTracker.markDoneInMemoryForTests();
+
+    final repo = SessionRepositoryImpl();
+    final snapshots = [
+      for (var i = 0; i < 10; i++)
+        {
+          'frameId': 'f$i',
+          'filePath': '/cache/f$i.jpg',
+          'timestampMs': 1000,
+          'score': 8.0,
+        },
+    ];
+    await repo.saveSession(
+      _session('legacy-first').copyWith(
+        createdAt: DateTime(2026, 1, 1),
+        topFrameSnapshots: snapshots,
+        topPickFrameIds: const ['f6'],
+      ),
+    );
+
+    final sessions = await repo.getSessions();
+    expect(sessions.single.usedFirstScoutBonus, isTrue);
   });
 
   test('evictOldSessions keeps only maxCachedSessions', () async {
