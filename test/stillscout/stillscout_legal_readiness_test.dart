@@ -19,11 +19,23 @@ void main() {
       );
     });
 
-    test('legal URLs are https', () {
+    test('legal URLs are https GitHub Pages defaults', () {
       expect(StillScoutConfig.privacyPolicyUrl, startsWith('https://'));
       expect(StillScoutConfig.termsOfUseUrl, startsWith('https://'));
       expect(StillScoutConfig.supportUrl, startsWith('https://'));
       expect(StillScoutConfig.appleStandardEulaUrl, startsWith('https://'));
+      expect(
+        StillScoutConfig.privacyPolicyUrl,
+        'https://somyahangsandesh.github.io/StillScout/legal/privacy.html',
+      );
+      expect(
+        StillScoutConfig.termsOfUseUrl,
+        'https://somyahangsandesh.github.io/StillScout/legal/terms.html',
+      );
+      expect(
+        StillScoutConfig.supportUrl,
+        'https://somyahangsandesh.github.io/StillScout/legal/support.html',
+      );
     });
 
     test('direct AI keys are gated off in release by default', () {

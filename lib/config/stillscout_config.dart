@@ -8,7 +8,7 @@
 //   - supabaseUrl + supabaseAnonKey (Gemini Flash proxy on edge recommended)
 //   - revenueCatAppleApiKey (appl_…)
 //   - Leave Gemini EMPTY in release unless ALLOW_DIRECT_AI_KEYS=true
-//   - Host docs/legal/*.html and set PRIVACY_POLICY_URL / TERMS_OF_USE_URL
+//   - Legal URLs default to GitHub Pages (docs/legal/HOSTED_URLS.txt)
 //
 // Cloud AI path (AI Pro only): Gemini Flash via optional Supabase proxy
 // or direct Gemini key (debug). Free users stay on Vision + heuristics.
@@ -28,25 +28,24 @@ class StillScoutConfig {
   StillScoutConfig._();
 
   // ── Legal (App Store Guideline 3.1.2 + App Store Connect metadata) ────────
-  // Public HTTPS copies of docs/legal/*.html (also mirrored in Notion).
-  // Override with --dart-define if you move hosting to your own domain.
-  // ── Legal URLs ─────────────────────────────────────────────────────────────
-  // Defaults point to the app's GitHub Pages legal mirror.
-  // Override with --dart-define=PRIVACY_POLICY_URL=https://… before releasing.
-  //
-  // IMPORTANT: Catbox.moe links (old defaults) are ephemeral — do NOT use them.
-  // Host docs/legal/*.html on a permanent domain before App Store submission.
+  // Live HTTPS copies of docs/legal/*.html on GitHub Pages.
+  // Override with --dart-define when stillscout.app (or another domain) points
+  // at the same Pages site.
+  // See docs/legal/HOSTED_URLS.txt for the ASC paste list.
   static const String privacyPolicyUrl = String.fromEnvironment(
     'PRIVACY_POLICY_URL',
-    defaultValue: 'https://stillscout.app/legal/privacy',
+    defaultValue:
+        'https://somyahangsandesh.github.io/StillScout/legal/privacy.html',
   );
   static const String termsOfUseUrl = String.fromEnvironment(
     'TERMS_OF_USE_URL',
-    defaultValue: 'https://stillscout.app/legal/terms',
+    defaultValue:
+        'https://somyahangsandesh.github.io/StillScout/legal/terms.html',
   );
   static const String supportUrl = String.fromEnvironment(
     'SUPPORT_URL',
-    defaultValue: 'https://stillscout.app/legal/support',
+    defaultValue:
+        'https://somyahangsandesh.github.io/StillScout/legal/support.html',
   );
   static const String appleStandardEulaUrl =
       'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';

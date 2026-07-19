@@ -87,7 +87,7 @@ Supports single-frame `{ image }` and batch `{ images, pick_count }` for AI Pro.
 
 Before submitting to App Store Connect:
 
-1. **Host legal pages** — defaults in `stillscout_config.dart` point to `stillscout.app/legal/*`. Override with `--dart-define` if needed.
+1. **Hosted legal pages** — defaults in `stillscout_config.dart` point to GitHub Pages (`somyahangsandesh.github.io/StillScout/legal/*.html`). Paste the same URLs into ASC (see `docs/legal/HOSTED_URLS.txt`).
 2. **In-app legal links** — Privacy Policy + Terms on empty state and paywall (Guideline 3.1.2).
 3. **Release secrets** — `secrets.local.dart` must include Supabase + RevenueCat `appl_` only. No direct AI keys in release.
    ```bash

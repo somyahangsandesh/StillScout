@@ -64,7 +64,7 @@ This uploads an IPA for TestFlight processing. It does **not** submit the app fo
 Minimum usually required before the first binary can process:
 
 - [x] App created with bundle `com.stillscout.stillscout`
-- [ ] Privacy Policy URL: `https://stillscout.app/legal/privacy`
+- [ ] Privacy Policy URL: `https://somyahangsandesh.github.io/StillScout/legal/privacy.html`
 - [ ] Export compliance: already set in Info.plist (`ITSAppUsesNonExemptEncryption = false`)
 - [ ] Sign Age Rating / content rights when ASC prompts (can be draft)
 

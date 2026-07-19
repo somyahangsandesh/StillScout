@@ -1,7 +1,15 @@
-# Hosted legal page URLs (public HTTPS)
+# Hosted legal page URLs (public HTTPS — verified HTTP 200 on GitHub Pages)
 # Canonical host — must match StillScoutConfig defaults / App Store Connect.
 # Source HTML: docs/legal/*.html
-privacy=https://stillscout.app/legal/privacy
-terms=https://stillscout.app/legal/terms
-support=https://stillscout.app/legal/support
-index=https://stillscout.app/legal/
+#
+# Paste these into App Store Connect → App Information:
+#   Privacy Policy URL → privacy=
+#   Support URL        → support=
+# Include terms= in the App Store description (or use Apple Standard EULA).
+#
+# Temporary until stillscout.app DNS/CNAME points at this Pages site.
+privacy=https://somyahangsandesh.github.io/StillScout/legal/privacy.html
+terms=https://somyahangsandesh.github.io/StillScout/legal/terms.html
+support=https://somyahangsandesh.github.io/StillScout/legal/support.html
+index=https://somyahangsandesh.github.io/StillScout/
+legal_index=https://somyahangsandesh.github.io/StillScout/legal/
