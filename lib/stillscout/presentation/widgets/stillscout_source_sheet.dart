@@ -164,8 +164,8 @@ class _StillScoutSourceSheetState extends State<StillScoutSourceSheet>
                               subtitle: 'Any video up to 10 minutes',
                               badge: 'Most popular',
                               gradient: const [
-                                Color(0xFF2A2340),
-                                Color(0xFF171322),
+                                Color(0xFF2A2418),
+                                Color(0xFF16120E),
                               ],
                               accent: StillScoutColors.scoutGold,
                               onTap: () => _pick(widget.onGallery),

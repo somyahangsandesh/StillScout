@@ -13,6 +13,7 @@ import 'stillscout_buttons.dart';
 import 'stillscout_crop_picker.dart';
 import 'stillscout_glass_surface.dart';
 import 'stillscout_polish_compare.dart';
+import 'stillscout_score_breakdown.dart';
 
 typedef ExportRequestedCallback = Future<void> Function(
   ScoredFrame frame,
@@ -493,7 +494,7 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
         const SizedBox(height: 10),
         _AiSummaryCard(summary: summary),
         const SizedBox(height: 12),
-        _CompactScoreGrid(
+        StillScoutCompactScoreGrid(
           sharpness: widget.frame.metadata.blurScore,
           lighting: widget.frame.metadata.lightingScore,
           openEyes: widget.frame.metadata.openEyesScore,
@@ -704,92 +705,3 @@ class _AiSummaryCard extends StatelessWidget {
   }
 }
 
-class _CompactScoreGrid extends StatelessWidget {
-  const _CompactScoreGrid({
-    required this.sharpness,
-    required this.lighting,
-    required this.openEyes,
-    required this.composition,
-  });
-
-  final int sharpness;
-  final int lighting;
-  final int openEyes;
-  final int composition;
-
-  @override
-  Widget build(BuildContext context) {
-    final cells = [
-      (Icons.blur_off_outlined, 'Sharp', sharpness),
-      (Icons.wb_sunny_outlined, 'Light', lighting),
-      (Icons.remove_red_eye_outlined, 'Eyes', openEyes),
-      (Icons.crop_free_outlined, 'Comp', composition),
-    ];
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: StillScoutDecorations.surfaceCard(),
-      child: Column(
-        children: [
-          for (var row = 0; row < 2; row++) ...[
-            if (row > 0) const SizedBox(height: 8),
-            Row(
-              children: [
-                for (var col = 0; col < 2; col++) ...[
-                  if (col > 0) const SizedBox(width: 8),
-                  Expanded(
-                    child: _ScoreCell(
-                      icon: cells[row * 2 + col].$1,
-                      label: cells[row * 2 + col].$2,
-                      value: cells[row * 2 + col].$3,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ScoreCell extends StatelessWidget {
-  const _ScoreCell({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final int value;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = value >= 80
-        ? StillScoutColors.scoutGold
-        : value >= 60
-            ? StillScoutColors.accent
-            : StillScoutColors.silver;
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            label,
-            style: StillScoutTextStyles.caption.copyWith(fontSize: 11),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        Text(
-          '$value',
-          style: StillScoutTextStyles.caption.copyWith(
-            color: StillScoutColors.chalk,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-}

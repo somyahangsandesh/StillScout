@@ -60,8 +60,8 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
     final quotaOk =
         widget.state.isPro || (scoutsLeft != null && scoutsLeft > 0);
     final online = widget.onlineStatus == OnlineStatus.online;
-    final trialAvailable = !widget.state.isPro &&
-        StillScoutAiProTrialTracker.isTrialAvailable;
+    final trialAvailable =
+        !widget.state.isPro && StillScoutAiProTrialTracker.isTrialAvailable;
     final needsCloud = StillScoutAccessPolicy.scoutRequiresNetwork(
       isPro: widget.state.isPro,
       isAiProTrialAvailable: trialAvailable,
@@ -70,7 +70,6 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
         !widget.state.isPro &&
         scoutsLeft != null &&
         scoutsLeft <= 0;
-    // Free on-device scouts work offline; Pro + AI trial need connectivity.
     final canPressCta = !quotaLoading &&
         (!needsCloud || online) &&
         (quotaOk || quotaExhausted);
@@ -92,45 +91,43 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
               : 'Upgrade for more scouts'),
     };
 
+    // When trim is open, collapse supporting copy so the stack stays short.
+    final stacked = _showTrim && durationMs > 5000;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.m),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: StillScoutSpacing.xl),
-            const Icon(
+            SizedBox(
+              height: stacked ? StillScoutSpacing.m : StillScoutSpacing.l,
+            ),
+            Icon(
               Icons.check_circle_rounded,
               color: StillScoutColors.success,
-              size: 40,
+              size: stacked ? 28 : 36,
             ),
-            const SizedBox(height: StillScoutSpacing.m),
+            const SizedBox(height: StillScoutSpacing.s),
             Text('Video ready', style: StillScoutTextStyles.title),
-            const SizedBox(height: StillScoutSpacing.xs),
-            Text(
-              'Review the estimate and trim the clip if you like, then start scouting.',
-              style: StillScoutTextStyles.body,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: StillScoutSpacing.m),
-            // Online chip for Pro and free AI Trial — Vision-only scouts work offline.
-            if (needsCloud)
-              StillScoutOnlineRequirementChip(status: widget.onlineStatus),
-            if (trialAvailable) ...[
-              const SizedBox(height: StillScoutSpacing.s),
+            if (!stacked) ...[
+              const SizedBox(height: StillScoutSpacing.xs),
               Text(
-                'One-time free Gemini AI trial · internet required',
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.scoutGold,
-                  fontWeight: FontWeight.w600,
-                ),
+                'Trim if needed, pick a scene type, then start.',
+                style: StillScoutTextStyles.body,
                 textAlign: TextAlign.center,
               ),
+            ],
+            if (needsCloud) ...[
+              const SizedBox(height: StillScoutSpacing.s),
+              StillScoutOnlineRequirementChip(status: widget.onlineStatus),
             ],
             if (!widget.state.isPro) ...[
               const SizedBox(height: StillScoutSpacing.s),
               Text(
-                scoutLabel,
+                trialAvailable
+                    ? 'Free Gemini trial · $scoutLabel'
+                    : scoutLabel,
                 style: StillScoutTextStyles.caption.copyWith(
                   color: quotaLoading
                       ? StillScoutColors.silver
@@ -142,21 +139,13 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
                   fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                trialAvailable
-                    ? 'Later free scouts work offline with on-device Vision.'
-                    : 'Exports are clean — upgrade for unlimited scouts and 4K.',
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.silver.withValues(alpha: 0.75),
-                ),
-                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
-            const SizedBox(height: StillScoutSpacing.l),
-
-            // Pre-flight estimate
+            SizedBox(
+              height: stacked ? StillScoutSpacing.m : StillScoutSpacing.l,
+            ),
             StillScoutPreFlightEstimate(
               estimatedFrames: widget.state.estimatedFrameCount,
               durationMs: () {
@@ -165,43 +154,30 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
                 return (end - start).clamp(0, durationMs);
               }(),
             ),
-
             if (durationMs > StillScoutConstants.maxVideoDurationMs) ...[
               const SizedBox(height: StillScoutSpacing.s),
               Text(
-                'Clips longer than 10 minutes are trimmed to the first 10 minutes. Open Trim to pick a different range.',
+                'Longer than 10 min — open Trim to pick a range.',
                 style: StillScoutTextStyles.caption.copyWith(
                   color: StillScoutColors.accent,
                 ),
                 textAlign: TextAlign.center,
               ),
             ],
-
             const SizedBox(height: StillScoutSpacing.m),
-
-            Text(
-              "What's this video?",
-              style: StillScoutTextStyles.caption.copyWith(
-                color: StillScoutColors.silver,
-              ),
-            ),
-            const SizedBox(height: StillScoutSpacing.s),
             StillScoutContextPicker(
               selected: widget.state.videoContext,
               onChanged: widget.onContextChanged,
             ),
-
-            const SizedBox(height: StillScoutSpacing.m),
-
-            // Trim toggle
-            if (durationMs > 5000) // only show trim for clips > 5s
+            if (durationMs > 5000) ...[
+              const SizedBox(height: StillScoutSpacing.s),
               _TrimToggle(
                 expanded: _showTrim,
                 onToggle: () => setState(() => _showTrim = !_showTrim),
               ),
-
+            ],
             if (_showTrim && durationMs > 5000) ...[
-              const SizedBox(height: StillScoutSpacing.m),
+              const SizedBox(height: StillScoutSpacing.s),
               StillScoutTrimScrubber(
                 durationMs: durationMs,
                 initialStartMs: widget.state.trimStartMs,
@@ -209,10 +185,9 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
                 onTrimChanged: widget.onTrimChanged,
               ),
             ],
-
-            const SizedBox(height: StillScoutSpacing.xl),
-
-            // CTA
+            SizedBox(
+              height: stacked ? StillScoutSpacing.m : StillScoutSpacing.l,
+            ),
             SizedBox(
               width: double.infinity,
               child: Semantics(
@@ -220,6 +195,7 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
                 button: true,
                 child: StillScoutPrimaryButton(
                   label: ctaLabel,
+                  expand: true,
                   icon: !online
                       ? Icons.wifi_off_rounded
                       : (quotaExhausted
@@ -230,19 +206,18 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
                 ),
               ),
             ),
-
-            const SizedBox(height: StillScoutSpacing.m),
-
+            const SizedBox(height: StillScoutSpacing.s),
             SizedBox(
               width: double.infinity,
               child: StillScoutSecondaryButton(
                 label: 'Pick a different video',
-                height: 48,
+                height: 44,
                 onPressed: widget.onPickDifferent,
               ),
             ),
-
-            const SizedBox(height: StillScoutSpacing.xxl),
+            SizedBox(
+              height: stacked ? StillScoutSpacing.l : StillScoutSpacing.xl,
+            ),
           ],
         ),
       ),
@@ -258,45 +233,51 @@ class _TrimToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: StillScoutSpacing.m,
-          vertical: StillScoutSpacing.s,
-        ),
-        decoration: BoxDecoration(
-          color: StillScoutColors.filmGray,
-          borderRadius: BorderRadius.circular(StillScoutRadius.s),
-          border: Border.all(
-            color: expanded
-                ? StillScoutColors.accent.withValues(alpha: 0.5)
-                : StillScoutColors.silver.withValues(alpha: 0.2),
+    return Semantics(
+      button: true,
+      label: expanded ? 'Hide trim' : 'Trim clip before scouting',
+      child: GestureDetector(
+        onTap: onToggle,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: StillScoutSpacing.m,
+            vertical: StillScoutSpacing.s,
           ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.content_cut_rounded,
-              size: 16,
-              color:
-                  expanded ? StillScoutColors.accent : StillScoutColors.silver,
+          decoration: BoxDecoration(
+            color: StillScoutColors.filmGray,
+            borderRadius: BorderRadius.circular(StillScoutRadius.s),
+            border: Border.all(
+              color: expanded
+                  ? StillScoutColors.accent.withValues(alpha: 0.5)
+                  : StillScoutColors.silver.withValues(alpha: 0.2),
             ),
-            const SizedBox(width: StillScoutSpacing.s),
-            Text(
-              expanded ? 'Hide trim' : 'Trim clip before scouting',
-              style: StillScoutTextStyles.caption.copyWith(
-                color:
-                    expanded ? StillScoutColors.accent : StillScoutColors.chalk,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.content_cut_rounded,
+                size: 16,
+                color: expanded
+                    ? StillScoutColors.accent
+                    : StillScoutColors.silver,
               ),
-            ),
-            const Spacer(),
-            Icon(
-              expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              size: 18,
-              color: StillScoutColors.silver,
-            ),
-          ],
+              const SizedBox(width: StillScoutSpacing.s),
+              Text(
+                expanded ? 'Hide trim' : 'Trim clip',
+                style: StillScoutTextStyles.caption.copyWith(
+                  color: expanded
+                      ? StillScoutColors.accent
+                      : StillScoutColors.chalk,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                size: 18,
+                color: StillScoutColors.silver,
+              ),
+            ],
+          ),
         ),
       ),
     );

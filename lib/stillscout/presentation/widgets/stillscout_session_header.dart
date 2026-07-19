@@ -24,8 +24,10 @@ class StillScoutSessionHeader extends StatelessWidget {
   final List<ScoredFrame> frames;
   final int? videoDurationMs;
   final int? processingTimeMs;
+
   /// Real Pro entitlement — drives keeper/export chips.
   final bool isPro;
+
   /// One-time AI trial — only affects provenance copy, not entitlements.
   final bool isAiProTrial;
   final bool isFirstScout;
@@ -39,6 +41,12 @@ class StillScoutSessionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    // Narrow or short phones: drop secondary stats + shrink/hide histogram.
+    final compactWidth = size.width < 360;
+    final shortPhone = size.height < 720;
+    final dense = compactWidth || shortPhone;
+
     final aiCount = _aiScoredCount;
     final total = frames.length;
     final showProvenance = total > 0 && aiCount < total;
@@ -56,104 +64,124 @@ class StillScoutSessionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         StillScoutGlassSurface(
-          margin: const EdgeInsets.fromLTRB(
+          margin: EdgeInsets.fromLTRB(
             StillScoutSpacing.m,
-            StillScoutSpacing.s,
+            dense ? StillScoutSpacing.xs : StillScoutSpacing.s,
             StillScoutSpacing.m,
             0,
           ),
-          padding: StillScoutSpacing.cardPadding,
+          padding: EdgeInsets.all(dense ? StillScoutSpacing.s + 4 : StillScoutSpacing.m),
           borderColor: StillScoutColors.scoutGold.withValues(alpha: 0.25),
           child: Column(
             children: [
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final compact = constraints.maxWidth < 340;
-                  return Wrap(
-                    alignment: WrapAlignment.spaceAround,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing:
-                        compact ? StillScoutSpacing.s : StillScoutSpacing.m,
-                    runSpacing: StillScoutSpacing.s,
-                    children: [
-                      _Stat(
-                        icon: Icons.auto_awesome,
-                        value: _topScore >= 10.0 ? '10' : _topScore.toStringAsFixed(1),
-                        label: 'Top Score',
-                        accent: true,
-                        compact: compact,
-                      ),
-                      _Stat(
-                        icon: Icons.grid_view_rounded,
-                        value: '$total',
-                        label: 'Frames',
-                        compact: compact,
-                      ),
-                      if (videoDurationMs != null)
-                        _Stat(
-                          icon: Icons.timer_outlined,
-                          value: _formatDuration(videoDurationMs!),
-                          label: 'Clip',
-                          compact: compact,
-                        ),
-                      if (processingTimeMs != null)
-                        _Stat(
-                          icon: Icons.bolt_rounded,
-                          value:
-                              '${(processingTimeMs! / 1000).toStringAsFixed(1)}s',
-                          label: 'Processed',
-                          compact: compact,
-                        ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: StillScoutSpacing.m),
-              _ScoreHistogram(
-                frames: frames,
-                keeperLimit: keeperLimit,
-              ),
-              const SizedBox(height: StillScoutSpacing.s),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: StillScoutSpacing.s,
-                runSpacing: StillScoutSpacing.s,
+              Row(
                 children: [
-                  _UsageChip(
-                    icon: Icons.lock_open_rounded,
-                    label: '$unlocked/$keeperLimit picks unlocked',
+                  Expanded(
+                    child: _Stat(
+                      icon: Icons.auto_awesome,
+                      value: _topScore >= 10.0
+                          ? '10'
+                          : _topScore.toStringAsFixed(1),
+                      label: 'Top Score',
+                      accent: true,
+                      compact: dense,
+                    ),
                   ),
-                  _UsageChip(
-                    icon: Icons.auto_fix_high_rounded,
-                    label: isPro
-                        ? 'Unlimited saves'
-                        : '$exportsLeft/${StillScoutConstants.freeExportsPerScout} saves left',
+                  Expanded(
+                    child: _Stat(
+                      icon: Icons.grid_view_rounded,
+                      value: '$total',
+                      label: 'Frames',
+                      compact: dense,
+                    ),
                   ),
+                  if (!dense && videoDurationMs != null)
+                    Expanded(
+                      child: _Stat(
+                        icon: Icons.timer_outlined,
+                        value: _formatDuration(videoDurationMs!),
+                        label: 'Clip',
+                        compact: false,
+                      ),
+                    ),
+                  if (!dense && processingTimeMs != null)
+                    Expanded(
+                      child: _Stat(
+                        icon: Icons.bolt_rounded,
+                        value:
+                            '${(processingTimeMs! / 1000).toStringAsFixed(1)}s',
+                        label: 'Processed',
+                        compact: false,
+                      ),
+                    ),
                 ],
               ),
+              if (!shortPhone) ...[
+                SizedBox(
+                  height: dense ? StillScoutSpacing.s : StillScoutSpacing.m,
+                ),
+                _ScoreHistogram(
+                  frames: frames,
+                  keeperLimit: keeperLimit,
+                  compact: dense,
+                ),
+              ],
+              SizedBox(
+                height: dense ? StillScoutSpacing.s : StillScoutSpacing.s + 2,
+              ),
+              if (dense)
+                Text(
+                  '$unlocked/$keeperLimit picks · ${isPro ? 'Unlimited saves' : '$exportsLeft/${StillScoutConstants.freeExportsPerScout} saves'}',
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.chalk.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                )
+              else
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: StillScoutSpacing.s,
+                  runSpacing: StillScoutSpacing.s,
+                  children: [
+                    _UsageChip(
+                      icon: Icons.lock_open_rounded,
+                      label: '$unlocked/$keeperLimit picks unlocked',
+                    ),
+                    _UsageChip(
+                      icon: Icons.auto_fix_high_rounded,
+                      label: isPro
+                          ? 'Unlimited saves'
+                          : '$exportsLeft/${StillScoutConstants.freeExportsPerScout} saves left',
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
         if (showProvenance)
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               StillScoutSpacing.m,
-              StillScoutSpacing.s,
+              dense ? StillScoutSpacing.xs : StillScoutSpacing.s,
               StillScoutSpacing.m,
               0,
             ),
             child: Text(
               !(isPro || isAiProTrial)
-                  ? 'On-device Apple Vision scores · Unlock AI Pro for Gemini judgment'
+                  ? 'On-device Vision · Upgrade for Gemini'
                   : (aiCount == 0
-                      ? 'Gemini was unavailable — scores are on-device estimates. '
-                          'Re-scout when online for Gemini judgments.'
-                      : '$aiCount of $total frames Gemini-scored · '
-                          '${total - aiCount} on-device estimates'),
+                      ? 'Gemini unavailable — on-device scores. Re-scout online for Gemini.'
+                      : '$aiCount/$total Gemini · ${total - aiCount} on-device'),
               style: StillScoutTextStyles.caption.copyWith(
                 color: StillScoutColors.silver.withValues(alpha: 0.85),
+                fontSize: dense ? 11 : 12,
               ),
               textAlign: TextAlign.center,
+              maxLines: dense ? 2 : 3,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
       ],
@@ -230,16 +258,21 @@ class _Stat extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color.withValues(alpha: 0.8)),
-          const SizedBox(height: StillScoutSpacing.xs / 2),
+          Icon(icon, size: compact ? 12 : 14, color: color.withValues(alpha: 0.8)),
+          SizedBox(height: compact ? 2 : StillScoutSpacing.xs / 2),
           Text(
             value,
             style: StillScoutTextStyles.subtitle.copyWith(
               color: color,
-              fontSize: compact ? 16 : 18,
+              fontSize: compact ? 15 : 18,
             ),
           ),
-          Text(label, style: StillScoutTextStyles.caption),
+          Text(
+            label,
+            style: StillScoutTextStyles.caption.copyWith(
+              fontSize: compact ? 10 : 12,
+            ),
+          ),
         ],
       ),
     );
@@ -247,18 +280,16 @@ class _Stat extends StatelessWidget {
 }
 
 /// Mini bar chart showing how many frames scored in each tier.
-///
-/// 5 buckets: 0–3 (dim), 3–5 (warm), 5–7 (yellow), 7–9 (green), 9–10 (gold).
-/// Bars beyond [keeperLimit] are rendered at 35% opacity to visualise the
-/// locked value without obscuring the unlocked portion.
 class _ScoreHistogram extends StatelessWidget {
   const _ScoreHistogram({
     required this.frames,
     required this.keeperLimit,
+    this.compact = false,
   });
 
   final List<ScoredFrame> frames;
   final int keeperLimit;
+  final bool compact;
 
   static const _bucketRanges = [
     (min: 0.0, max: 3.0, label: '0–3'),
@@ -291,12 +322,10 @@ class _ScoreHistogram extends StatelessWidget {
     final counts = List<int>.filled(_bucketRanges.length, 0);
     final unlockedCounts = List<int>.filled(_bucketRanges.length, 0);
 
-    // Total per bucket.
     for (final f in frames) {
       counts[_bucket(f.score)]++;
     }
 
-    // Unlocked per bucket: the top keeperLimit frames by score.
     final sorted = List<ScoredFrame>.of(frames)
       ..sort((a, b) => b.score.compareTo(a.score));
     for (var i = 0; i < math.min(keeperLimit, sorted.length); i++) {
@@ -304,6 +333,7 @@ class _ScoreHistogram extends StatelessWidget {
     }
 
     final maxCount = counts.reduce(math.max).clamp(1, 999);
+    final maxBarH = compact ? 28.0 : 42.0;
 
     return Semantics(
       label: 'Score distribution histogram',
@@ -319,6 +349,8 @@ class _ScoreHistogram extends StatelessWidget {
                 maxCount: maxCount,
                 color: _bucketColors[b],
                 label: _bucketRanges[b].label,
+                maxBarH: maxBarH,
+                showCountLabel: !compact,
               ),
             ),
           ],
@@ -335,6 +367,8 @@ class _HistogramBar extends StatelessWidget {
     required this.maxCount,
     required this.color,
     required this.label,
+    required this.maxBarH,
+    this.showCountLabel = true,
   });
 
   final int count;
@@ -342,28 +376,30 @@ class _HistogramBar extends StatelessWidget {
   final int maxCount;
   final Color color;
   final String label;
+  final double maxBarH;
+  final bool showCountLabel;
 
-  static const double _maxBarH = 42;
   static const double _minBarH = 3;
 
   @override
   Widget build(BuildContext context) {
     final fraction = count / maxCount;
-    final barH = (_minBarH + fraction * (_maxBarH - _minBarH))
-        .clamp(_minBarH, _maxBarH);
+    final barH =
+        (_minBarH + fraction * (maxBarH - _minBarH)).clamp(_minBarH, maxBarH);
     final lockedCount = (count - unlockedCount).clamp(0, count);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          count > 0 ? '$count' : '',
-          style: StillScoutTextStyles.caption.copyWith(
-            fontSize: 9,
-            color: color.withValues(alpha: 0.8),
+        if (showCountLabel)
+          Text(
+            count > 0 ? '$count' : '',
+            style: StillScoutTextStyles.caption.copyWith(
+              fontSize: 9,
+              color: color.withValues(alpha: 0.8),
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
+        if (showCountLabel) const SizedBox(height: 2),
         ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: SizedBox(

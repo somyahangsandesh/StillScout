@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
 import '../theme/stillscout_theme.dart';
+import 'stillscout_score_breakdown.dart';
 
 /// Side-by-side frame comparison sheet.
 ///
 /// Select exactly 2 frames in the gallery, then call [show] — it presents
-/// a full-screen 2-up view with synced score bars so the creator can see
-/// at a glance which take is technically better without eyeballing numbers.
+/// a full-screen 2-up view with the same compact score grid as frame detail.
 class StillScoutCompareSheet extends StatelessWidget {
   const StillScoutCompareSheet({
     super.key,
@@ -126,27 +126,17 @@ class StillScoutCompareSheet extends StatelessWidget {
   Widget _buildScoreRows() {
     return Padding(
       padding: const EdgeInsets.all(StillScoutSpacing.m),
-      child: Container(
-        padding: const EdgeInsets.all(StillScoutSpacing.m),
-        decoration: StillScoutDecorations.surfaceCard(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Score Breakdown', style: StillScoutTextStyles.subtitle),
-            const SizedBox(height: StillScoutSpacing.m),
-            _ScoreRow('Sharpness', frameA.metadata.blurScore, frameB.metadata.blurScore),
-            const SizedBox(height: StillScoutSpacing.s),
-            _ScoreRow('Lighting', frameA.metadata.lightingScore, frameB.metadata.lightingScore),
-            const SizedBox(height: StillScoutSpacing.s),
-            _ScoreRow('Open Eyes', frameA.metadata.openEyesScore, frameB.metadata.openEyesScore),
-            const SizedBox(height: StillScoutSpacing.s),
-            _ScoreRow('Composition', frameA.metadata.compositionScore, frameB.metadata.compositionScore),
-            const SizedBox(height: StillScoutSpacing.m),
-            const Divider(color: StillScoutColors.slate, height: 1),
-            const SizedBox(height: StillScoutSpacing.m),
-            _ScoreRow('Overall', frameA.score, frameB.score, isTotal: true),
-          ],
-        ),
+      child: StillScoutCompareScoreGrid(
+        sharpnessA: frameA.metadata.blurScore,
+        sharpnessB: frameB.metadata.blurScore,
+        lightingA: frameA.metadata.lightingScore,
+        lightingB: frameB.metadata.lightingScore,
+        openEyesA: frameA.metadata.openEyesScore,
+        openEyesB: frameB.metadata.openEyesScore,
+        compositionA: frameA.metadata.compositionScore,
+        compositionB: frameB.metadata.compositionScore,
+        overallA: frameA.score,
+        overallB: frameB.score,
       ),
     );
   }
@@ -269,109 +259,3 @@ class _WinnerBadge extends StatelessWidget {
   }
 }
 
-class _ScoreRow extends StatelessWidget {
-  const _ScoreRow(this.label, this.scoreA, this.scoreB, {this.isTotal = false});
-
-  final String label;
-  final num scoreA;
-  final num scoreB;
-  final bool isTotal;
-
-  Color _barColor(num score, num other) {
-    if (score > other) return StillScoutColors.accent;
-    if (score < other) return StillScoutColors.silver;
-    return StillScoutColors.silver;
-  }
-
-  String _fmt(num v) {
-    if (!isTotal) return '${v.round()}';
-    final d = v.toDouble();
-    return d >= 10.0 ? '10' : d.toStringAsFixed(1);
-  }
-
-  // Normalise to 0–1 for the progress bar.
-  double _fill(num v) =>
-      isTotal ? (v.toDouble() / 10.0).clamp(0.0, 1.0) : (v.toDouble() / 100.0).clamp(0.0, 1.0);
-
-  @override
-  Widget build(BuildContext context) {
-    final aStyle = isTotal
-        ? StillScoutTextStyles.subtitle.copyWith(fontSize: 17)
-        : StillScoutTextStyles.body;
-
-    return Row(
-      children: [
-        SizedBox(
-          width: 88,
-          child: Text(label, style: StillScoutTextStyles.caption),
-        ),
-        Expanded(
-          child: _ScoreBar(
-            fill: _fill(scoreA),
-            color: _barColor(scoreA, scoreB),
-            alignment: Alignment.centerRight,
-          ),
-        ),
-        const SizedBox(width: StillScoutSpacing.s),
-        Text(_fmt(scoreA), style: aStyle),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.xs),
-          child: Text('·', style: StillScoutTextStyles.caption),
-        ),
-        Text(_fmt(scoreB), style: aStyle),
-        const SizedBox(width: StillScoutSpacing.s),
-        Expanded(
-          child: _ScoreBar(
-            fill: _fill(scoreB),
-            color: _barColor(scoreB, scoreA),
-            alignment: Alignment.centerLeft,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ScoreBar extends StatelessWidget {
-  const _ScoreBar({
-    required this.fill,
-    required this.color,
-    required this.alignment,
-  });
-
-  final double fill; // 0.0–1.0
-  final Color color;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth * fill.clamp(0.0, 1.0);
-        return Stack(
-          alignment: alignment,
-          children: [
-            Container(
-              height: 4,
-              decoration: BoxDecoration(
-                color: StillScoutColors.slateLight,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Align(
-              alignment: alignment,
-              child: Container(
-                width: width,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}

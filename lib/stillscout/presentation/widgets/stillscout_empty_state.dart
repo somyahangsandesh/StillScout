@@ -444,7 +444,7 @@ class _AmbientGlow extends StatelessWidget {
                 center: secondaryCenter,
                 radius: 0.9,
                 colors: [
-                  StillScoutColors.secondaryAccent.withValues(alpha: 0.04),
+                  StillScoutColors.scoutGold.withValues(alpha: 0.035),
                   Colors.transparent,
                 ],
               ),

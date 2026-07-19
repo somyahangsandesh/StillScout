@@ -354,19 +354,19 @@ class _ProUpsellStep extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      StillScoutColors.accent.withValues(alpha: 0.25),
-                      StillScoutColors.secondaryAccent.withValues(alpha: 0.18),
+                      StillScoutColors.scoutGold.withValues(alpha: 0.28),
+                      StillScoutColors.accent.withValues(alpha: 0.18),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(StillScoutRadius.pill),
                   border: Border.all(
-                    color: StillScoutColors.accent.withValues(alpha: 0.55),
+                    color: StillScoutColors.scoutGold.withValues(alpha: 0.55),
                   ),
                 ),
                 child: Text(
                   'AI PRO',
                   style: StillScoutTextStyles.badge.copyWith(
-                    color: StillScoutColors.accent,
+                    color: StillScoutColors.scoutGold,
                     fontSize: 10,
                     letterSpacing: 2.0,
                   ),

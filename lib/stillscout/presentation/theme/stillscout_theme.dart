@@ -25,12 +25,11 @@ class StillScoutColors {
   static const Color accentDim = Color(0x1AE8C97A);
   static const Color scoutGold = Color(0xFFFFD60A);
 
-  /// Secondary accent — formalizes the purple already used ad hoc for the
-  /// "Gallery" quick-import chip. Gold stays reserved for "premium/best"
-  /// signaling (top picks, polish, paywall); this is for neutral/
-  /// informational emphasis that shouldn't compete with gold.
-  static const Color secondaryAccent = Color(0xFFB8A4FF);
-  static const Color secondaryAccentGlow = Color(0x66B8A4FF);
+  /// Secondary brand wash — warm sand that sits under [accent]/[scoutGold]
+  /// for dual glows and soft fills. Never purple; keeps the cinematic gold
+  /// palette coherent when two accent layers are needed.
+  static const Color secondaryAccent = Color(0xFFC9B896);
+  static const Color secondaryAccentGlow = Color(0x66C9B896);
 
   // ── Status ───────────────────────────────────────────────────────────────
   static const Color danger = Color(0xFFFF453A);
