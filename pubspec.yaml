@@ -1,7 +1,7 @@
 name: stillscout
 description: StillScout — AI-powered video frame extractor for creators.
 publish_to: 'none'
-version: 1.0.0+23
+version: 1.0.0+24
 
 environment:
   sdk: '>=3.3.0 <4.0.0'

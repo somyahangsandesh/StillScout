@@ -55,7 +55,7 @@ flutter run \
 
 | | Free | AI Pro |
 |---|------|--------|
-| Scouts | **2 / day** (UTC) | Unlimited |
+| Scouts | **5 / day** (UTC) | Unlimited |
 | Cloud AI | **1×** complimentary Gemini scout (needs internet; not consumed if Gemini never reaches) | Unlimited Gemini via Supabase |
 | Visible keepers | Top **5** ranks (**8** on first successful free scout) | **20** ranks |
 | AI Auto Polish | Locked | Unlocked |

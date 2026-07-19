@@ -86,8 +86,7 @@ class StillScoutConstants {
   static const int freeExportsPerScout = 3;
 
   /// Free scouts per calendar day (UTC). Pro users are unlimited.
-  /// Kept intentionally low so the AI Pro trial → paid conversion has teeth.
-  static const int freeScoutsPerDay = 2;
+  static const int freeScoutsPerDay = 5;
 
   /// Sentinel returned by [StillScoutScoutQuotaTracker.remainingToday] for Pro.
   static const int unlimitedScoutsSentinel = 999;
