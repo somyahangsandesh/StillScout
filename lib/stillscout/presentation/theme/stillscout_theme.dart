@@ -25,6 +25,13 @@ class StillScoutColors {
   static const Color accentDim = Color(0x1AE8C97A);
   static const Color scoutGold = Color(0xFFFFD60A);
 
+  /// Secondary accent — formalizes the purple already used ad hoc for the
+  /// "Gallery" quick-import chip. Gold stays reserved for "premium/best"
+  /// signaling (top picks, polish, paywall); this is for neutral/
+  /// informational emphasis that shouldn't compete with gold.
+  static const Color secondaryAccent = Color(0xFFB8A4FF);
+  static const Color secondaryAccentGlow = Color(0x66B8A4FF);
+
   // ── Status ───────────────────────────────────────────────────────────────
   static const Color danger = Color(0xFFFF453A);
   static const Color success = Color(0xFF30D158);
@@ -93,6 +100,27 @@ class StillScoutRadius {
   static BorderRadius badge = BorderRadius.circular(pill);
   static BorderRadius sheet =
       const BorderRadius.vertical(top: Radius.circular(xl));
+}
+
+/// Standard motion tokens — durations and curves. Centralizing these
+/// replaces the scattered `200ms`/`320ms`/`400ms` magic numbers that had
+/// accumulated per-widget, and keeps new animations consistent with
+/// existing ones by default.
+class StillScoutMotion {
+  StillScoutMotion._();
+
+  static const Duration fast = Duration(milliseconds: 150);
+  static const Duration base = Duration(milliseconds: 250);
+  static const Duration slow = Duration(milliseconds: 450);
+
+  /// Entrances — reveals, fade-ins, staggered grid/list items.
+  static const Curve entrance = Curves.easeOutCubic;
+
+  /// State toggles — switches, selection, expand/collapse.
+  static const Curve toggle = Curves.easeInOutCubic;
+
+  /// Celebratory / attention moments — glows, pulses, badges.
+  static const Curve emphasis = Curves.easeOutBack;
 }
 
 class StillScoutTextStyles {
@@ -191,6 +219,11 @@ class StillScoutDecorations {
     boxShadow: [StillScoutColors.goldGlow()],
   );
 
+  /// Tint layer for glass cards. Historically this was the *entire* "glass"
+  /// effect (no real blur-behind existed anywhere) so it was tuned fairly
+  /// opaque. It's now meant to sit on top of a real [BackdropFilter] blur
+  /// (see `StillScoutGlassSurface`), so it's tuned a little more
+  /// translucent to let that blur read through.
   static BoxDecoration glassCard({
     Color? borderColor,
     double borderWidth = 1,
@@ -200,8 +233,8 @@ class StillScoutDecorations {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            StillScoutColors.slate.withValues(alpha: 0.72),
-            StillScoutColors.filmGray.withValues(alpha: 0.88),
+            StillScoutColors.slate.withValues(alpha: 0.58),
+            StillScoutColors.filmGray.withValues(alpha: 0.74),
           ],
         ),
         borderRadius: StillScoutRadius.card,

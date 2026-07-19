@@ -30,8 +30,8 @@ class StillScoutSession {
   /// Total extracted frames after de-duplication.
   final int frameCount;
 
-  /// Weighted total of the best-scored frame (0–100).
-  final int topScore;
+  /// Composite score of the best frame (0.0–10.0, 1dp).
+  final double topScore;
 
   /// Absolute path to the best frame thumbnail, living in the persistent
   /// cache dir — this is what the History grid renders.
@@ -57,7 +57,7 @@ class StillScoutSession {
     String? videoPath,
     DateTime? createdAt,
     int? frameCount,
-    int? topScore,
+    double? topScore,
     String? topFrameThumbPath,
     int? videoDurationMs,
     int? processingTimeMs,
@@ -110,7 +110,7 @@ class StillScoutSession {
         json['createdAt'] as int? ?? 0,
       ),
       frameCount: json['frameCount'] as int? ?? 0,
-      topScore: json['topScore'] as int? ?? 0,
+      topScore: _parseTopScore(json['topScore']),
       topFrameThumbPath: json['topFrameThumbPath'] as String?,
       videoDurationMs: json['videoDurationMs'] as int?,
       processingTimeMs: json['processingTimeMs'] as int?,
@@ -118,6 +118,13 @@ class StillScoutSession {
       exportsUsed: json['exportsUsed'] as int? ?? 0,
       topPickFrameIds: _parseStringList(json['topPickFrameIds']),
     );
+  }
+
+  static double _parseTopScore(Object? raw) {
+    if (raw is double) return raw.clamp(0.0, 10.0);
+    if (raw is int) return raw > 10 ? (raw / 10.0).clamp(0.0, 10.0) : raw.toDouble();
+    if (raw is num) return raw > 10 ? (raw.toDouble() / 10.0).clamp(0.0, 10.0) : raw.toDouble();
+    return 0.0;
   }
 
   static List<String> _parseStringList(Object? raw) {

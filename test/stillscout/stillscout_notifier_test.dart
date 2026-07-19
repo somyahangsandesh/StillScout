@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/services.dart';
 import 'package:stillscout/stillscout/data/models/extracted_frame.dart';
 import 'package:stillscout/stillscout/data/models/frame_score_metadata.dart';
 import 'package:stillscout/stillscout/data/models/scored_frame.dart';
@@ -22,7 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // ── fakes ────────────────────────────────────────────────────────────────────
 
-final _mockFrame = ExtractedFrame(
+const _mockFrame = ExtractedFrame(
   id: 'frame1',
   filePath: '/fake/frame1.jpg',
   timestampMs: 500,
@@ -31,10 +34,10 @@ final _mockFrame = ExtractedFrame(
   sourceVideoPath: '/fake/video.mp4',
 );
 
-final _mockScored = ScoredFrame(
+const _mockScored = ScoredFrame(
   frame: _mockFrame,
-  score: 85,
-  metadata: const FrameScoreMetadata(
+  score: 8.5,
+  metadata: FrameScoreMetadata(
     blurScore: 80,
     lightingScore: 85,
     openEyesScore: 90,
@@ -46,6 +49,7 @@ final _mockScored = ScoredFrame(
 class FakeVideoRepository implements VideoRepository {
   StillScoutFailure? throwFailure;
   final List<ExtractedFrame> frames;
+  int extractCallCount = 0;
 
   FakeVideoRepository({this.throwFailure, List<ExtractedFrame>? frames})
       : frames = frames ?? [_mockFrame];
@@ -64,6 +68,7 @@ class FakeVideoRepository implements VideoRepository {
     void Function(FrameExtractionProgress p)? onProgress,
     StillScoutCancelToken? cancelToken,
   }) async {
+    extractCallCount++;
     if (throwFailure != null) throw throwFailure!;
     return frames;
   }
@@ -80,7 +85,11 @@ class FakeVideoRepository implements VideoRepository {
 class FakeScoringRepository implements ScoringRepository {
   final List<ScoredFrame> results;
 
-  FakeScoringRepository({List<ScoredFrame>? results})
+  /// When set, scoreAndRankFrames suspends until this completes — lets tests
+  /// deterministically observe the "scoring" phase before it resolves.
+  final Future<void>? blockUntil;
+
+  FakeScoringRepository({List<ScoredFrame>? results, this.blockUntil})
       : results = results ?? [_mockScored];
 
   @override
@@ -88,10 +97,13 @@ class FakeScoringRepository implements ScoringRepository {
     List<ExtractedFrame> frames, {
     required String videoPath,
     Map<String, double>? scoreWeights,
+    StillScoutVideoContext videoContext = StillScoutVideoContext.auto,
     void Function(double)? onProgress,
     StillScoutCancelToken? cancelToken,
+    bool useCloudAi = false,
     bool requireCloudAi = false,
   }) async {
+    if (blockUntil != null) await blockUntil;
     onProgress?.call(1.0);
     return results;
   }
@@ -112,6 +124,9 @@ class FakeSessionRepository implements SessionRepository {
   @override
   Future<void> saveSession(StillScoutSession session) async =>
       _sessions[session.id] = session;
+
+  @override
+  Future<StillScoutSession?> getSession(String id) async => _sessions[id];
 
   @override
   Future<void> deleteSession(String id) async => _sessions.remove(id);
@@ -168,11 +183,16 @@ void main() {
     StillScoutScoutBackground.enabled = false;
     // StillScoutSubscriptionManager reads SharedPreferences.
     SharedPreferences.setMockInitialValues({});
+    // flutter_secure_storage uses a MethodChannel — stub it with an in-memory
+    // store so Keychain-backed trackers work in unit tests.
+    _setupSecureStorageMock();
   });
 
   group('StillScoutNotifier', () {
     setUp(() async {
       await StillScoutScoutQuotaTracker.resetForTests();
+      // Consume the AI Pro trial so offline tests are not affected by it.
+      await StillScoutAiProTrialTracker.consumeTrial();
     });
 
     test('initial state is idle with empty frames', () {
@@ -183,7 +203,7 @@ void main() {
       expect(state.frames, isEmpty);
     });
 
-    test('processVideo fails immediately when offline', () async {
+    test('processVideo succeeds offline for free on-device scouts', () async {
       final container = _makeContainer(
         connectivity: FakeStillScoutConnectivity(alwaysOnline: false),
       );
@@ -194,8 +214,8 @@ void main() {
           .processVideo('/fake/video.mp4');
 
       final state = container.read(stillScoutProvider);
-      expect(state.phase, StillScoutPhase.error);
-      expect(state.errorMessage, const OfflineFailure().displayMessage);
+      expect(state.phase, StillScoutPhase.complete);
+      expect(state.frames, isNotEmpty);
     });
 
     test('processVideo transitions idle → extracting → scoring → complete', () async {
@@ -286,7 +306,7 @@ void main() {
     });
 
     test('processVideo fails when weekly scout quota exhausted', () async {
-      for (var i = 0; i < StillScoutConstants.freeScoutsPerWeek; i++) {
+      for (var i = 0; i < StillScoutConstants.freeScoutsPerDay; i++) {
         await StillScoutScoutQuotaTracker.recordCompletedScout(isPro: false);
       }
 
@@ -332,7 +352,153 @@ void main() {
       expect(state.videoPath, '/fake/video.mp4');
       expect(state.videoDurationMs, isNotNull);
     });
+
+    test('free scout sets cloudScoringOutcome to notApplicable', () async {
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      await container
+          .read(stillScoutProvider.notifier)
+          .processVideo('/fake/video.mp4');
+
+      final state = container.read(stillScoutProvider);
+      expect(state.phase, StillScoutPhase.complete);
+      expect(state.cloudScoringOutcome, CloudScoringOutcome.notApplicable);
+    });
+
+    test(
+      'trial scout that never reaches Gemini does not consume a free scout '
+      'credit, and the trial remains available for a retry',
+      () async {
+        // Make the AI trial available (group setUp consumes it by default).
+        await StillScoutAiProTrialTracker.resetForTests();
+        addTearDown(StillScoutAiProTrialTracker.consumeTrial);
+
+        final container = _makeContainer();
+        addTearDown(container.dispose);
+
+        final usedBefore = await StillScoutScoutQuotaTracker.usedToday();
+
+        await container
+            .read(stillScoutProvider.notifier)
+            .processVideo('/fake/video.mp4');
+
+        final state = container.read(stillScoutProvider);
+        expect(state.phase, StillScoutPhase.complete);
+        // FakeScoringRepository returns heuristic-source frames — Gemini
+        // never "reached" even though the trial requested cloud AI.
+        expect(state.geminiReachedOnLastScout, isFalse);
+        expect(state.cloudScoringOutcome, CloudScoringOutcome.degraded);
+
+        final usedAfter = await StillScoutScoutQuotaTracker.usedToday();
+        expect(
+          usedAfter,
+          usedBefore,
+          reason: 'a degraded trial scout must not burn a free scout credit',
+        );
+        expect(
+          StillScoutAiProTrialTracker.isTrialAvailable,
+          isTrue,
+          reason: 'the trial was never actually experienced, so it should '
+              'still be available',
+        );
+      },
+    );
+
+    test(
+      'rescoreWithCloudAi re-scores existing frames without re-extracting',
+      () async {
+        await StillScoutAiProTrialTracker.resetForTests();
+        addTearDown(StillScoutAiProTrialTracker.consumeTrial);
+
+        final videoRepo = FakeVideoRepository();
+        final container = _makeContainer(videoRepo: videoRepo);
+        addTearDown(container.dispose);
+
+        await container
+            .read(stillScoutProvider.notifier)
+            .processVideo('/fake/video.mp4');
+
+        var state = container.read(stillScoutProvider);
+        expect(state.cloudScoringOutcome, CloudScoringOutcome.degraded);
+        expect(videoRepo.extractCallCount, 1);
+
+        await container.read(stillScoutProvider.notifier).rescoreWithCloudAi();
+
+        expect(
+          videoRepo.extractCallCount,
+          1,
+          reason: 'rescoreWithCloudAi must not re-run extraction',
+        );
+        state = container.read(stillScoutProvider);
+        expect(state.phase, StillScoutPhase.complete);
+        expect(state.frames, isNotEmpty);
+      },
+    );
+
+    test(
+      'abortForOffline does not cancel a scout that is already scoring',
+      () async {
+        final gate = Completer<void>();
+        final container = _makeContainer(
+          scoringRepo: FakeScoringRepository(blockUntil: gate.future),
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(stillScoutProvider.notifier);
+        final future = notifier.processVideo('/fake/video.mp4');
+
+        // Wait until the scout reaches the scoring phase.
+        while (container.read(stillScoutProvider).phase !=
+            StillScoutPhase.scoring) {
+          await Future<void>.delayed(const Duration(milliseconds: 5));
+        }
+
+        // Simulate connectivity dropping mid-scout — should not cancel once
+        // scoring has begun (W2.5: soft-degrade over hard cancel).
+        notifier.abortForOffline();
+        gate.complete();
+        await future;
+
+        final state = container.read(stillScoutProvider);
+        expect(state.phase, isNot(StillScoutPhase.cancelled));
+      },
+    );
   });
+}
+
+// ── secure storage mock ───────────────────────────────────────────────────────
+
+/// Stubs the flutter_secure_storage MethodChannel with an in-memory map so
+/// Keychain-backed trackers work correctly in unit tests.
+void _setupSecureStorageMock() {
+  final store = <String, String>{};
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+    const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+    (call) async {
+      switch (call.method) {
+        case 'write':
+          store[call.arguments['key'] as String] =
+              call.arguments['value'] as String? ?? '';
+          return null;
+        case 'read':
+          return store[call.arguments['key'] as String];
+        case 'delete':
+          store.remove(call.arguments['key'] as String);
+          return null;
+        case 'readAll':
+          return Map<String, String>.from(store);
+        case 'deleteAll':
+          store.clear();
+          return null;
+        case 'containsKey':
+          return store.containsKey(call.arguments['key'] as String);
+        default:
+          return null;
+      }
+    },
+  );
 }
 
 // ── test doubles ──────────────────────────────────────────────────────────────

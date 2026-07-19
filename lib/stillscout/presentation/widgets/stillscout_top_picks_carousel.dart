@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
 import '../theme/stillscout_theme.dart';
+import 'stillscout_score_badge.dart';
 
 class StillScoutTopPicksCarousel extends StatelessWidget {
   const StillScoutTopPicksCarousel({
@@ -25,7 +26,8 @@ class StillScoutTopPicksCarousel extends StatelessWidget {
     final topPicks = frames.take(3).toList(growable: false);
     if (topPicks.isEmpty) return const SizedBox.shrink();
 
-    final carouselHeight = MediaQuery.sizeOf(context).width < 360 ? 220.0 : 240.0;
+    final carouselHeight =
+        MediaQuery.sizeOf(context).width < 360 ? 232.0 : 252.0;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -64,6 +66,13 @@ class StillScoutTopPicksCarousel extends StatelessWidget {
               itemBuilder: (context, index) {
                 final frame = topPicks[index];
                 final rank = rankFor(frame);
+                // The #1 pick gets the carousel's full height; #2/#3 sit a
+                // notch shorter and anchored to the shared baseline, so the
+                // hero card reads as clearly more prominent rather than just
+                // slightly wider.
+                final isHero = rank == 0;
+                final cardHeight =
+                    isHero ? carouselHeight : carouselHeight * 0.82;
                 return TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: 1),
                   duration: Duration(milliseconds: 380 + index * 90),
@@ -74,12 +83,19 @@ class StillScoutTopPicksCarousel extends StatelessWidget {
                       child: Opacity(opacity: value, child: child),
                     );
                   },
-                  child: _PodiumCard(
-                    rank: rank + 1,
-                    frame: frame,
-                    isPro: isPro,
-                    displayRank: rank,
-                    onTap: () => onFrameTap(frame),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SizedBox(
+                      height: cardHeight,
+                      child: _PodiumCard(
+                        rank: rank + 1,
+                        frame: frame,
+                        isPro: isPro,
+                        displayRank: rank,
+                        isHero: isHero,
+                        onTap: () => onFrameTap(frame),
+                      ),
+                    ),
                   ),
                 );
               },
@@ -98,6 +114,7 @@ class _PodiumCard extends StatelessWidget {
     required this.onTap,
     required this.isPro,
     required this.displayRank,
+    required this.isHero,
   });
 
   final int rank;
@@ -105,6 +122,7 @@ class _PodiumCard extends StatelessWidget {
   final VoidCallback onTap;
   final bool isPro;
   final int displayRank;
+  final bool isHero;
 
   static const _rankColors = {
     1: StillScoutColors.rankGold,
@@ -115,7 +133,7 @@ class _PodiumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rankColor = _rankColors[rank] ?? StillScoutColors.silver;
-    final width = rank == 1 ? 168.0 : 150.0;
+    final width = isHero ? 192.0 : 140.0;
     final footer = StillScoutAccessPolicy.frameFooterLabel(
       rank: displayRank,
       isPro: isPro,
@@ -155,7 +173,12 @@ class _PodiumCard extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.file(File(frame.frame.filePath), fit: BoxFit.cover),
+                      Image.file(
+                        File(frame.frame.filePath),
+                        key: ValueKey(frame.frame.filePath),
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                      ),
                       Positioned(
                         left: 0,
                         right: 0,
@@ -166,6 +189,7 @@ class _PodiumCard extends StatelessWidget {
                             gradient: StillScoutColors.frameShadow,
                           ),
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 child: Text(
@@ -176,13 +200,13 @@ class _PodiumCard extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              Text(
-                                '${frame.score}',
-                                style: StillScoutTextStyles.caption.copyWith(
-                                  color: rankColor,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                ),
+                              const SizedBox(width: 6),
+                              StillScoutScoreBadge(
+                                score: frame.score,
+                                size: isHero
+                                    ? StillScoutScoreBadgeSize.large
+                                    : StillScoutScoreBadgeSize.medium,
+                                metadata: frame.metadata,
                               ),
                             ],
                           ),
@@ -207,8 +231,8 @@ class _PodiumCard extends StatelessWidget {
                           ),
                           child: Text(
                             '#$rank',
-                            style:
-                                StillScoutTextStyles.badge.copyWith(fontSize: 10),
+                            style: StillScoutTextStyles.badge
+                                .copyWith(fontSize: 10),
                           ),
                         ),
                       ),

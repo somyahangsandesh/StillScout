@@ -8,6 +8,9 @@ abstract interface class SessionRepository {
   /// Persists [session]. Overwrites if [StillScoutSession.id] already exists.
   Future<void> saveSession(StillScoutSession session);
 
+  /// Returns a single session by [id], or null if missing.
+  Future<StillScoutSession?> getSession(String id);
+
   /// Removes the session with [id] and its associated cached frames.
   Future<void> deleteSession(String id);
 

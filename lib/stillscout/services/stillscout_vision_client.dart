@@ -5,44 +5,63 @@ import 'vision/vision_cascade_orchestrator.dart';
 import 'vision/vision_scoring_client.dart';
 
 export 'vision/vision_cascade_orchestrator.dart' show VisionCascadeOrchestrator;
+export 'vision/vision_scoring_client.dart'
+    show VisionBatchResult, VisionBatchSuccess, VisionBatchFailure,
+         VisionBatchFrameScore, parseBatchScoringResponse;
 
 /// Public façade used by [FrameScoringService].
 ///
-/// Delegates to [VisionCascadeOrchestrator]:
-///
-///   **P0** Supabase Edge Function proxy (keys server-side, daily device quota)
-///   → **fallback** Groq → Gemini → Grok → OpenAI (local keys + device quota)
-///   → null (caller uses ML Kit + heuristic)
+/// AI Pro cloud path is **Gemini Flash only** (optional Supabase proxy that
+/// must also call Gemini Flash). Free users never call this — they stay on
+/// Apple Vision + heuristics.
 class StillScoutVisionClient {
   StillScoutVisionClient._();
 
   static final VisionCascadeOrchestrator _orchestrator =
       VisionCascadeOrchestrator();
 
-  /// Score one 512px base64 JPEG frame via the provider cascade.
-  /// Returns null when all configured providers are exhausted — the caller
-  /// should fall back to on-device ML Kit + heuristic scoring.
+  /// Score up to [StillScoutConstants.maxGridFramesPerScout] frames in a
+  /// single Gemini Flash (gemini-3.1-flash-lite) call. Returns per-frame
+  /// scores + the [pickCount] best indices. Primary AI Pro scoring path.
+  static Future<VisionBatchResult> batchScoreFrames({
+    required List<String> base64Jpegs,
+    required int pickCount,
+    StillScoutVideoContext videoContext = StillScoutVideoContext.auto,
+  }) =>
+      _orchestrator.batchScoreFrames(
+        base64Jpegs: base64Jpegs,
+        pickCount: pickCount,
+        videoContext: videoContext,
+      );
+
+  /// Score one 512px compressed JPEG via Gemini Flash (fallback / single
+  /// frame re-score path — used when batch scoring fails).
   static Future<FrameScoreMetadata?> scoreFrame({
     required String base64Jpeg,
+    StillScoutVideoContext videoContext = StillScoutVideoContext.auto,
   }) =>
-      _orchestrator.scoreFrame(base64Jpeg: base64Jpeg);
+      _orchestrator.scoreFrame(
+        base64Jpeg: base64Jpeg,
+        videoContext: videoContext,
+      );
 
-  /// Whether at least one provider is currently available (configured + not
-  /// rate-limited). Use this to decide whether to attempt the LLM phase at
-  /// all — if false, skip straight to heuristic to save time.
+  /// Whether Gemini Flash (or its Supabase proxy) is available right now.
   static Future<bool> hasAvailableProvider() =>
       _orchestrator.hasAvailableProvider();
 
-  /// Debug string showing every provider's current state.
   static String get providerStatusSummary => _orchestrator.statusSummary;
 
-  /// Test-only: reset the session-disabled circuit breaker on the OpenAI
-  /// provider (keeps existing test signatures working).
   @visibleForTesting
   static void resetSessionDisabledForTests() => _orchestrator.resetForTests();
 
-  /// Test-only: exercise the same JSON parsing path used by [scoreFrame].
   @visibleForTesting
   static FrameScoreMetadata? parseResponseForTests(String raw) =>
       parseVisionResponse(raw);
+
+  @visibleForTesting
+  static VisionBatchSuccess? parseBatchResponseForTests(
+    String raw, {
+    int? expectedFrameCount,
+  }) =>
+      parseBatchScoringResponse(raw, expectedFrameCount: expectedFrameCount);
 }

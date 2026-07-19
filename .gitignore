@@ -59,6 +59,15 @@ android/**/GeneratedPluginRegistrant.java
 
 # Local API keys — never commit
 lib/config/secrets.local.dart
+lib/config/secrets.debug.local.dart
+
+# Supabase CLI local link cache
+supabase/.temp/
+
+# App Store Connect API credentials — never commit
+secrets.asc.env
+**/AuthKey_*.p8
+.appstoreconnect/
 
 # Android release signing — never commit
 android/key.properties

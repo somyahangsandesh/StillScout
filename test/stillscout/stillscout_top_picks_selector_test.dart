@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-ScoredFrame _scored(int score, int timestampMs) => ScoredFrame(
+ScoredFrame _scored(double score, int timestampMs) => ScoredFrame(
       frame: ExtractedFrame(
         id: 'id_$timestampMs',
         filePath: '/fake/$timestampMs.jpg',
@@ -29,7 +29,7 @@ ScoredFrame _scored(int score, int timestampMs) => ScoredFrame(
 void main() {
   group('StillScoutTopPicksSelector', () {
     test('returns all frames when fewer than count', () {
-      final frames = [_scored(90, 0), _scored(80, 1000)];
+      final frames = [_scored(9.0, 0), _scored(8.0, 1000)];
       expect(
         StillScoutTopPicksSelector.select(frames, count: 3),
         hasLength(2),
@@ -43,9 +43,9 @@ void main() {
     test('always includes the top-scored frame first', () {
       final frames = [
         _scored(95, 0),
-        _scored(80, 500),
+        _scored(8.0, 500),
         _scored(85, 1000),
-        _scored(70, 1500),
+        _scored(7.0, 1500),
       ];
       final picks = StillScoutTopPicksSelector.select(frames, count: 3);
       expect(picks.first.score, 95);
@@ -56,7 +56,7 @@ void main() {
       final frames = [
         _scored(99, 0),
         _scored(95, 100),   // too close to 0
-        _scored(90, 500),   // too close to 0
+        _scored(9.0, 500),   // too close to 0
         _scored(85, 5000),  // far enough away
       ];
       final picks = StillScoutTopPicksSelector.select(frames, count: 3);
@@ -91,7 +91,7 @@ void main() {
       final frames = [
         _scored(99, 0),
         _scored(95, 100),
-        _scored(90, 200),
+        _scored(9.0, 200),
         _scored(85, 300),
       ];
       final picks = StillScoutTopPicksSelector.select(frames, count: 3);

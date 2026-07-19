@@ -7,19 +7,43 @@ import 'stillscout_constants.dart';
 class StillScoutAccessPolicy {
   StillScoutAccessPolicy._();
 
-  static int keeperLimit({required bool isPro}) =>
-      isPro ? StillScoutConstants.proKeeperLimit : StillScoutConstants.freeKeeperLimit;
+  /// Maximum number of frames a user can view at this tier.
+  ///
+  /// [isFirstScout] gives new free users a bonus (8 instead of 5) as a
+  /// "wow moment" so they feel StillScout's full value before converting.
+  static int keeperLimit({required bool isPro, bool isFirstScout = false}) {
+    if (isPro) return StillScoutConstants.proKeeperLimit;
+    if (isFirstScout) {
+      // Cap at proKeeperLimit so we never exceed Pro's visibility on first scout.
+      return (StillScoutConstants.freeKeeperLimit +
+              StillScoutConstants.firstScoutBonusKeepers)
+          .clamp(0, StillScoutConstants.proKeeperLimit);
+    }
+    return StillScoutConstants.freeKeeperLimit;
+  }
 
   static bool showTimestamp({required bool isPro}) => isPro;
 
-  static bool canViewFrame({required int rank, required bool isPro}) =>
-      rank >= 0 && rank < keeperLimit(isPro: isPro);
+  static bool canViewFrame({
+    required int rank,
+    required bool isPro,
+    bool isFirstScout = false,
+  }) =>
+      rank >= 0 && rank < keeperLimit(isPro: isPro, isFirstScout: isFirstScout);
 
-  static bool canExportFrame({required int rank, required bool isPro}) =>
-      canViewFrame(rank: rank, isPro: isPro);
+  static bool canExportFrame({
+    required int rank,
+    required bool isPro,
+    bool isFirstScout = false,
+  }) =>
+      canViewFrame(rank: rank, isPro: isPro, isFirstScout: isFirstScout);
 
-  static bool isLocked({required int rank, required bool isPro}) =>
-      !canViewFrame(rank: rank, isPro: isPro);
+  static bool isLocked({
+    required int rank,
+    required bool isPro,
+    bool isFirstScout = false,
+  }) =>
+      !canViewFrame(rank: rank, isPro: isPro, isFirstScout: isFirstScout);
 
   static String rankLabel(int rank) => 'Top Pick #${rank + 1}';
 
@@ -35,16 +59,21 @@ class StillScoutAccessPolicy {
   static String semanticsLabel({
     required int rank,
     required bool isPro,
-    required int score,
+    required double score,
   }) {
+    final scoreLabel = score >= 10.0 ? '10' : score.toStringAsFixed(1);
     if (showTimestamp(isPro: isPro)) {
-      return 'Frame rank ${rank + 1}, score $score';
+      return 'Frame rank ${rank + 1}, score $scoreLabel';
     }
-    return '${rankLabel(rank)}, score $score';
+    return '${rankLabel(rank)}, score $scoreLabel';
   }
 
-  static int lockedCount({required int totalFrames, required bool isPro}) {
-    final limit = keeperLimit(isPro: isPro);
+  static int lockedCount({
+    required int totalFrames,
+    required bool isPro,
+    bool isFirstScout = false,
+  }) {
+    final limit = keeperLimit(isPro: isPro, isFirstScout: isFirstScout);
     if (totalFrames <= limit) return 0;
     return totalFrames - limit;
   }
@@ -72,13 +101,13 @@ class StillScoutAccessPolicy {
     required bool isPro,
     required int exportsUsedThisSession,
   }) {
-    if (isPro) return 'Unlimited polished saves';
+    if (isPro) return 'Unlimited saves';
     final left = exportsRemainingThisScout(
       isPro: false,
       exportsUsedThisSession: exportsUsedThisSession,
     );
-    if (left <= 0) return 'No polished saves left this scout';
-    return '$left polished save${left == 1 ? '' : 's'} left this scout';
+    if (left <= 0) return 'No saves left this scout';
+    return '$left save${left == 1 ? '' : 's'} left this scout';
   }
 
   static bool canExportThisSession({
@@ -94,25 +123,48 @@ class StillScoutAccessPolicy {
         count;
   }
 
+  /// Cloud Gemini analysis — paid AI Pro entitlement.
+  static bool canUseCloudAi({required bool isPro}) => isPro;
+
+  /// Whether the next scout will call Gemini (Pro, or unused free AI trial).
+  /// Used for offline gates and preflight connectivity UI.
+  static bool scoutRequiresNetwork({
+    required bool isPro,
+    bool isAiProTrialAvailable = false,
+  }) =>
+      isPro || isAiProTrialAvailable;
+
+  /// AI Auto Polish — AI Pro only (not available on the free trial).
+  /// Polish runs automatically on all top picks after each Pro scout, and is
+  /// available as a per-frame toggle in the detail sheet.
+  static bool canUseAiPolish({required bool isPro, bool isAiProTrial = false}) =>
+      isPro;
+
   static String scoutsAllowanceLabel({
     required bool isPro,
-    required int scoutsRemainingThisWeek,
+    required int scoutsRemainingToday,
     bool isLoading = false,
+    bool isAiProTrialAvailable = false,
   }) {
-    if (isPro) return 'Unlimited scouts';
-    if (isLoading) return 'Checking weekly allowance…';
-    if (scoutsRemainingThisWeek <= 0) return 'No scouts left this week';
-    return '$scoutsRemainingThisWeek free scout${scoutsRemainingThisWeek == 1 ? '' : 's'} left this week';
+    if (isPro) return 'Unlimited AI Pro scouts';
+    if (isLoading) return 'Checking daily allowance…';
+    if (isAiProTrialAvailable) {
+      return 'Free AI Trial ready · needs internet';
+    }
+    if (scoutsRemainingToday <= 0) return 'No free scouts left today';
+    return '$scoutsRemainingToday free scout${scoutsRemainingToday == 1 ? '' : 's'} left today';
   }
 
   /// Ranks the user may browse in detail (gallery + swipe carousel).
   static List<int> browsableRanks({
     required int totalFrames,
     required bool isPro,
+    bool isFirstScout = false,
   }) {
     return [
       for (var rank = 0; rank < totalFrames; rank++)
-        if (canViewFrame(rank: rank, isPro: isPro)) rank,
+        if (canViewFrame(rank: rank, isPro: isPro, isFirstScout: isFirstScout))
+          rank,
     ];
   }
 

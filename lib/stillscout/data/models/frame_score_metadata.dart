@@ -1,21 +1,20 @@
 /// Where a frame's score came from — surfaced in the UI so creators know
 /// whether they're looking at a real AI judgment or an offline estimate.
 enum ScoreSource {
-  /// Scored by the multimodal vision LLM (gpt-4o-mini).
+  /// Scored by Gemini Flash (AI Pro cloud path).
   llm,
 
   /// Scored on-device via pixel heuristics (no network, or LLM unavailable).
   heuristic,
 
-  /// Pixel heuristics (blur/lighting/composition) combined with ML Kit
-  /// on-device face detection for the open-eyes axis. Best-of-both-worlds:
-  /// fully offline, real face intelligence.
+  /// Pixel heuristics combined with Apple Vision face detection for the
+  /// open-eyes axis. Fully offline.
   hybrid;
 
   String get label => switch (this) {
-        ScoreSource.llm => 'AI Scored',
-        ScoreSource.heuristic => 'Estimated · Offline',
-        ScoreSource.hybrid => 'On-device ML',
+        ScoreSource.llm => 'Gemini AI',
+        ScoreSource.heuristic => 'On-device',
+        ScoreSource.hybrid => 'Apple Vision',
       };
 
   static ScoreSource fromName(String? name) {
@@ -48,9 +47,13 @@ class FrameScoreMetadata {
 
   final ScoreSource source;
 
-  /// Weighted aggregate used for ranking (open eyes/expression matters most
-  /// for "is this the keeper frame", composition next, then technicals).
-  int totalScore([Map<String, double>? weights]) {
+  /// Weighted aggregate used for ranking — returns a 0.0–10.0 score with
+  /// 1-decimal-place precision (e.g. 8.5, 6.3, 9.0).
+  ///
+  /// Sub-scores (blur/lighting/eyes/composition) remain on the 0–100 int
+  /// scale internally; the total is divided by 10 on the way out so the
+  /// displayed number is intuitive ("9.5 out of 10").
+  double totalScore([Map<String, double>? weights]) {
     final w = weights ??
         const {
           'blur': 0.25,
@@ -62,7 +65,9 @@ class FrameScoreMetadata {
         (lightingScore * (w['lighting'] ?? 0.25)) +
         (openEyesScore * (w['eyes'] ?? 0.30)) +
         (compositionScore * (w['composition'] ?? 0.20));
-    return weighted.round().clamp(1, 100);
+    // Round to 1 decimal place on the 0–10 scale.
+    final raw = weighted.clamp(0.0, 100.0);
+    return (raw * 10).round() / 100.0; // e.g. 85.4 → 854 → 854/100 = 8.5
   }
 
   FrameScoreMetadata copyWith({

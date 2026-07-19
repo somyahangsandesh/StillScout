@@ -1,3 +1,5 @@
+import '../stillscout_constants.dart';
+
 /// Typed failure hierarchy for the StillScout pipeline.
 ///
 /// Every error that surfaces to the UI is expressed as a [StillScoutFailure]
@@ -33,6 +35,17 @@ final class VideoTooShortFailure extends StillScoutFailure {
 
   @override
   String get debugTag => 'video_too_short';
+}
+
+final class VideoTooLongFailure extends StillScoutFailure {
+  const VideoTooLongFailure();
+
+  @override
+  String get displayMessage =>
+      'That clip is longer than 10 minutes. Trim it to 10 minutes or less, then try again.';
+
+  @override
+  String get debugTag => 'video_too_long';
 }
 
 final class VideoUnreadableFailure extends StillScoutFailure {
@@ -97,8 +110,8 @@ final class ScoutQuotaExhaustedFailure extends StillScoutFailure {
 
   @override
   String get displayMessage =>
-      'You\'ve used all your free scouts this week. '
-      'Upgrade to Pro for unlimited scouting, or try again next week.';
+      'You\'ve used all ${StillScoutConstants.freeScoutsPerDay} free scouts for today. '
+      'Upgrade to Pro for unlimited scouting, or try again tomorrow.';
 
   @override
   String get debugTag => 'scout_quota_exhausted';
@@ -109,8 +122,9 @@ final class OfflineFailure extends StillScoutFailure {
 
   @override
   String get displayMessage =>
-      'StillScout needs a working internet connection for cloud AI scouting. '
-      'Connect to Wi‑Fi or mobile data, then try again.';
+      'Gemini scoring needs a working internet connection. '
+      'Connect to Wi‑Fi or mobile data, then try again. '
+      'Later free scouts (on-device Vision) work offline.';
 
   @override
   String get debugTag => 'offline';

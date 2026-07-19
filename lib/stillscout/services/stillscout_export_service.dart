@@ -1,12 +1,10 @@
 import 'dart:io';
 
-import 'dart:ui' show Rect;
-
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -15,6 +13,7 @@ import '../domain/stillscout_constants.dart';
 import '../presentation/widgets/stillscout_crop_picker.dart';
 import 'face_quality_detector.dart';
 import 'stillscout_auto_polish.dart';
+import 'stillscout_permissions.dart';
 
 enum StillScoutExportAction { saveToGallery, share }
 
@@ -65,12 +64,13 @@ class StillScoutExportService {
     ScoredFrame frame, {
     required bool isPro,
     StillScoutCropRatio? cropRatio,
-    bool applyPolish = true,
+    bool applyPolish = false,
     FaceQualityDetector? faceDetector,
     String? precomputedPolishPath,
+    BuildContext? permissionContext,
   }) async {
     try {
-      if (!await _ensureGalleryAccess()) {
+      if (!await _ensureGalleryAccess(permissionContext)) {
         return ExportResult.permissionDenied();
       }
 
@@ -84,15 +84,14 @@ class StillScoutExportService {
       );
       final path = resolved.path;
 
-      final bytes = await _materializeJpegBytes(path);
-      if (bytes == null || bytes.isEmpty) {
+      if (!await File(path).exists()) {
         return ExportResult.failure('Could not prepare the export file.');
       }
 
       try {
-        final name =
-            'stillscout_${frame.frame.id}_${frame.frame.timestampMs}';
-        await _putBytesInGallery(bytes, name: name);
+        // Save the file directly — no Dart decode/re-encode, so colour
+        // profiles (Display P3) and original JPEG quality are preserved.
+        await _putFileInGallery(path);
       } on GalException catch (e) {
         if (e.type == GalExceptionType.accessDenied) {
           return ExportResult.permissionDenied();
@@ -116,7 +115,7 @@ class StillScoutExportService {
     ScoredFrame frame, {
     required bool isPro,
     StillScoutCropRatio? cropRatio,
-    bool applyPolish = true,
+    bool applyPolish = false,
     FaceQualityDetector? faceDetector,
     String? precomputedPolishPath,
     Rect? shareOrigin,
@@ -139,7 +138,7 @@ class StillScoutExportService {
 
       final result = await Share.shareXFiles(
         [XFile(sharePath, mimeType: 'image/jpeg')],
-        text: 'Scouted with StillScout — score ${frame.score}/100',
+        text: 'Scouted with StillScout — score ${frame.score >= 10.0 ? '10' : frame.score.toStringAsFixed(1)}/10',
         sharePositionOrigin: shareOrigin,
       );
       if (result.status == ShareResultStatus.dismissed) {
@@ -155,13 +154,14 @@ class StillScoutExportService {
   static Future<BatchExportSummary> saveBatchToGallery(
     List<ScoredFrame> frames, {
     required bool isPro,
-    bool applyPolish = true,
+    bool applyPolish = false,
     FaceQualityDetector? faceDetector,
+    BuildContext? permissionContext,
   }) async {
     var succeeded = 0;
     var failed = 0;
 
-    if (!await _ensureGalleryAccess()) {
+    if (!await _ensureGalleryAccess(permissionContext)) {
       return BatchExportSummary(
         succeeded: 0,
         failed: frames.length,
@@ -175,6 +175,8 @@ class StillScoutExportService {
         isPro: isPro,
         applyPolish: applyPolish,
         faceDetector: faceDetector,
+        // Access already ensured for the batch.
+        permissionContext: null,
       );
       if (result.isSuccess) {
         succeeded++;
@@ -188,7 +190,7 @@ class StillScoutExportService {
   static Future<ExportResult> shareBatch(
     List<ScoredFrame> frames, {
     required bool isPro,
-    bool applyPolish = true,
+    bool applyPolish = false,
     FaceQualityDetector? faceDetector,
     Rect? shareOrigin,
   }) async {
@@ -224,33 +226,28 @@ class StillScoutExportService {
     }
   }
 
-  static Future<void> _putBytesInGallery(
-    Uint8List bytes, {
-    required String name,
-  }) async {
+  /// Save a file directly from its path — bypasses Dart decode/re-encode so
+  /// the original JPEG bytes (including any Display-P3 ICC profile) reach the
+  /// Photos library untouched. iOS handles EXIF orientation natively.
+  static Future<void> _putFileInGallery(String filePath) async {
     try {
-      await Gal.putImageBytes(bytes, album: 'StillScout', name: name);
+      await Gal.putImage(filePath, album: 'StillScout');
     } on GalException catch (e) {
       if (e.type == GalExceptionType.accessDenied) rethrow;
-      await Gal.putImageBytes(bytes, name: name);
+      // Album creation may fail on older iOS — retry without album name.
+      await Gal.putImage(filePath);
     }
   }
 
-  static Future<bool> _ensureGalleryAccess() async {
+  static Future<bool> _ensureGalleryAccess([BuildContext? context]) async {
+    if (context != null && context.mounted) {
+      return StillScoutPermissions.ensureGalleryWrite(context);
+    }
+
     // Gal owns write access — READ_MEDIA_* / photos alone is not enough to save.
     if (await Gal.hasAccess(toAlbum: true)) return true;
 
-    if (Platform.isAndroid) {
-      final storage = await Permission.storage.request();
-      if (storage.isGranted && await Gal.hasAccess(toAlbum: true)) return true;
-    }
-
     if (await Gal.requestAccess(toAlbum: true)) return true;
-
-    if (Platform.isAndroid) {
-      final storage = await Permission.storage.status;
-      return storage.isGranted;
-    }
     return false;
   }
 
@@ -258,7 +255,7 @@ class StillScoutExportService {
     ScoredFrame frame, {
     required bool isPro,
     StillScoutCropRatio? cropRatio,
-    bool applyPolish = true,
+    bool applyPolish = false,
     FaceQualityDetector? faceDetector,
     String? precomputedPolishPath,
   }) async {
@@ -290,8 +287,15 @@ class StillScoutExportService {
     }
 
     if (applyPolish) {
+      // Never reuse a preview polish cache when exporting Pro native-res
+      // or after a crop — that would discard the higher-quality / cropped path.
+      final cropApplied = targetRatio != null;
       final cached = precomputedPolishPath;
-      if (cached != null && await File(cached).exists()) {
+      final canUseCached = !isPro &&
+          !cropApplied &&
+          cached != null &&
+          await File(cached).exists();
+      if (canUseCached) {
         path = cached;
       } else {
         final polished = await StillScoutAutoPolish.polishWithFaceDetection(
@@ -300,59 +304,34 @@ class StillScoutExportService {
         );
         if (polished != null && await File(polished).exists()) path = polished;
       }
-    } else {
-      path = await _bakeOrientationToFile(path);
     }
+    // No re-encode for orientation baking — iOS Photos handles EXIF orientation
+    // natively via Gal.putImage(path), and re-encoding via Dart's image library
+    // strips Display-P3 ICC profiles causing the saved image to look different.
 
     return (path: path, nativeRes: nativeRes);
   }
 
-  /// Re-encodes with EXIF orientation applied so gallery apps show the full frame.
-  static Future<String> _bakeOrientationToFile(String path) async {
-    try {
-      final bytes = await File(path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return path;
-      final oriented = img.bakeOrientation(img.Image.from(decoded));
-      final tempDir = await getTemporaryDirectory();
-      final out =
-          '${tempDir.path}/stillscout_orient_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      await File(out).writeAsBytes(
-        img.encodeJpg(oriented, quality: 95),
-        flush: true,
-      );
-      return out;
-    } catch (_) {
-      return path;
-    }
-  }
-
-  static Future<Uint8List?> _materializeJpegBytes(String path) async {
-    try {
-      if (!await File(path).exists()) return null;
-      final bytes = await File(path).readAsBytes();
-      if (bytes.isEmpty) return null;
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return bytes;
-      final oriented = img.bakeOrientation(img.Image.from(decoded));
-      return Uint8List.fromList(img.encodeJpg(oriented, quality: 95));
-    } catch (e) {
-      if (kDebugMode) debugPrint('[Export] materialize failed: $e');
-      return null;
-    }
-  }
-
+  /// Copies the source file to a stable temp path for the share sheet.
+  /// Raw bytes are copied without decode/re-encode to preserve the original
+  /// colour profile (Display P3) and JPEG quality.
   static Future<String?> _writeShareableFile(
     String path,
     ScoredFrame frame,
   ) async {
-    final bytes = await _materializeJpegBytes(path);
-    if (bytes == null || bytes.isEmpty) return null;
-    final tempDir = await getTemporaryDirectory();
-    final out =
-        '${tempDir.path}/stillscout_share_${frame.frame.id}_${frame.frame.timestampMs}.jpg';
-    await File(out).writeAsBytes(bytes, flush: true);
-    return out;
+    try {
+      if (!await File(path).exists()) return null;
+      final bytes = await File(path).readAsBytes();
+      if (bytes.isEmpty) return null;
+      final tempDir = await getTemporaryDirectory();
+      final out =
+          '${tempDir.path}/stillscout_share_${frame.frame.id}_${frame.frame.timestampMs}.jpg';
+      await File(out).writeAsBytes(bytes, flush: true);
+      return out;
+    } catch (e) {
+      if (kDebugMode) debugPrint('[Export] share file prep failed: $e');
+      return null;
+    }
   }
 
   static Future<({String path, bool nativeRes})> _sourcePath(
@@ -362,7 +341,7 @@ class StillScoutExportService {
     if (!await File(frame.frame.filePath).exists()) {
       throw StateError('Frame file missing at ${frame.frame.filePath}');
     }
-    if (!isPro) return (path: frame.frame.filePath, nativeRes: true);
+    if (!isPro) return (path: frame.frame.filePath, nativeRes: false);
 
     final videoPath = frame.frame.sourceVideoPath;
     if (videoPath.isEmpty || !await File(videoPath).exists()) {
@@ -374,9 +353,13 @@ class StillScoutExportService {
 
     try {
       final tempDir = await getTemporaryDirectory();
+      // Use a unique full file path so the iOS plugin doesn't map all exports
+      // to the same video-name-based filename in the temp directory.
+      final exportPath =
+          '${tempDir.path}/stillscout_export_${frame.frame.id}_${frame.frame.timestampMs}.jpg';
       final highRes = await VideoThumbnail.thumbnailFile(
         video: videoPath,
-        thumbnailPath: tempDir.path,
+        thumbnailPath: exportPath,
         timeMs: frame.frame.timestampMs,
         imageFormat: ImageFormat.JPEG,
         quality: StillScoutConstants.proExportJpegQuality,

@@ -1,20 +1,23 @@
 // ============================================================================
 // secrets.local.example.dart — copy to secrets.local.dart and fill in values
 // ============================================================================
+// App Store release builds:
+//   - Fill supabaseUrl + supabaseAnonKey (Gemini Flash proxy on edge)
+//   - Fill revenueCatAppleApiKey (appl_…)
+//   - LEAVE geminiApiKey EMPTY — release mode never uses it directly.
+//     The Gemini key lives as a Supabase Secret and never touches the binary.
+// Debug / local testing: fill geminiApiKey for direct AI calls.
+// ============================================================================
 
 // ignore_for_file: unused_field
 class StillScoutSecrets {
-  // Supabase (P0 vision-score Edge Function proxy)
+  // Supabase (Gemini Flash proxy Edge Function) — required for store builds
   static const String supabaseUrl = '';
   static const String supabaseAnonKey = '';
 
-  // Direct provider fallbacks (only when Supabase proxy is unavailable)
-  static const String groqApiKey = '';
+  // Direct Gemini key — DEBUG ONLY. Keep empty for App Store builds.
   static const String geminiApiKey = '';
-  static const String grokApiKey = '';
-  static const String openAiApiKey = '';
 
-  // RevenueCat public SDK keys (appl_… / goog_… — never sk_ secrets)
+  // RevenueCat public iOS SDK key (appl_… — never sk_ secrets)
   static const String revenueCatAppleApiKey = '';
-  static const String revenueCatGoogleApiKey = '';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../domain/stillscout_constants.dart';
 import '../theme/stillscout_theme.dart';
 
 /// Lightweight in/out trim range slider for StillScout.
@@ -16,12 +17,16 @@ class StillScoutTrimScrubber extends StatefulWidget {
     required this.onTrimChanged,
     this.initialStartMs,
     this.initialEndMs,
+    this.maxWindowMs = StillScoutConstants.maxVideoDurationMs,
   });
 
   final int durationMs;
   final void Function(int startMs, int endMs) onTrimChanged;
   final int? initialStartMs;
   final int? initialEndMs;
+
+  /// Maximum selectable window (product limit: 10 minutes).
+  final int maxWindowMs;
 
   @override
   State<StillScoutTrimScrubber> createState() => _StillScoutTrimScrubberState();
@@ -30,12 +35,34 @@ class StillScoutTrimScrubber extends StatefulWidget {
 class _StillScoutTrimScrubberState extends State<StillScoutTrimScrubber> {
   late RangeValues _values;
 
+  int get _maxWindow =>
+      widget.maxWindowMs.clamp(1, widget.durationMs);
+
+  RangeValues _clampWindow(RangeValues values) {
+    var start = values.start.clamp(0.0, widget.durationMs.toDouble());
+    var end = values.end.clamp(0.0, widget.durationMs.toDouble());
+    if (end < start) end = start;
+    final maxWindow = _maxWindow.toDouble();
+    if (end - start > maxWindow) {
+      // Keep the thumb the user most recently moved by preserving the
+      // end when the window grows from the left, and start when from the right.
+      if ((end - _values.end).abs() >= (start - _values.start).abs()) {
+        start = end - maxWindow;
+      } else {
+        end = start + maxWindow;
+      }
+    }
+    return RangeValues(start.toDouble(), end.toDouble());
+  }
+
   @override
   void initState() {
     super.initState();
-    _values = RangeValues(
-      (widget.initialStartMs ?? 0).toDouble(),
-      (widget.initialEndMs ?? widget.durationMs).toDouble(),
+    _values = _clampWindow(
+      RangeValues(
+        (widget.initialStartMs ?? 0).toDouble(),
+        (widget.initialEndMs ?? widget.durationMs).toDouble(),
+      ),
     );
   }
 
@@ -81,6 +108,22 @@ class _StillScoutTrimScrubberState extends State<StillScoutTrimScrubber> {
             ],
           ),
         ),
+        if (widget.durationMs > _maxWindow)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              StillScoutSpacing.m,
+              0,
+              StillScoutSpacing.m,
+              4,
+            ),
+            child: Text(
+              'Max scout window is 10 minutes',
+              style: StillScoutTextStyles.caption.copyWith(
+                color: StillScoutColors.silver,
+                fontSize: 11,
+              ),
+            ),
+          ),
         SliderTheme(
           data: const SliderThemeData(
             activeTrackColor: StillScoutColors.accent,
@@ -98,10 +141,11 @@ class _StillScoutTrimScrubberState extends State<StillScoutTrimScrubber> {
             max: widget.durationMs.toDouble(),
             onChanged: (values) {
               HapticFeedback.selectionClick();
-              setState(() => _values = values);
+              final clamped = _clampWindow(values);
+              setState(() => _values = clamped);
               widget.onTrimChanged(
-                values.start.round(),
-                values.end.round(),
+                clamped.start.round(),
+                clamped.end.round(),
               );
             },
           ),

@@ -8,12 +8,12 @@ import 'package:hive/hive.dart';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-StillScoutSession _session(String id, {int topScore = 80}) => StillScoutSession(
+StillScoutSession _session(String id, {double topScore = 8.0}) => StillScoutSession(
       id: id,
       videoPath: '/fake/$id.mp4',
       createdAt: DateTime.now(),
       frameCount: 10,
-      topScore: topScore,
+      topScore: topScore.toDouble(),
     );
 
 // ── tests ─────────────────────────────────────────────────────────────────────
@@ -74,11 +74,11 @@ void main() {
 
   test('saveSession overwrites existing entry with same id', () async {
     final repo = SessionRepositoryImpl();
-    await repo.saveSession(_session('overwrite', topScore: 70));
-    await repo.saveSession(_session('overwrite', topScore: 95));
+    await repo.saveSession(_session('overwrite', topScore: 7.0));
+    await repo.saveSession(_session('overwrite', topScore: 9.5));
     final sessions = await repo.getSessions();
     expect(sessions, hasLength(1));
-    expect(sessions.first.topScore, 95);
+    expect(sessions.first.topScore, 9.5);
   });
 
   test('exportsUsed round-trips through Hive', () async {

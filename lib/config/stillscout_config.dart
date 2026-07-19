@@ -4,48 +4,66 @@
 // Pass keys via --dart-define at build time, or create
 // lib/config/secrets.local.dart (gitignored) following the template below.
 //
-// Example secrets.local.dart:
-//   class StillScoutSecrets {
-//     // AI Vision cascade (add any you have — app uses all free tiers in order)
-//     static const String groqApiKey    = 'gsk_...';   // console.groq.com
-//     static const String geminiApiKey  = 'AIza...';   // aistudio.google.com
-//     static const String grokApiKey    = 'xai-...';   // console.x.ai
-//     static const String openAiApiKey  = 'sk-...';    // platform.openai.com
-//     // RevenueCat
-//     static const String revenueCatAppleApiKey  = 'appl_...';
-//     static const String revenueCatGoogleApiKey = 'goog_...';
-//   }
+// App Store release checklist:
+//   - supabaseUrl + supabaseAnonKey (Gemini Flash proxy on edge recommended)
+//   - revenueCatAppleApiKey (appl_…)
+//   - Leave Gemini EMPTY in release unless ALLOW_DIRECT_AI_KEYS=true
+//   - Host docs/legal/*.html and set PRIVACY_POLICY_URL / TERMS_OF_USE_URL
 //
-// The cascade priority is: Groq → Gemini → Grok → OpenAI → on-device ML Kit.
-// You only need ONE key to get AI scoring — the rest are optional redundancy.
+// Cloud AI path (AI Pro only): Gemini Flash via optional Supabase proxy
+// or direct Gemini key (debug). Free users stay on Vision + heuristics.
 // ============================================================================
+
+import 'package:flutter/foundation.dart';
 
 // ignore: uri_does_not_exist
 import 'secrets.local.dart' if (dart.library.io) 'secrets.local.dart';
+// On iOS/Android dart.library.html is false, so this always resolves to the
+// committed stub (empty keys). A developer who wants live debug keys can add
+// them to secrets.local.dart (StillScoutSecrets) instead.
+// ignore: uri_does_not_exist
+import '_secrets_debug_stub.dart' if (dart.library.html) 'secrets.debug.local.dart';
 
 class StillScoutConfig {
   StillScoutConfig._();
 
-  // ── Groq (Priority 1 — free tier, fastest, llama-4-scout vision) ──────────
-  static const String _groqFromEnv =
-      String.fromEnvironment('GROQ_API_KEY', defaultValue: '');
+  // ── Legal (App Store Guideline 3.1.2 + App Store Connect metadata) ────────
+  // Public HTTPS copies of docs/legal/*.html (also mirrored in Notion).
+  // Override with --dart-define if you move hosting to your own domain.
+  // ── Legal URLs ─────────────────────────────────────────────────────────────
+  // Defaults point to the app's GitHub Pages legal mirror.
+  // Override with --dart-define=PRIVACY_POLICY_URL=https://… before releasing.
+  //
+  // IMPORTANT: Catbox.moe links (old defaults) are ephemeral — do NOT use them.
+  // Host docs/legal/*.html on a permanent domain before App Store submission.
+  static const String privacyPolicyUrl = String.fromEnvironment(
+    'PRIVACY_POLICY_URL',
+    defaultValue: 'https://stillscout.app/legal/privacy',
+  );
+  static const String termsOfUseUrl = String.fromEnvironment(
+    'TERMS_OF_USE_URL',
+    defaultValue: 'https://stillscout.app/legal/terms',
+  );
+  static const String supportUrl = String.fromEnvironment(
+    'SUPPORT_URL',
+    defaultValue: 'https://stillscout.app/legal/support',
+  );
+  static const String appleStandardEulaUrl =
+      'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 
-  static bool _isGroqKey(String k) {
-    final t = k.trim();
-    return t.isNotEmpty && t.startsWith('gsk_') && !t.contains('YOUR_');
-  }
+  /// Release builds never read client AI key material unless you explicitly
+  /// pass `--dart-define=ALLOW_DIRECT_AI_KEYS=true` (emergency hotfix only).
+  /// Combined with `kReleaseMode`, Dart AOT dead-code-eliminates secret reads
+  /// so provider keys are not pulled into App Store binaries.
+  static const bool allowDirectAiKeysInRelease = bool.fromEnvironment(
+    'ALLOW_DIRECT_AI_KEYS',
+    defaultValue: false,
+  );
 
-  static String get groqApiKey {
-    if (_isGroqKey(_groqFromEnv)) return _groqFromEnv.trim();
-    // ignore: undefined_identifier
-    const local = StillScoutSecrets.groqApiKey;
-    if (_isGroqKey(local)) return local.trim();
-    return 'gsk_YOUR_GROQ_API_KEY';
-  }
+  static bool get _mayUseDirectAiKeys =>
+      !kReleaseMode || allowDirectAiKeysInRelease;
 
-  static bool get isGroqConfigured => _isGroqKey(groqApiKey);
-
-  // ── Gemini Flash (Priority 2 — free tier, most generous quota) ────────────
+  // ── Gemini Flash (sole cloud AI for AI Pro scoring) ───────────────────────
   static const String _geminiFromEnv =
       String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
 
@@ -57,75 +75,33 @@ class StillScoutConfig {
   }
 
   static String get geminiApiKey {
+    if (!_mayUseDirectAiKeys) return '';
     if (_isGeminiKey(_geminiFromEnv)) return _geminiFromEnv.trim();
     // ignore: undefined_identifier
     const local = StillScoutSecrets.geminiApiKey;
     if (_isGeminiKey(local)) return local.trim();
+    // ignore: undefined_identifier
+    const debug = StillScoutDebugSecrets.geminiApiKey;
+    if (_isGeminiKey(debug)) return debug.trim();
     return 'AIzaYOUR_GEMINI_API_KEY';
   }
 
-  static bool get isGeminiConfigured => _isGeminiKey(geminiApiKey);
+  static bool get isGeminiConfigured =>
+      _mayUseDirectAiKeys && _isGeminiKey(geminiApiKey);
 
-  // ── xAI Grok (Priority 3 — free tier, OpenAI-compatible) ─────────────────
-  static const String _grokFromEnv =
-      String.fromEnvironment('GROK_API_KEY', defaultValue: '');
-
-  static bool _isGrokKey(String k) {
-    final t = k.trim();
-    return t.isNotEmpty && t.startsWith('xai-') && !t.contains('YOUR_');
-  }
-
-  static String get grokApiKey {
-    if (_isGrokKey(_grokFromEnv)) return _grokFromEnv.trim();
-    // ignore: undefined_identifier
-    const local = StillScoutSecrets.grokApiKey;
-    if (_isGrokKey(local)) return local.trim();
-    return 'xai-YOUR_GROK_API_KEY';
-  }
-
-  static bool get isGrokConfigured => _isGrokKey(grokApiKey);
-
-  // ── OpenAI GPT-4o-mini (Priority 4 — paid fallback) ──────────────────────
-  static const String _openAiFromEnv =
-      String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
-
-  static bool _isOpenAiKey(String key) {
-    final k = key.trim();
-    return k.isNotEmpty && k.startsWith('sk-') && !k.contains('YOUR_');
-  }
-
-  static String get openAiApiKey {
-    if (_isOpenAiKey(_openAiFromEnv)) return _openAiFromEnv.trim();
-    // ignore: undefined_identifier
-    const local = StillScoutSecrets.openAiApiKey;
-    if (_isOpenAiKey(local)) return local.trim();
-    return 'sk-YOUR_OPENAI_API_KEY';
-  }
-
-  static bool get isOpenAiConfigured => _isOpenAiKey(openAiApiKey);
-
-  /// Vision model used for AI frame scoring.
-  static const String visionModel = 'gpt-4o-mini';
-
-  // ── RevenueCat (in-app purchases) ─────────────────────────────────────────
-  // PUBLIC SDK keys only — appl_ (iOS), goog_ (Android), test_ (sandbox).
+  // ── RevenueCat (in-app purchases — iOS / App Store only) ──────────────────
+  // PUBLIC SDK key only — appl_… or test_… (sandbox).
   // NEVER put sk_ secret keys in the app — those are server-side only.
   static const String _testStoreKey = 'test_zRmNZWtkMgDEoptCavDbAdhMXxw';
 
   static const String _rcAppleFromEnv =
       String.fromEnvironment('RC_APPLE_KEY', defaultValue: '');
-  static const String _rcGoogleFromEnv =
-      String.fromEnvironment('RC_GOOGLE_KEY', defaultValue: '');
 
   static bool _isRevenueCatPublicKey(String k) {
     final t = k.trim();
     if (t.isEmpty || t.contains('YOUR_')) return false;
-    // Reject secret keys — they must never ship in client binaries.
     if (t.startsWith('sk_')) return false;
-    return t.startsWith('appl_') ||
-        t.startsWith('goog_') ||
-        t.startsWith('amzn_') ||
-        t.startsWith('test_');
+    return t.startsWith('appl_') || t.startsWith('test_');
   }
 
   static String get revenueCatAppleApiKey {
@@ -133,25 +109,58 @@ class StillScoutConfig {
     // ignore: undefined_identifier
     const local = StillScoutSecrets.revenueCatAppleApiKey;
     if (_isRevenueCatPublicKey(local)) return local.trim();
+    // Never ship the shared sandbox key in release builds.
+    if (kReleaseMode) return '';
     return _testStoreKey;
   }
 
-  static String get revenueCatGoogleApiKey {
-    if (_isRevenueCatPublicKey(_rcGoogleFromEnv)) return _rcGoogleFromEnv.trim();
-    // ignore: undefined_identifier
-    const local = StillScoutSecrets.revenueCatGoogleApiKey;
-    if (_isRevenueCatPublicKey(local)) return local.trim();
-    return _testStoreKey;
-  }
-
-  /// True when a real store key is configured (not just the test fallback).
+  /// True when a real App Store key is configured (not just the test fallback).
   static bool get isRevenueCatConfigured =>
-      _isRevenueCatPublicKey(revenueCatAppleApiKey) ||
-      _isRevenueCatPublicKey(revenueCatGoogleApiKey);
+      _isRevenueCatPublicKey(revenueCatAppleApiKey);
+
+  /// True when a production App Store public SDK key (`appl_`) is present.
+  static bool get isRevenueCatStoreConfigured {
+    final apple = revenueCatAppleApiKey.trim();
+    return apple.startsWith('appl_') && !apple.contains('YOUR_');
+  }
+
+  /// Call once at startup to surface misconfiguration in debug/TestFlight logs.
+  static void assertReleaseReadiness() {
+    if (!kReleaseMode) return;
+
+    if (!isSupabaseConfigured) {
+      debugPrint(
+        '[StillScoutConfig] WARNING: Supabase is not configured — '
+        'AI Pro cloud scoring will not work in this release build.',
+      );
+    }
+    if (!isRevenueCatStoreConfigured) {
+      debugPrint(
+        '[StillScoutConfig] WARNING: RevenueCat production appl_ key missing — '
+        'IAP will be unavailable in this release build.',
+      );
+    }
+    if (isGeminiConfigured) {
+      debugPrint(
+        '[StillScoutConfig] WARNING: Direct Gemini key is present in a release '
+        'build. Remove it — use the Supabase edge proxy instead.',
+      );
+    }
+  }
 
   /// Entitlement identifier — create in RevenueCat dashboard as "pro".
   /// Attach stillscout_pro_monthly + stillscout_pro_yearly products to it.
+  /// Product branding in-app is **AI Pro**; the RC id stays `pro`.
   static const String rcEntitlementPro = 'pro';
+
+  /// Alias for [rcEntitlementPro] — use when naming the AI Pro product.
+  static const String rcEntitlementAiPro = rcEntitlementPro;
+
+  /// User-facing product name for the Pro entitlement.
+  static const String aiProDisplayName = 'AI Pro';
+
+  /// User-facing cloud model name — avoid pinning a patch version in UI copy.
+  static const String geminiModelDisplayName = 'Gemini Flash';
 
   /// Primary offering identifier in RevenueCat (fallback: default, stillscout_main).
   static const String rcOfferingIdentifier = 'stillscout_main';
@@ -167,8 +176,7 @@ class StillScoutConfig {
 
   // ── Supabase (vision-score Edge Function proxy) ───────────────────────────
   // Project URL and anon/public key — safe to ship in client apps.
-  // The REAL AI provider keys (Groq, Gemini, Grok, OpenAI) live as Supabase
-  // Secrets and never leave the server.
+  // The Gemini API key lives as a Supabase Secret and never leaves the server.
   //
   // Find both values at: Supabase dashboard → Project Settings → API.
   static const String _supabaseUrlFromEnv =
@@ -217,5 +225,11 @@ class StillScoutConfig {
 
   /// Must match Xcode + RevenueCat iOS app registration.
   static const String iosBundleId = 'com.stillscout.stillscout';
-  static const String androidApplicationId = 'com.stillscout.stillscout';
+
+  /// Apple Developer Team ID (Certificates, Identifiers & Profiles).
+  static const String appleTeamId = 'S8WFJFA85T';
+
+  /// App Store Connect API Key ID used for TestFlight uploads
+  /// (`tool/upload_testflight.sh` / `secrets.asc.env`).
+  static const String appStoreConnectApiKeyId = '725F75L52R';
 }

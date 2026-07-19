@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -6,20 +8,10 @@ import '../../../data/models/frame_score_metadata.dart';
 import '../../stillscout_device_id.dart';
 import '../vision_scoring_client.dart';
 
-/// Priority-0 vision provider — calls the StillScout Supabase Edge Function.
+/// Priority-0 proxy — StillScout Supabase Edge Function.
 ///
-/// The Edge Function holds the real API keys as server-side Supabase Secrets.
-/// No keys are shipped in the app binary. The server runs its own cascade
-/// (Groq → Gemini → Grok → OpenAI) and returns a unified score.
-///
-/// Cascade behaviour when this client fails:
-/// - [VisionScoringRateLimit]  → device hit the Supabase server daily cap
-///   (configured server-side; app local guard is
-///   [StillScoutConstants.maxCloudFramesPerDeviceDay] for direct providers)
-/// - [VisionScoringAuthError]  → bad anon key / misconfigured function
-/// - [VisionScoringFailure]    → function unreachable (network / cold start)
-///
-/// In all failure cases the orchestrator falls through to direct API clients.
+/// The edge function calls **Gemini Flash** with server-side keys only.
+/// Supports single-frame scoring and multi-image batch scoring (AI Pro).
 class SupabaseVisionClient implements VisionScoringClient {
   SupabaseVisionClient();
 
@@ -32,27 +24,102 @@ class SupabaseVisionClient implements VisionScoringClient {
   @override
   void resetForTests() {}
 
+  String get _baseUrl =>
+      '${StillScoutConfig.supabaseUrl}/functions/v1/vision-score';
+
+  Map<String, String> get _headers => {
+        'Authorization': 'Bearer ${StillScoutConfig.supabaseAnonKey}',
+        'apikey': StillScoutConfig.supabaseAnonKey,
+      };
+
   @override
-  Future<VisionScoringResult> scoreFrame({required String base64Jpeg}) async {
-    final url = '${StillScoutConfig.supabaseUrl}/functions/v1/vision-score';
-    final anonKey = StillScoutConfig.supabaseAnonKey;
+  Future<VisionBatchResult> batchScoreFrames({
+    required List<String> base64Jpegs,
+    required int pickCount,
+    StillScoutVideoContext videoContext = StillScoutVideoContext.auto,
+  }) async {
+    if (!isConfigured) {
+      return const VisionBatchFailure('not configured');
+    }
+    if (base64Jpegs.isEmpty) {
+      return const VisionBatchFailure('no frames');
+    }
 
     final deviceId = await StillScoutDeviceId.get();
 
     try {
       final response = await sharedVisionDio.post<Map<String, dynamic>>(
-        url,
+        _baseUrl,
+        data: <String, dynamic>{
+          'images': base64Jpegs,
+          'pick_count': pickCount,
+          'device_id': deviceId,
+          'context': videoContext.name,
+        },
+        options: Options(
+          headers: _headers,
+          // 48×384px JPEGs need headroom on cellular.
+          sendTimeout: const Duration(seconds: 45),
+          receiveTimeout: const Duration(seconds: 65),
+        ),
+      );
+
+      final body = response.data;
+      if (body == null) {
+        return const VisionBatchFailure('empty_body');
+      }
+
+      final parsed = parseBatchScoringResponse(
+        jsonEncode(body),
+        expectedFrameCount: base64Jpegs.length,
+      );
+      if (parsed != null) {
+        debugPrint('[Supabase] Batch scored ${base64Jpegs.length} frames.');
+        return parsed;
+      }
+      debugPrint('[Supabase] Batch parse failed — body keys: ${body.keys}');
+      return const VisionBatchFailure('parse_error');
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      final errorCode = e.response?.data is Map
+          ? (e.response!.data as Map)['code'] as String?
+          : null;
+
+      if (status == 429 || errorCode == 'DAILY_CAP_REACHED') {
+        debugPrint('[Supabase] Batch daily quota reached.');
+        return const VisionBatchRateLimit();
+      }
+      if (status == 401 || status == 403) {
+        debugPrint('[Supabase] Batch auth error ($status).');
+        return const VisionBatchAuthError();
+      }
+      debugPrint('[Supabase] Batch failed: status=$status msg=${e.message}');
+      return VisionBatchFailure('status=$status');
+    } catch (e) {
+      debugPrint('[Supabase] Batch unexpected error: $e');
+      return VisionBatchFailure(e.toString());
+    }
+  }
+
+  @override
+  Future<VisionScoringResult> scoreFrame({
+    required String base64Jpeg,
+    StillScoutVideoContext videoContext = StillScoutVideoContext.auto,
+  }) async {
+    final deviceId = await StillScoutDeviceId.get();
+
+    try {
+      final response = await sharedVisionDio.post<Map<String, dynamic>>(
+        _baseUrl,
         data: <String, dynamic>{
           'image': base64Jpeg,
           'device_id': deviceId,
+          'context': videoContext.name,
         },
         options: Options(
-          headers: <String, String>{
-            'Authorization': 'Bearer $anonKey',
-            'apikey': anonKey,
-          },
-          sendTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 20),
+          headers: _headers,
+          sendTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 25),
         ),
       );
 
@@ -61,7 +128,6 @@ class SupabaseVisionClient implements VisionScoringClient {
         return const VisionScoringFailure('empty_body');
       }
 
-      // Parse using the shared parser — same JSON schema as direct providers
       final metadata = _parseSupabaseScore(body);
       if (metadata == null) {
         debugPrint('[Supabase] Parse failed — body: $body');
@@ -76,17 +142,16 @@ class SupabaseVisionClient implements VisionScoringClient {
           : null;
 
       if (status == 429 || errorCode == 'DAILY_CAP_REACHED') {
-        debugPrint('[Supabase] Device daily quota reached — falling back to direct providers.');
+        debugPrint('[Supabase] Device daily quota reached.');
         return const VisionScoringRateLimit();
       }
       if (status == 401 || status == 403) {
-        debugPrint('[Supabase] Auth error ($status) — check anon key and function deployment.');
+        debugPrint('[Supabase] Auth error ($status).');
         return const VisionScoringAuthError();
       }
       if (status == 503) {
-        // All server-side providers also failed — skip to local fallback
-        debugPrint('[Supabase] All server providers exhausted (503).');
-        return const VisionScoringFailure('server_providers_exhausted');
+        debugPrint('[Supabase] Gemini unavailable on edge (503).');
+        return const VisionScoringFailure('server_gemini_unavailable');
       }
       debugPrint('[Supabase] Request failed: status=$status msg=${e.message}');
       return VisionScoringFailure('status=$status');
@@ -97,7 +162,6 @@ class SupabaseVisionClient implements VisionScoringClient {
   }
 }
 
-/// Converts the edge function's flat JSON response into [FrameScoreMetadata].
 FrameScoreMetadata? _parseSupabaseScore(Map<String, dynamic> json) {
   try {
     final b = json['blur_score'];

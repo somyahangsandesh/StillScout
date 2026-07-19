@@ -1,16 +1,13 @@
 # StillScout
 
-**Shipathon 2026** · Standalone Flutter app for creators
+**Shipathon 2026** · iOS-only Flutter app for creators
 
-**Standalone app** — AI-powered frame scouting for creators.  
-Extract, rank, polish, and export the best stills from any video clip.
+AI-powered frame scouting for creators. Extract, rank, polish, and export the best stills from any video clip.
 
 > **This is the canonical StillScout codebase.**  
-> It is **not** part of Dawn Oracle. Shipathon / App Store / Play Store builds use **this repo only**.  
+> **Platform:** iOS only (iPhone + iPad). No Android / Play Store target.  
 > **Path:** `/Users/sandeshsomyahang/stillscout`  
-> **Bundle ID:** `com.stillscout.stillscout` (iOS + Android)
-
-Git: local repo at this path (`.git` present).
+> **Bundle ID:** `com.stillscout.stillscout`
 
 ## Setup
 
@@ -20,11 +17,11 @@ Git: local repo at this path (`.git` present).
    cp lib/config/secrets.local.example.dart lib/config/secrets.local.dart
    ```
 3. Fill in `StillScoutSecrets` in `secrets.local.dart` (gitignored):
-   - **Supabase** URL + anon key for the `vision-score` Edge Function (production path).
-   - Optional direct AI keys as emergency fallbacks when the proxy is down.
-   - RevenueCat public SDK keys for Pro subscriptions.
+   - **Supabase** URL + anon key for the `vision-score` Edge Function (required for AI Pro in release).
+   - **RevenueCat** `appl_…` public SDK key for AI Pro subscriptions.
+   - Optional direct Gemini key for **debug only** — never ship in App Store builds.
 
-## Run
+## Run (iOS)
 
 ```bash
 flutter run
@@ -36,8 +33,7 @@ Optional dart-defines:
 flutter run \
   --dart-define=SUPABASE_URL=... \
   --dart-define=SUPABASE_ANON_KEY=... \
-  --dart-define=RC_APPLE_KEY=... \
-  --dart-define=RC_GOOGLE_KEY=...
+  --dart-define=RC_APPLE_KEY=appl_...
 ```
 
 ## Architecture
@@ -46,20 +42,21 @@ flutter run \
 |-------|----------|
 | **Extract** | `video_thumbnail` every **1 second** (max **180** frames per clip, 4 parallel workers) |
 | **Dedup** | Perceptual hash in isolate — drops near-duplicate frames |
-| **Score** | Supabase `vision-score` (P0) → Groq / Gemini / Grok / OpenAI fallback |
-| **Eyes** | ML Kit face/eye detection on all frames post-scoring |
+| **On-device** | Apple **Vision** face/eye analysis — gates obvious rejects before cloud spend |
+| **Score (free)** | Vision + heuristics — no network |
+| **Score (AI Pro)** | Supabase `vision-score` → Gemini batch (release-safe; keys server-side) |
 | **Rank** | Context-weighted scores (portrait / action / landscape / event) |
 | **Persist** | Full gallery + frame files in Hive history (`stillscout_cache/<sessionId>/`) |
-| **Export** | Auto Polish, crop ratios, gallery save (`gal`), share sheet |
+| **Export** | Auto Polish, crop ratios, Photos save (`gal`), share sheet |
 
-**Cloud AI is required** for scouting — the app fails clearly when offline or when all providers are unavailable.
+**AI Pro** requires Supabase cloud scoring. Release builds never embed Gemini keys — the edge proxy is the only production path.
 
 ## Monetization
 
-| | Free | Pro |
-|---|------|-----|
-| Scouts | **8 / week** (UTC Monday reset) | Unlimited |
-| Visible keepers | Top **3** ranks | **10** ranks |
+| | Free | AI Pro |
+|---|------|--------|
+| Scouts | **2 / day** (UTC) | Unlimited |
+| Visible keepers | Top **5** ranks (**8** on first scout) | **20** ranks |
 | Polished exports / scout | **3** | Unlimited |
 | Timestamps | Hidden (rank labels) | Exact timecodes |
 | Timeline view | Locked | Unlocked |
@@ -71,81 +68,50 @@ RevenueCat entitlement: `pro` · Products: `stillscout_pro_monthly`, `stillscout
 
 ## Quotas & cache
 
-- **Cloud AI:** up to **60** frames/scout sent to LLM; **40** frames/device/day local guard (UTC midnight)
+- **Cloud AI:** up to **20** keeper picks/scout; **48** frames sent per Gemini batch; **200** picks/device/day server cap (UTC)
 - **Session history:** max **20** scouts in Hive; LRU eviction
 - **Frame cache:** max **512 MB** on disk — oldest sessions evicted when over budget
 
 ## Supabase proxy
 
-Primary AI scoring runs through a Supabase Edge Function so provider keys never ship in the app binary. Deploy `vision-score` in your Supabase project; the app only needs the public anon key.
-
-## Android notes
-
-- Foreground service keeps scouting alive when the app is backgrounded (`flutter_foreground_task`)
-- Gallery **write** permission is required for Save — not just read/media access
-- The `video_thumbnail` plugin may require a jcenter workaround on older Gradle setups
-
-### Release signing
-
-Release builds are signed with a dedicated upload keystore, loaded from
-`android/key.properties` (gitignored — never commit it or the `.jks` file).
-Without that file, release builds fall back to the debug key so `flutter run
---release` still works for anyone cloning the repo.
-
-Generate your own upload key once:
+AI Pro scoring runs through the `vision-score` Edge Function (`supabase/functions/vision-score/`). Deploy to your Supabase project; the app only needs the public anon key.
 
 ```bash
-keytool -genkeypair -v \
-  -keystore android/app/upload-keystore.jks \
-  -alias upload -keyalg RSA -keysize 2048 -validity 10000
+supabase functions deploy vision-score
+supabase secrets set GEMINI_API_KEY=...
 ```
 
-Then create `android/key.properties`:
+Supports single-frame `{ image }` and batch `{ images, pick_count }` for AI Pro.
 
-```
-storePassword=<store password>
-keyPassword=<key password>
-keyAlias=upload
-storeFile=app/upload-keystore.jks
-```
+## App Store compliance
 
-Verify a build is signed with your key (not the debug key) with:
+Before submitting to App Store Connect:
 
-```bash
-$ANDROID_HOME/build-tools/<version>/apksigner verify --print-certs \
-  build/app/outputs/flutter-apk/app-release.apk
-```
+1. **Host legal pages** — defaults in `stillscout_config.dart` point to `stillscout.app/legal/*`. Override with `--dart-define` if needed.
+2. **In-app legal links** — Privacy Policy + Terms on empty state and paywall (Guideline 3.1.2).
+3. **Release secrets** — `secrets.local.dart` must include Supabase + RevenueCat `appl_` only. No direct AI keys in release.
+   ```bash
+   dart run tool/check_release_secrets.dart
+   ```
+   See `docs/TESTFLIGHT.md` for the TestFlight upload path.
+4. **App Privacy nutrition labels** — Photos/Videos, Device ID, Purchase History (not tracking).
+5. **Privacy Manifest** — `ios/Runner/PrivacyInfo.xcprivacy` bundled with Runner.
+6. **Subscriptions** — ASC products + RevenueCat entitlement `pro` + Paid Apps Agreement.
 
-**Back up `android/app/upload-keystore.jks` somewhere safe outside this
-repo.** Losing it means you can never publish an update to the same Play
-Store listing.
+See `docs/APP_STORE_LAUNCH.md` for the remaining RevenueCat / ASC checklist.
 
 ## iOS notes
 
-- Portrait-locked on iPhone and iPad (`UISupportedInterfaceOrientations*` in `Info.plist`)
-- `ITSAppUsesNonExemptEncryption = false` — app only uses standard HTTPS/TLS, so this skips the export-compliance prompt on every App Store Connect upload
-- No background execution (Apple doesn't allow it for this kind of work) — `WakelockPlus` keeps the screen awake during a scout instead; see `stillscout_scout_background.dart`
-- `google_mlkit_*` requires **iOS 15.5+** — `Podfile`'s `platform :ios, '15.5'` must stay in sync with `IPHONEOS_DEPLOYMENT_TARGET` in Xcode, or `pod install` fails to resolve
-- MLKit's transitive pods ship no arm64 simulator slice — the `Podfile` post-install hook forces those to `EXCLUDED_ARCHS[sdk=iphonesimulator*]` so `flutter run` still works on Apple Silicon Macs
-- Branded app icon + launch screen are generated (not hand-drawn assets) — see `tool/generate_branding_assets.py`
+- Portrait-locked on iPhone and iPad
+- `ITSAppUsesNonExemptEncryption = false` — standard HTTPS only
+- Photo library usage string covers **importing videos** and **saving exports**
+- No background execution — `WakelockPlus` keeps the screen awake during a scout
+- On-device face analysis uses a native **Vision** plugin (`VisionFaceDetectorPlugin.swift`)
+- Branded app icon + launch screen: `tool/generate_branding_assets.py`
 
 ### Signing
 
-`CODE_SIGN_STYLE` is set to `Automatic` for the Runner target, but Xcode still
-needs **your** Apple Developer Team selected once before it can sign anything
-(this is tied to your Apple ID/paid membership — nothing in this repo can
-supply it):
-
-1. Open `ios/Runner.xcworkspace` in Xcode (not `.xcodeproj`).
-2. Select the **Runner** target → **Signing & Capabilities**.
-3. Pick your **Team** from the dropdown (Automatically manage signing should
-   already be checked).
-4. Do the same for the **RunnerTests** target if you plan to run tests on a
-   device.
-
-After that, `flutter run --release` / building for a physical device or
-TestFlight works normally. Building for the simulator (`flutter build ios
---simulator`) never needs signing.
+Open `ios/Runner.xcworkspace` in Xcode, select your **Team** under Signing & Capabilities for Runner (and RunnerTests if needed). After that, `flutter run --release` and TestFlight builds work normally.
 
 ## Tests
 
@@ -157,11 +123,12 @@ flutter test
 ## Key paths
 
 ```
-lib/stillscout/domain/stillscout_constants.dart   # Intervals, quotas, limits
-lib/stillscout/presentation/theme/stillscout_theme.dart
-lib/stillscout/presentation/providers/stillscout_notifier.dart
+lib/stillscout/domain/stillscout_constants.dart
 lib/stillscout/services/frame_scoring_service.dart
-lib/stillscout/services/stillscout_export_service.dart
-lib/config/secrets.local.dart                      # Gitignored keys
-tool/generate_branding_assets.py                   # Regenerates app icons + launch image
+lib/stillscout/services/vision/providers/supabase_vision_client.dart
+lib/stillscout/presentation/providers/stillscout_notifier.dart
+lib/config/stillscout_config.dart
+supabase/functions/vision-score/index.ts
+ios/Runner/VisionFaceDetectorPlugin.swift
+lib/config/secrets.local.dart          # Gitignored keys
 ```

@@ -1,7 +1,7 @@
 name: stillscout
 description: StillScout — AI-powered video frame extractor for creators.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+22
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -30,25 +30,24 @@ dependencies:
 
   # Utilities
   uuid: ^4.5.1
+  package_info_plus: ^9.0.1
 
   # Export / share
   gal: ^2.3.0
   share_plus: ^9.0.0
 
-  # Permissions
-  permission_handler: ^11.4.0
+  # Legal / external links (Apple EULA, hosted privacy/terms)
+  url_launcher: ^6.3.1
 
   # Monetisation
   purchases_flutter: ^8.11.0
-
-  # On-device ML — face / eye detection
-  google_mlkit_face_detection: ^0.13.1
 
   # UI
   google_fonts: ^6.2.1
   connectivity_plus: ^7.2.0
   wakelock_plus: ^1.5.2
-  flutter_foreground_task: ^9.2.2
+  app_settings: ^7.0.0
+  flutter_secure_storage: ^10.3.1
 
 dev_dependencies:
   flutter_test:

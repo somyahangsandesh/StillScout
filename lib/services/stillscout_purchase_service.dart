@@ -10,31 +10,74 @@
 // 6. Paste PUBLIC SDK key (appl_…) into secrets.local.dart — NOT sk_ secret keys
 // ============================================================================
 
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-import '../config/stillscout_config.dart';
+import 'package:stillscout/config/stillscout_config.dart';
+import 'package:stillscout/stillscout/services/stillscout_diagnostics_log.dart';
+
 import 'stillscout_offering_resolver.dart';
+
+/// Observable RevenueCat / App Store init outcome.
+enum StillScoutIapInitStatus {
+  /// Purchases.configure succeeded.
+  ready,
+
+  /// Configure threw or store returned an unrecoverable error.
+  failed,
+
+  /// No usable public SDK key in this build (release without appl_…).
+  notConfigured,
+}
+
+/// Result of a Pro entitlement check — never treat a failed check as "free forever".
+class SubscriptionCheckResult {
+  const SubscriptionCheckResult({
+    required this.isPro,
+    required this.checkFailed,
+  });
+
+  final bool isPro;
+
+  /// True when the store / SDK could not be queried. UI should surface a retry.
+  final bool checkFailed;
+}
 
 /// RevenueCat wrapper for StillScout Pro — unlimited exports + native-res saves.
 class StillScoutPurchaseService {
   StillScoutPurchaseService._();
 
   static bool _initialized = false;
+  static StillScoutIapInitStatus _initStatus =
+      StillScoutIapInitStatus.notConfigured;
 
-  static Future<void> initialize() async {
-    if (_initialized) return;
+  static StillScoutIapInitStatus get initStatus => _initStatus;
 
-    final appleKey = StillScoutConfig.revenueCatAppleApiKey;
-    final googleKey = StillScoutConfig.revenueCatGoogleApiKey;
+  static Future<StillScoutIapInitStatus> initialize() async {
+    if (_initStatus == StillScoutIapInitStatus.ready && _initialized) {
+      return _initStatus;
+    }
 
-    if (!StillScoutConfig.isRevenueCatConfigured) {
-      debugPrint(
-        '[StillScout IAP] No valid public SDK key — using sandbox fallback '
-        'or offline mode. Add appl_/goog_ key to secrets.local.dart',
+    final appleKey = StillScoutConfig.revenueCatAppleApiKey.trim();
+    if (appleKey.isEmpty ||
+        !_looksLikePublicSdkKey(appleKey)) {
+      _initStatus = StillScoutIapInitStatus.notConfigured;
+      _initialized = false;
+      StillScoutDiagnosticsLog.log(
+        'IAP',
+        'Not configured — missing public SDK key (appl_…). '
+        'Subscription checks will report checkFailed until a key is added.',
+      );
+      return _initStatus;
+    }
+
+    if (!StillScoutConfig.isRevenueCatStoreConfigured) {
+      StillScoutDiagnosticsLog.log(
+        'IAP',
+        'No production appl_ key — using test/sandbox fallback. '
+        'Add RevenueCat public SDK key (appl_…) to secrets.local.dart '
+        'before App Store release.',
       );
     }
 
@@ -42,29 +85,51 @@ class StillScoutPurchaseService {
       await Purchases.setLogLevel(
         kDebugMode ? LogLevel.debug : LogLevel.error,
       );
-
-      final PurchasesConfiguration config;
-      if (Platform.isAndroid) {
-        config = PurchasesConfiguration(googleKey);
-      } else if (Platform.isIOS || Platform.isMacOS) {
-        config = PurchasesConfiguration(appleKey);
-      } else {
-        debugPrint('[StillScout IAP] Skipping — unsupported platform');
-        return;
-      }
-
-      await Purchases.configure(config);
+      await Purchases.configure(PurchasesConfiguration(appleKey));
       _initialized = true;
-      debugPrint('[StillScout IAP] Initialized (${Platform.isIOS ? 'iOS' : 'Android'})');
+      _initStatus = StillScoutIapInitStatus.ready;
+      StillScoutDiagnosticsLog.log('IAP', 'Initialized (iOS)');
     } catch (e) {
-      debugPrint('[StillScout IAP] Init error: $e');
+      _initialized = false;
+      _initStatus = StillScoutIapInitStatus.failed;
+      StillScoutDiagnosticsLog.log('IAP', 'Init error: $e');
     }
+    return _initStatus;
   }
 
-  static bool get isInitialized => _initialized;
+  /// Re-attempt configure after a failed / not-ready init (Settings retry).
+  static Future<StillScoutIapInitStatus> retryInitialize() => initialize();
 
-  static Future<bool> hasPro() async =>
-      hasEntitlement(StillScoutConfig.rcEntitlementPro);
+  static bool get isInitialized =>
+      _initialized && _initStatus == StillScoutIapInitStatus.ready;
+
+  static bool _looksLikePublicSdkKey(String k) =>
+      (k.startsWith('appl_') || k.startsWith('test_')) && !k.contains('YOUR_');
+
+  static Future<bool> hasPro() async {
+    final result = await checkProEntitlement();
+    return result.isPro;
+  }
+
+  /// Preferred entitlement check — surfaces store failures via [checkFailed].
+  static Future<SubscriptionCheckResult> checkProEntitlement() async {
+    if (_initStatus == StillScoutIapInitStatus.notConfigured ||
+        _initStatus == StillScoutIapInitStatus.failed ||
+        !_initialized) {
+      return const SubscriptionCheckResult(isPro: false, checkFailed: true);
+    }
+    try {
+      final info = await Purchases.getCustomerInfo();
+      return SubscriptionCheckResult(
+        isPro: info.entitlements.active
+            .containsKey(StillScoutConfig.rcEntitlementPro),
+        checkFailed: false,
+      );
+    } catch (e) {
+      debugPrint('[StillScout IAP] checkProEntitlement error: $e');
+      return const SubscriptionCheckResult(isPro: false, checkFailed: true);
+    }
+  }
 
   static Future<bool> hasEntitlement(String entitlementId) async {
     if (!_initialized) return false;
@@ -106,10 +171,10 @@ class StillScoutPurchaseService {
   static Future<StillScoutPurchaseResult> purchasePackage(
     Package package,
   ) async {
-    if (!_initialized) {
+    if (!isInitialized) {
       return const StillScoutPurchaseResult(
         success: false,
-        error: 'Store is not ready yet. Please try again in a moment.',
+        error: 'The App Store isn’t ready yet. Please try again in a moment.',
       );
     }
     try {
@@ -128,20 +193,31 @@ class StillScoutPurchaseService {
           cancelled: true,
         );
       }
+      if (code == PurchasesErrorCode.paymentPendingError) {
+        return const StillScoutPurchaseResult(
+          success: false,
+          paymentPending: true,
+          error:
+              'Payment is pending with Apple. When it clears, tap Restore Purchases.',
+        );
+      }
       return StillScoutPurchaseResult(
         success: false,
         error: _friendlyError(code),
       );
     } catch (e) {
-      return StillScoutPurchaseResult(success: false, error: e.toString());
+      return const StillScoutPurchaseResult(
+        success: false,
+        error: 'Something went wrong. Please try again.',
+      );
     }
   }
 
   static Future<StillScoutPurchaseResult> restorePurchases() async {
-    if (!_initialized) {
+    if (!isInitialized) {
       return const StillScoutPurchaseResult(
         success: false,
-        error: 'Store is not ready yet. Please try again in a moment.',
+        error: 'The App Store isn’t ready yet. Please try again in a moment.',
       );
     }
     try {
@@ -162,6 +238,20 @@ class StillScoutPurchaseService {
     }
   }
 
+  /// Human-readable store status for Settings (no entitlement / offering IDs).
+  static String storeStatusMessage() {
+    switch (_initStatus) {
+      case StillScoutIapInitStatus.ready:
+        return '';
+      case StillScoutIapInitStatus.notConfigured:
+        return 'In-app purchases aren’t available in this build. '
+            'Subscription status can’t be verified.';
+      case StillScoutIapInitStatus.failed:
+        return 'Couldn’t connect to the App Store. '
+            'Subscription status can’t be verified until you retry.';
+    }
+  }
+
   static String _friendlyError(PurchasesErrorCode code) {
     switch (code) {
       case PurchasesErrorCode.networkError:
@@ -169,7 +259,7 @@ class StillScoutPurchaseService {
       case PurchasesErrorCode.paymentPendingError:
         return 'Payment is pending. Check your App Store account.';
       case PurchasesErrorCode.invalidCredentialsError:
-        return 'Store configuration error. Check RevenueCat public API key.';
+        return 'Store isn’t configured correctly for this build. Try again later.';
       case PurchasesErrorCode.purchaseNotAllowedError:
         return 'Purchases are not allowed on this device.';
       case PurchasesErrorCode.productNotAvailableForPurchaseError:
@@ -184,6 +274,7 @@ class StillScoutPurchaseResult {
   const StillScoutPurchaseResult({
     required this.success,
     this.cancelled = false,
+    this.paymentPending = false,
     this.isRestore = false,
     this.hasPro = false,
     this.error,
@@ -192,6 +283,7 @@ class StillScoutPurchaseResult {
 
   final bool success;
   final bool cancelled;
+  final bool paymentPending;
   final bool isRestore;
   final bool hasPro;
   final String? error;

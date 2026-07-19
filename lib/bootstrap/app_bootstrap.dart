@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../config/stillscout_config.dart';
 import '../services/stillscout_purchase_service.dart';
 import '../stillscout/domain/stillscout_constants.dart';
 import '../stillscout/services/stillscout_maintenance.dart';
@@ -16,6 +17,8 @@ class AppBootstrap {
 
   static Future<void> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    StillScoutConfig.assertReleaseReadiness();
 
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -32,7 +35,7 @@ class AppBootstrap {
     // RevenueCat IAP
     await StillScoutPurchaseService.initialize();
 
-    // Android foreground notification while scouting in background.
+    // Wakelock setup — keeps the screen alive during long scouts.
     StillScoutScoutBackground.initialize();
   }
 }

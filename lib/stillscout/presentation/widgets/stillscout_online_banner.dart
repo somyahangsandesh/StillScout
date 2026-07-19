@@ -1,30 +1,64 @@
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/stillscout_online_status.dart';
 import '../theme/stillscout_theme.dart';
 
-/// Persistent strip when AI scouting isn't available.
+/// Persistent strip when AI Pro / trial scouting needs a network and it’s down.
+///
+/// Free on-device scouts do not need this banner — pass [needsNetwork] false.
+///
+/// Wraps in [AnimatedSwitcher] with a vertical slide so it appears/disappears
+/// smoothly rather than popping in abruptly.
 class StillScoutOnlineBanner extends StatelessWidget {
   const StillScoutOnlineBanner({
     super.key,
     required this.status,
+    this.needsNetwork = false,
   });
 
   final OnlineStatus status;
 
+  /// When false (default), the banner stays hidden — free scouts run offline.
+  /// Set true for AI Pro or an active AI Pro trial that requires Gemini.
+  final bool needsNetwork;
+
   @override
   Widget build(BuildContext context) {
-    if (status == OnlineStatus.online) return const SizedBox.shrink();
+    final show = needsNetwork && status != OnlineStatus.online;
+    return AnimatedSwitcher(
+      duration: StillScoutMotion.base,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return SizeTransition(
+          sizeFactor: animation,
+          alignment: Alignment.topCenter,
+          child: FadeTransition(opacity: animation, child: child),
+        );
+      },
+      child: show
+          ? _BannerContent(key: ValueKey(status), status: status)
+          : const SizedBox.shrink(key: ValueKey('hidden')),
+    );
+  }
+}
 
+class _BannerContent extends StatelessWidget {
+  const _BannerContent({super.key, required this.status});
+  final OnlineStatus status;
+
+  @override
+  Widget build(BuildContext context) {
     final (icon, message, color) = switch (status) {
       OnlineStatus.checking => (
           Icons.sync_rounded,
-          'Checking connection for AI scouting…',
+          'Checking connection for AI Pro scouting…',
           StillScoutColors.silver,
         ),
       OnlineStatus.offline => (
           Icons.wifi_off_rounded,
-          'No internet — StillScout needs a connection for AI scouting.',
+          'No internet — AI Pro scouting needs a connection.',
           StillScoutColors.danger,
         ),
       OnlineStatus.online => (Icons.cloud_done_rounded, '', StillScoutColors.success),
@@ -62,6 +96,26 @@ class StillScoutOnlineBanner extends StatelessWidget {
                 ),
               ),
             ),
+            if (status == OnlineStatus.offline) ...[
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () => AppSettings.openAppSettings(),
+                style: TextButton.styleFrom(
+                  foregroundColor: StillScoutColors.accent,
+                  minimumSize: const Size(44, 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: StillScoutSpacing.s,
+                  ),
+                ),
+                child: Text(
+                  'Settings',
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -94,7 +148,7 @@ class StillScoutOnlineRequirementChip extends StatelessWidget {
       OnlineStatus.offline => (
           StillScoutColors.danger,
           Icons.wifi_off_rounded,
-          'Offline — connect to scout',
+          'Offline — AI Pro needs connection',
         ),
     };
 

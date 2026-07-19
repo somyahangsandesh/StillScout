@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../theme/stillscout_theme.dart';
 import '../widgets/stillscout_logo.dart';
+import 'stillscout_onboarding_screen.dart';
 import 'stillscout_screen.dart';
 
 /// Branded boot screen — bridges native splash → home with a short cinematic fade.
@@ -58,6 +59,43 @@ class _StillScoutSplashScreenState extends State<StillScoutSplashScreen>
     await _ctrl.forward();
     await Future<void>.delayed(const Duration(milliseconds: 280));
     if (!mounted) return;
+
+    final onboardingDone = await stillScoutOnboardingComplete();
+    if (!mounted) return;
+
+    if (!onboardingDone) {
+      // Capture the NavigatorState *before* pushReplacement so the callback
+      // has a live reference even after the splash route is removed from the
+      // tree.
+      final nav = Navigator.of(context);
+      await nav.pushReplacement(
+        PageRouteBuilder<void>(
+          transitionDuration: const Duration(milliseconds: 420),
+          pageBuilder: (_, __, ___) => StillScoutOnboardingScreen(
+            onFinished: () {
+              nav.pushReplacement(
+                PageRouteBuilder<void>(
+                  transitionDuration: const Duration(milliseconds: 520),
+                  pageBuilder: (_, __, ___) => const StillScoutScreen(),
+                  transitionsBuilder: (_, animation, __, child) =>
+                      FadeTransition(
+                    opacity: CurvedAnimation(
+                        parent: animation, curve: Curves.easeOut),
+                    child: child,
+                  ),
+                ),
+              );
+            },
+          ),
+          transitionsBuilder: (_, animation, __, child) => FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            child: child,
+          ),
+        ),
+      );
+      return;
+    }
+
     await Navigator.of(context).pushReplacement(
       PageRouteBuilder<void>(
         transitionDuration: const Duration(milliseconds: 520),
@@ -113,18 +151,11 @@ class _StillScoutSplashScreenState extends State<StillScoutSplashScreen>
                             child: Column(
                               children: [
                                 Text(
-                                  'CLOUD AI FRAME SCOUTING',
+                                  'STILL. SCOUT. POST.',
                                   style: StillScoutTextStyles.display.copyWith(
                                     fontSize: 20,
                                     letterSpacing: 3.2,
                                     color: StillScoutColors.accent,
-                                  ),
-                                ),
-                                const SizedBox(height: StillScoutSpacing.s),
-                                Text(
-                                  'Live internet required for every scout',
-                                  style: StillScoutTextStyles.caption.copyWith(
-                                    color: StillScoutColors.silver.withValues(alpha: 0.75),
                                   ),
                                 ),
                               ],
@@ -155,7 +186,7 @@ class _StillScoutSplashScreenState extends State<StillScoutSplashScreen>
                     ),
                     const SizedBox(height: StillScoutSpacing.m),
                     Text(
-                      'Warming up the AI scout…',
+                      'Loading…',
                       style: StillScoutTextStyles.caption.copyWith(
                         color: StillScoutColors.silver.withValues(alpha: 0.7),
                       ),

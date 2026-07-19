@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,17 +19,18 @@ import '../theme/stillscout_theme.dart';
 import '../widgets/stillscout_logo.dart';
 import '../widgets/stillscout_batch_export_bar.dart';
 import '../widgets/stillscout_compare_sheet.dart';
-import '../widgets/stillscout_context_picker.dart';
 import '../widgets/stillscout_empty_state.dart';
 import '../widgets/stillscout_online_banner.dart';
 import '../widgets/stillscout_crop_picker.dart';
 import '../widgets/stillscout_frame_detail_sheet.dart';
 import '../widgets/stillscout_paywall_sheet.dart';
+import '../widgets/stillscout_coach_mark.dart';
+import '../widgets/stillscout_preflight_card.dart';
 import '../widgets/stillscout_processing_state.dart';
 import '../widgets/stillscout_results_gallery.dart';
-import '../widgets/stillscout_trim_scrubber.dart';
+import '../widgets/stillscout_scout_error_views.dart';
 import 'stillscout_history_screen.dart';
-
+import 'stillscout_settings_screen.dart';
 
 class StillScoutScreen extends ConsumerStatefulWidget {
   const StillScoutScreen({super.key});
@@ -45,8 +45,13 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
   final Set<String> _selectedIds = {};
   bool _batchExportBusy = false;
   bool _celebrateCompletion = false;
+  bool _showContextChipsMark = false;
+  final _coachMarkTracker = StillScoutCoachMarkTracker();
+  Timer? _cancelledResetTimer;
   bool _wasBackgroundedDuringScout = false;
-  int? _scoutsRemainingThisWeek;
+  // Optimistic default so the Start Scout button is never permanently
+  // disabled by a slow or failing SharedPreferences read.
+  int? _scoutsRemainingToday = StillScoutConstants.freeScoutsPerDay;
 
   @override
   void initState() {
@@ -58,6 +63,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
 
   @override
   void dispose() {
+    _cancelledResetTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -65,8 +71,8 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState lifecycleState) {
     final phase = ref.read(stillScoutProvider).phase;
-    final isProcessing = phase == StillScoutPhase.extracting ||
-        phase == StillScoutPhase.scoring;
+    final isProcessing =
+        phase == StillScoutPhase.extracting || phase == StillScoutPhase.scoring;
 
     if (!isProcessing) {
       _wasBackgroundedDuringScout = false;
@@ -79,12 +85,11 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         _wasBackgroundedDuringScout &&
         mounted) {
       _wasBackgroundedDuringScout = false;
-      final message = Platform.isAndroid
-          ? 'Still scouting in the background — check your notification.'
-          : 'StillScout is still working — keep the app open for fastest results.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
+        const SnackBar(
+          content: Text(
+            'StillScout is still working — keep the app open for fastest results.',
+          ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: StillScoutColors.slate,
         ),
@@ -102,8 +107,6 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
       ),
     );
   }
-
-  bool _isOnline() => ref.read(isOnlineProvider);
 
   Widget? _buildBackLeading(StillScoutState state) {
     switch (state.phase) {
@@ -149,10 +152,33 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
   }
 
   Future<void> _loadScoutQuota() async {
-    final isPro = ref.read(stillScoutProvider).isPro;
-    final remaining =
-        await StillScoutScoutQuotaTracker.remainingThisWeek(isPro: isPro);
-    if (mounted) setState(() => _scoutsRemainingThisWeek = remaining);
+    try {
+      final isPro = ref.read(stillScoutProvider).isPro;
+      final remaining =
+          await StillScoutScoutQuotaTracker.remainingToday(isPro: isPro);
+      if (mounted) setState(() => _scoutsRemainingToday = remaining);
+    } catch (_) {
+      // On any failure keep the optimistic default so the button stays usable.
+      if (mounted) {
+        setState(
+          () => _scoutsRemainingToday = StillScoutConstants.freeScoutsPerDay,
+        );
+      }
+    }
+  }
+
+  Future<void> _maybeShowCoachMarks() async {
+    // Show the context-chips coach mark first (700 ms delay so completion
+    // hero animation has time to land before we throw an overlay on top).
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    final showChips = await _coachMarkTracker
+        .shouldShow(StillScoutCoachMarkKeys.contextChips);
+    if (showChips && mounted) {
+      setState(() => _showContextChipsMark = true);
+      await _coachMarkTracker
+          .markShown(StillScoutCoachMarkKeys.contextChips);
+    }
   }
 
   Future<void> _loadTierLabel() async {
@@ -160,7 +186,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
     final label = await StillScoutSubscriptionManager.tierLabel(
       isPro: state.isPro,
       exportsUsedThisSession: state.exportsUsedThisSession,
-      scoutsRemainingThisWeek: _scoutsRemainingThisWeek,
+      scoutsRemainingToday: _scoutsRemainingToday,
     );
     if (mounted) setState(() => _tierLabel = label);
   }
@@ -168,6 +194,21 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
   Future<void> _showPaywall({String? reason}) async {
     final state = ref.read(stillScoutProvider);
     if (state.isPro) return;
+    // Compute locked stats from the current session for the personalised hook.
+    final lockedCount = StillScoutAccessPolicy.lockedCount(
+      totalFrames: state.frames.length,
+      isPro: false,
+      isFirstScout: state.isFirstScout,
+    );
+    final lockedFrames = state.frames.length > lockedCount
+        ? state.frames.skip(state.frames.length - lockedCount)
+        : <ScoredFrame>[];
+    final bestLockedScore = lockedFrames.isEmpty
+        ? null
+        : lockedFrames
+            .map((f) => f.score)
+            .reduce((a, b) => a > b ? a : b);
+
     await StillScoutPaywallSheet.show(
       context,
       exportsRemaining: StillScoutAccessPolicy.exportsRemainingThisScout(
@@ -175,10 +216,19 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         exportsUsedThisSession: state.exportsUsedThisSession,
       ),
       reason: reason,
+      lockedCount: lockedCount > 0 ? lockedCount : null,
+      bestLockedScore: bestLockedScore,
       onPurchased: () async {
         await ref.read(stillScoutProvider.notifier).refreshSubscriptionState();
         await _loadScoutQuota();
         await _loadTierLabel();
+        if (!mounted) return;
+        // Auto-start the scout so user doesn't need to tap Start Scout again
+        // after upgrading from the pre-flight paywall.
+        final s = ref.read(stillScoutProvider);
+        if (s.phase == StillScoutPhase.idle && s.videoPath != null) {
+          ref.read(stillScoutProvider.notifier).processVideo(s.videoPath!);
+        }
       },
     );
   }
@@ -193,6 +243,10 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
       final wasOnline = previous?.valueOrNull?.isOnline ?? false;
       final nowOnline = next.valueOrNull?.isOnline ?? false;
       if (wasOnline && !nowOnline) {
+        // Only abort if the active scout actually uses cloud AI.
+        // Free on-device scouts run entirely offline — aborting them here
+        // would cancel a perfectly valid scout for no reason.
+        // AI trial scouts also use cloud AI even though isPro is false.
         ref.read(stillScoutProvider.notifier).abortForOffline();
       }
     });
@@ -213,18 +267,56 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
           next.phase == StillScoutPhase.complete &&
           next.frames.isNotEmpty) {
         HapticFeedback.heavyImpact();
-        setState(() => _celebrateCompletion = true);
-        unawaited(_loadScoutQuota());
+                setState(() => _celebrateCompletion = true);
+                unawaited(_loadScoutQuota());
+                unawaited(_maybeShowCoachMarks());
         unawaited(_loadTierLabel());
+        // Warn AI Pro and trial users when Gemini fell back to Vision scores.
+        if ((next.isPro || next.isAiProTrial) && !next.geminiReachedOnLastScout) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: StillScoutColors.slate,
+                duration: Duration(seconds: 5),
+                content: Text(
+                  'Gemini was unreachable — showing on-device estimates. '
+                  'Reconnect and re-scout for AI results.',
+                ),
+              ),
+            );
+          });
+        }
+        // Soft conversion: do not auto-open the paywall after trial —
+        // the upgrade card in results is enough (avoids interrupting the wow).
       }
       if (next.phase != StillScoutPhase.complete) {
         setState(() => _celebrateCompletion = false);
       }
+      // When cancelled, briefly show the cancelled state then return to
+      // pre-flight — gives users a moment to see the feedback before the
+      // screen resets, while preserving their video selection.
+      if (previous?.phase != StillScoutPhase.cancelled &&
+          next.phase == StillScoutPhase.cancelled) {
+        _cancelledResetTimer?.cancel();
+        _cancelledResetTimer = Timer(const Duration(milliseconds: 1200), () {
+          if (mounted) {
+            ref.read(stillScoutProvider.notifier).returnToPreFlight();
+          }
+        });
+      }
+      // Cancel the delayed reset if the user takes a new action themselves.
+      if (previous?.phase == StillScoutPhase.cancelled &&
+          next.phase != StillScoutPhase.cancelled) {
+        _cancelledResetTimer?.cancel();
+        _cancelledResetTimer = null;
+      }
     });
 
     // Compare action: if exactly 2 selected frames, show compare icon.
-    final canCompare = _selectedIds.length == 2 &&
-        state.phase == StillScoutPhase.complete;
+    final canCompare =
+        _selectedIds.length == 2 && state.phase == StillScoutPhase.complete;
 
     return Scaffold(
       backgroundColor: StillScoutColors.voidBlack,
@@ -237,7 +329,8 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const StillScoutLogo(size: 28, animateGlow: true, glowStrength: 0.22),
+            const StillScoutLogo(
+                size: 28, animateGlow: true, glowStrength: 0.22),
             const SizedBox(width: 10),
             Text(
               'STILLSCOUT',
@@ -296,6 +389,16 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
                   color: StillScoutColors.silver),
             ),
           ),
+          Semantics(
+            label: 'Settings',
+            button: true,
+            child: IconButton(
+              tooltip: 'Settings',
+              onPressed: () => StillScoutSettingsScreen.open(context),
+              icon: const Icon(Icons.settings_outlined,
+                  color: StillScoutColors.silver),
+            ),
+          ),
         ],
       ),
       body: DecoratedBox(
@@ -303,7 +406,10 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         child: SafeArea(
           child: Column(
             children: [
-              StillScoutOnlineBanner(status: onlineStatus),
+              StillScoutOnlineBanner(
+                status: onlineStatus,
+                needsNetwork: state.isPro || state.isAiProTrial,
+              ),
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),
@@ -340,17 +446,28 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         // After a video is picked but before processing starts, show
         // the pre-flight card (estimate + optional trim).
         if (state.videoPath != null && state.videoDurationMs != null) {
-          return _PreFlightCard(
+          return StillScoutPreFlightCard(
             key: const ValueKey('preflight'),
             state: state,
             onlineStatus: onlineStatus,
-            scoutsRemainingThisWeek: _scoutsRemainingThisWeek,
+            scoutsRemainingToday: _scoutsRemainingToday,
             onStartScout: () {
-              if (onlineStatus != OnlineStatus.online) {
+              final needsCloud = StillScoutAccessPolicy.scoutRequiresNetwork(
+                isPro: state.isPro,
+                isAiProTrialAvailable:
+                    StillScoutAiProTrialTracker.isTrialAvailable,
+              );
+              if (needsCloud && onlineStatus != OnlineStatus.online) {
                 _showOfflineSnack();
                 return;
               }
-              if (!state.isPro && (_scoutsRemainingThisWeek ?? 0) <= 0) {
+              // Only gate on quota when we have a confirmed value of 0.
+              // While still loading (null) or optimistic default, let the
+              // notifier handle the server-side guard so the button is never
+              // permanently stuck disabled.
+              if (!state.isPro &&
+                  _scoutsRemainingToday != null &&
+                  _scoutsRemainingToday! <= 0) {
                 _showPaywall(
                   reason: const ScoutQuotaExhaustedFailure().displayMessage,
                 );
@@ -362,9 +479,8 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
             },
             onTrimChanged: (start, end) =>
                 ref.read(stillScoutProvider.notifier).setTrimRange(start, end),
-            onContextChanged: (ctx) => ref
-                .read(stillScoutProvider.notifier)
-                .setVideoContext(ctx),
+            onContextChanged: (ctx) =>
+                ref.read(stillScoutProvider.notifier).setVideoContext(ctx),
             onPickDifferent: () =>
                 ref.read(stillScoutProvider.notifier).reset(),
           );
@@ -384,6 +500,10 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
           progress: state.progress,
           message: state.statusMessage,
           liveFrames: state.liveFrames,
+          framesExtracted: state.framesExtracted,
+          totalFrames: state.totalFrames,
+          isAiProTrial: state.isAiProTrial,
+          isPro: state.isPro,
           onCancel: () =>
               ref.read(stillScoutProvider.notifier).cancelProcessing(),
         );
@@ -397,15 +517,33 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
           videoDurationMs: state.videoDurationMs,
           processingTimeMs: state.processingTimeMs,
           isPro: state.isPro,
+          isAiProTrial: state.isAiProTrial,
+          isFirstScout: state.isFirstScout,
           exportsUsedThisSession: state.exportsUsedThisSession,
+          showContextChipsCoachMark: _showContextChipsMark,
+          onContextChipsCoachMarkDismissed: () {
+            setState(() => _showContextChipsMark = false);
+          },
           celebrateCompletion: _celebrateCompletion,
+          geminiReached: state.geminiReachedOnLastScout,
+          onRetryCloudAi: () =>
+              ref.read(stillScoutProvider.notifier).rescoreWithCloudAi(),
+          onUpgradeAiPro: () => _showPaywall(
+            reason: state.isAiProTrial
+                ? 'You just used Gemini. Keep AI Pro for unlimited scouts, '
+                    '20 keepers, and Auto Polish.'
+                : 'AI finds your best moment and turns it into a professional photo.',
+          ),
           onLockedFrameTap: () => _showPaywall(
             reason:
-                'Unlock all top picks, exact timecodes, and native 4K exports.',
+                'Unlock Gemini judgment, 20 keepers, timecodes, and native 4K.',
           ),
           onFrameTap: (frame, rank) {
             if (_selectedIds.isNotEmpty) {
-              if (!StillScoutAccessPolicy.isLocked(rank: rank, isPro: state.isPro)) {
+              if (!StillScoutAccessPolicy.isLocked(
+                  rank: rank,
+                  isPro: state.isPro,
+                  isFirstScout: state.isFirstScout)) {
                 _toggleSelection(frame);
               }
               return;
@@ -413,23 +551,33 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
             _onFrameTap(frame, state.isPro, state.frames, rank);
           },
           onFrameLongPress: (frame) {
-            final rank = state.frames.indexWhere((f) => f.frame.id == frame.frame.id);
-            if (StillScoutAccessPolicy.isLocked(rank: rank, isPro: state.isPro)) {
+            final rank =
+                state.frames.indexWhere((f) => f.frame.id == frame.frame.id);
+            if (StillScoutAccessPolicy.isLocked(
+                rank: rank,
+                isPro: state.isPro,
+                isFirstScout: state.isFirstScout)) {
               return;
             }
             _toggleSelection(frame);
           },
+          videoContext: state.videoContext,
+          onContextChanged: (ctx) =>
+              ref.read(stillScoutProvider.notifier).setVideoContext(ctx),
         );
 
       case StillScoutPhase.error:
-        return _ErrorState(
+        return StillScoutScoutErrorView(
           key: const ValueKey('error'),
           message: state.errorMessage ?? 'Unknown error',
-          onRetry: () => ref.read(stillScoutProvider.notifier).reset(),
+          // Use returnToPreFlight so the picked video is preserved.
+          onRetry: state.videoPath != null
+              ? () => ref.read(stillScoutProvider.notifier).returnToPreFlight()
+              : () => ref.read(stillScoutProvider.notifier).reset(),
         );
 
       case StillScoutPhase.cancelled:
-        return _CancelledState(
+        return StillScoutScoutCancelledView(
           key: const ValueKey('cancelled'),
           onStartOver: () => ref.read(stillScoutProvider.notifier).reset(),
         );
@@ -451,12 +599,25 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
   /// Picks up the video path and reads duration for the pre-flight card
   /// *before* starting extraction.
   Future<void> _onVideoSelected(String path) async {
-    if (!_isOnline()) {
-      _showOfflineSnack();
-      return;
-    }
+    // Free on-device scouts can pick offline; AI Pro needs network later.
     await ref.read(stillScoutProvider.notifier).onVideoPicked(path);
     await _loadTierLabel();
+    if (!mounted) return;
+    final durationMs = ref.read(stillScoutProvider).videoDurationMs;
+    if (durationMs != null &&
+        durationMs > StillScoutConstants.maxVideoDurationMs) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: StillScoutColors.slate,
+          duration: Duration(seconds: 6),
+          content: Text(
+            'This clip is longer than 10 minutes — scouting is limited to the '
+            'first 10 minutes. Open Trim below to choose a different range.',
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _onFrameTap(
@@ -465,9 +626,13 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
     List<ScoredFrame> allFrames,
     int rank,
   ) async {
-    if (StillScoutAccessPolicy.isLocked(rank: rank, isPro: isPro)) {
+    final scoutState = ref.read(stillScoutProvider);
+    final isFirstScout = scoutState.isFirstScout;
+    if (StillScoutAccessPolicy.isLocked(
+        rank: rank, isPro: isPro, isFirstScout: isFirstScout)) {
       await _showPaywall(
-        reason: 'See full detail on all ${StillScoutAccessPolicy.keeperLimit(isPro: isPro)}+ ranked picks with Pro.',
+        reason:
+            'See full detail on all ${StillScoutAccessPolicy.keeperLimit(isPro: isPro, isFirstScout: isFirstScout)}+ ranked picks with Pro.',
       );
       return;
     }
@@ -476,17 +641,22 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
       frame: frame,
       tierLabel: _tierLabel,
       isPro: isPro,
+      isFirstScout: scoutState.isFirstScout,
+      isAiProTrial: scoutState.isAiProTrial,
       rank: rank,
       allFrames: allFrames,
       initialIndex: rank,
       onExportPressed: _handleExport,
+      onUnlockAiPro: () => _showPaywall(
+        reason:
+            'AI Auto Polish and Gemini Flash scoring unlock with AI Pro.',
+      ),
     );
   }
 
   void _openCompare(StillScoutState state) {
-    final selected = state.frames
-        .where((f) => _selectedIds.contains(f.frame.id))
-        .toList();
+    final selected =
+        state.frames.where((f) => _selectedIds.contains(f.frame.id)).toList();
     if (selected.length != 2) return;
     StillScoutCompareSheet.show(
       context,
@@ -502,7 +672,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
     ScoredFrame frame,
     StillScoutExportAction action, {
     required StillScoutCropRatio cropRatio,
-    bool applyPolish = true,
+    bool applyPolish = false,
     String? precomputedPolishPath,
   }) async {
     final state = ref.read(stillScoutProvider);
@@ -515,7 +685,8 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
       )) {
         if (!mounted) return;
         await _showPaywall(
-          reason: 'You\'ve used all ${StillScoutConstants.freeExportsPerScout} polished saves for this scout.',
+          reason:
+              'You\'ve used all ${StillScoutConstants.freeExportsPerScout} saves for this scout.',
         );
         return;
       }
@@ -529,6 +700,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
             applyPolish: applyPolish,
             faceDetector: faceDetector,
             precomputedPolishPath: precomputedPolishPath,
+            permissionContext: context,
           )
         : await StillScoutExportService.share(
             frame,
@@ -542,14 +714,14 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
 
     if (result.isSuccess) {
       if (!state.isPro) {
-        ref.read(stillScoutProvider.notifier).consumeSessionExports(1);
+        await ref.read(stillScoutProvider.notifier).consumeSessionExports(1);
       }
       HapticFeedback.mediumImpact();
     }
 
     await _loadTierLabel();
     if (!mounted) return;
-    _showExportFeedback(result, isPro: state.isPro);
+    _showExportFeedback(result, action: action, isPro: state.isPro);
   }
 
   Rect _shareOriginRect(BuildContext context) {
@@ -565,13 +737,14 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
     StillScoutState state,
     StillScoutExportAction action,
   ) async {
-    final frames = state.frames
-        .where((f) => _selectedIds.contains(f.frame.id))
-        .where((f) {
-          final rank = state.frames.indexWhere((x) => x.frame.id == f.frame.id);
-          return StillScoutAccessPolicy.canExportFrame(rank: rank, isPro: state.isPro);
-        })
-        .toList();
+    final frames =
+        state.frames.where((f) => _selectedIds.contains(f.frame.id)).where((f) {
+      final rank = state.frames.indexWhere((x) => x.frame.id == f.frame.id);
+      return StillScoutAccessPolicy.canExportFrame(
+          rank: rank,
+          isPro: state.isPro,
+          isFirstScout: state.isFirstScout);
+    }).toList();
     if (frames.isEmpty) return;
 
     if (!state.isPro) {
@@ -596,11 +769,12 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         frames,
         isPro: state.isPro,
         faceDetector: faceDetector,
+        permissionContext: context,
       );
       if (!mounted) return;
       if (summary.hasAnySuccess) {
         if (!state.isPro) {
-          ref
+          await ref
               .read(stillScoutProvider.notifier)
               .consumeSessionExports(summary.succeeded);
         }
@@ -624,31 +798,62 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         shareOrigin: _shareOriginRect(context),
       );
       if (!mounted) return;
-      if (result.isSuccess && !state.isPro) {
-        ref.read(stillScoutProvider.notifier).consumeSessionExports(frames.length);
+      if (result.isSuccess) {
+        // Sharing counts against the free export quota the same as saving.
+        if (!state.isPro) {
+          await ref
+              .read(stillScoutProvider.notifier)
+              .consumeSessionExports(frames.length);
+        }
+        HapticFeedback.mediumImpact();
       }
       setState(() {
         _batchExportBusy = false;
         _selectedIds.clear();
       });
       await _loadTierLabel();
-      _showExportFeedback(result, isPro: state.isPro, batchCount: frames.length);
+      _showExportFeedback(
+        result,
+        action: action,
+        isPro: state.isPro,
+        batchCount: frames.length,
+      );
     }
   }
 
-  void _showExportFeedback(ExportResult result,
-      {required bool isPro, int? batchCount}) {
+  void _showExportFeedback(
+    ExportResult result, {
+    required StillScoutExportAction action,
+    required bool isPro,
+    int? batchCount,
+  }) {
+    final isShare = action == StillScoutExportAction.share;
     switch (result.outcome) {
       case ExportOutcome.success:
-        _showSnack(
-          batchCount != null
-              ? 'Shared $batchCount frames.'
-              : isPro
-                  ? (result.nativeResUsed
-                      ? 'Exported at native resolution.'
-                      : 'Exported — original video unavailable, used preview quality.')
-                  : 'Exported. ${_tierLabel.split('—').lastOrNull?.trim() ?? ''}',
-        );
+        HapticFeedback.mediumImpact();
+        String successMsg;
+        if (batchCount != null) {
+          successMsg = isShare
+              ? 'Shared $batchCount photos.'
+              : 'Saved $batchCount photos to your camera roll.';
+        } else if (isShare) {
+          successMsg = 'Share sheet opened.';
+        } else if (isPro) {
+          successMsg = result.nativeResUsed
+              ? 'Saved at native resolution.'
+              : 'Saved — the original source file was not found; saved at preview quality instead.';
+        } else {
+          // Celebrate the save; only mention quota when exhausted.
+          final nowUsed = ref.read(stillScoutProvider).exportsUsedThisSession;
+          final left = StillScoutAccessPolicy.exportsRemainingThisScout(
+            isPro: false,
+            exportsUsedThisSession: nowUsed,
+          );
+          successMsg = left <= 0
+              ? 'Saved! No more free saves this scout — upgrade for unlimited.'
+              : 'Saved to your camera roll!';
+        }
+        _showSnack(successMsg);
       case ExportOutcome.permissionDenied:
         _showSnack(result.message ?? 'Photo library access is required.');
       case ExportOutcome.failure:
@@ -669,338 +874,3 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
     );
   }
 }
-
-// ── Pre-flight card ────────────────────────────────────────────────────────────
-
-class _PreFlightCard extends StatefulWidget {
-  const _PreFlightCard({
-    super.key,
-    required this.state,
-    required this.onlineStatus,
-    this.scoutsRemainingThisWeek,
-    required this.onStartScout,
-    required this.onTrimChanged,
-    required this.onContextChanged,
-    required this.onPickDifferent,
-  });
-
-  final StillScoutState state;
-  final OnlineStatus onlineStatus;
-  final int? scoutsRemainingThisWeek;
-  final VoidCallback onStartScout;
-  final void Function(int start, int end) onTrimChanged;
-  final ValueChanged<StillScoutVideoContext> onContextChanged;
-  final VoidCallback onPickDifferent;
-
-  @override
-  State<_PreFlightCard> createState() => _PreFlightCardState();
-}
-
-class _PreFlightCardState extends State<_PreFlightCard> {
-  bool _showTrim = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final durationMs = widget.state.videoDurationMs ?? 0;
-    final scoutsLeft = widget.scoutsRemainingThisWeek;
-    final quotaLoading = !widget.state.isPro && scoutsLeft == null;
-    final quotaOk =
-        widget.state.isPro || (scoutsLeft != null && scoutsLeft > 0);
-    final canScout = widget.onlineStatus == OnlineStatus.online &&
-        (widget.state.isPro || (scoutsLeft != null && scoutsLeft > 0));
-    final scoutLabel = StillScoutAccessPolicy.scoutsAllowanceLabel(
-      isPro: widget.state.isPro,
-      scoutsRemainingThisWeek: scoutsLeft ?? 0,
-      isLoading: quotaLoading,
-    );
-    final ctaLabel = switch (widget.onlineStatus) {
-      OnlineStatus.checking => 'Checking connection…',
-      OnlineStatus.offline => 'Connect to start',
-      OnlineStatus.online => quotaLoading
-          ? 'Loading allowance…'
-          : (quotaOk ? 'Start Scout' : 'No scouts left this week'),
-    };
-
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.m),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: StillScoutSpacing.xl),
-            const Icon(
-              Icons.check_circle_rounded,
-              color: StillScoutColors.success,
-              size: 40,
-            ),
-            const SizedBox(height: StillScoutSpacing.m),
-            Text('Video ready', style: StillScoutTextStyles.title),
-            const SizedBox(height: StillScoutSpacing.xs),
-            Text(
-              'Review the estimate and trim the clip if you like, then start scouting.',
-              style: StillScoutTextStyles.body,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: StillScoutSpacing.m),
-            StillScoutOnlineRequirementChip(status: widget.onlineStatus),
-            if (!widget.state.isPro) ...[
-              const SizedBox(height: StillScoutSpacing.s),
-              Text(
-                scoutLabel,
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: quotaLoading
-                      ? StillScoutColors.silver
-                      : quotaOk
-                          ? StillScoutColors.accent
-                          : StillScoutColors.danger,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Exports are clean — upgrade for unlimited scouts and 4K.',
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.silver.withValues(alpha: 0.75),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-            const SizedBox(height: StillScoutSpacing.l),
-
-            // Pre-flight estimate
-            StillScoutPreFlightEstimate(
-              estimatedFrames: widget.state.estimatedFrameCount,
-              durationMs: durationMs,
-            ),
-
-            const SizedBox(height: StillScoutSpacing.m),
-
-            Text(
-              "What's this video?",
-              style: StillScoutTextStyles.caption.copyWith(
-                color: StillScoutColors.silver,
-              ),
-            ),
-            const SizedBox(height: StillScoutSpacing.s),
-            StillScoutContextPicker(
-              selected: widget.state.videoContext,
-              onChanged: widget.onContextChanged,
-            ),
-
-            const SizedBox(height: StillScoutSpacing.m),
-
-            // Trim toggle
-            if (durationMs > 5000) // only show trim for clips > 5s
-              _TrimToggle(
-                expanded: _showTrim,
-                onToggle: () => setState(() => _showTrim = !_showTrim),
-              ),
-
-            if (_showTrim && durationMs > 5000) ...[
-              const SizedBox(height: StillScoutSpacing.m),
-              StillScoutTrimScrubber(
-                durationMs: durationMs,
-                initialStartMs: widget.state.trimStartMs,
-                initialEndMs: widget.state.trimEndMs,
-                onTrimChanged: widget.onTrimChanged,
-              ),
-            ],
-
-            const SizedBox(height: StillScoutSpacing.xl),
-
-            // CTA
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: Semantics(
-                label: 'Start scouting frames',
-                button: true,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: canScout
-                        ? StillScoutColors.accent
-                        : StillScoutColors.slate,
-                    foregroundColor: StillScoutColors.voidBlack,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(StillScoutRadius.m),
-                    ),
-                  ),
-                  icon: Icon(
-                    canScout ? Icons.search_rounded : Icons.wifi_off_rounded,
-                    size: 20,
-                  ),
-                  label: Text(
-                    ctaLabel,
-                    style: StillScoutTextStyles.subtitle.copyWith(
-                      color: StillScoutColors.voidBlack,
-                    ),
-                  ),
-                  onPressed: canScout ? widget.onStartScout : null,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: StillScoutSpacing.m),
-
-            TextButton(
-              onPressed: widget.onPickDifferent,
-              child: Text(
-                'Pick a different video',
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.silver,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: StillScoutSpacing.xxl),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TrimToggle extends StatelessWidget {
-  const _TrimToggle({required this.expanded, required this.onToggle});
-
-  final bool expanded;
-  final VoidCallback onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: StillScoutSpacing.m,
-          vertical: StillScoutSpacing.s,
-        ),
-        decoration: BoxDecoration(
-          color: StillScoutColors.filmGray,
-          borderRadius: BorderRadius.circular(StillScoutRadius.s),
-          border: Border.all(
-            color: expanded
-                ? StillScoutColors.accent.withValues(alpha: 0.5)
-                : StillScoutColors.silver.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.content_cut_rounded,
-              size: 16,
-              color:
-                  expanded ? StillScoutColors.accent : StillScoutColors.silver,
-            ),
-            const SizedBox(width: StillScoutSpacing.s),
-            Text(
-              expanded ? 'Hide trim' : 'Trim clip before scouting',
-              style: StillScoutTextStyles.caption.copyWith(
-                color:
-                    expanded ? StillScoutColors.accent : StillScoutColors.chalk,
-              ),
-            ),
-            const Spacer(),
-            Icon(
-              expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-              size: 18,
-              color: StillScoutColors.silver,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Error / Cancelled states ───────────────────────────────────────────────────
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({
-    super.key,
-    required this.message,
-    required this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(StillScoutSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline,
-                color: StillScoutColors.danger, size: 48),
-            const SizedBox(height: StillScoutSpacing.m),
-            Text(message,
-                style: StillScoutTextStyles.body, textAlign: TextAlign.center),
-            const SizedBox(height: StillScoutSpacing.l),
-            Semantics(
-              label: 'Try again',
-              button: true,
-              child: OutlinedButton(
-                onPressed: onRetry,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: StillScoutColors.chalk,
-                  side: const BorderSide(color: StillScoutColors.accent),
-                  minimumSize: const Size(0, 48),
-                ),
-                child: const Text('Try again'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CancelledState extends StatelessWidget {
-  const _CancelledState({super.key, required this.onStartOver});
-
-  final VoidCallback onStartOver;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(StillScoutSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.cancel_outlined,
-                color: StillScoutColors.silver, size: 48),
-            const SizedBox(height: StillScoutSpacing.m),
-            Text('Scout cancelled', style: StillScoutTextStyles.title),
-            const SizedBox(height: StillScoutSpacing.s),
-            Text(
-              'No frames were saved. Pick a clip whenever you\'re ready.',
-              style: StillScoutTextStyles.body,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: StillScoutSpacing.l),
-            Semantics(
-              label: 'Start over',
-              button: true,
-              child: OutlinedButton(
-                onPressed: onStartOver,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: StillScoutColors.chalk,
-                  side: const BorderSide(color: StillScoutColors.accent),
-                  minimumSize: const Size(0, 48),
-                ),
-                child: const Text('Start over'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-

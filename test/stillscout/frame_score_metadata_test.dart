@@ -10,18 +10,18 @@ void main() {
         openEyesScore: 100,
         compositionScore: 40,
       );
-      // 80*0.25 + 60*0.25 + 100*0.30 + 40*0.20 = 20 + 15 + 30 + 8 = 73
-      expect(metadata.totalScore(), 73);
+      // 80*0.25 + 60*0.25 + 100*0.30 + 40*0.20 = 20 + 15 + 30 + 8 = 73 → 7.3 on 0-10 scale
+      expect(metadata.totalScore(), 7.3);
     });
 
-    test('totalScore is clamped to 1-100', () {
+    test('totalScore is on 0-10 scale and clamps correctly', () {
       const high = FrameScoreMetadata(
         blurScore: 100,
         lightingScore: 100,
         openEyesScore: 100,
         compositionScore: 100,
       );
-      expect(high.totalScore(), 100);
+      expect(high.totalScore(), 10.0);
 
       const low = FrameScoreMetadata(
         blurScore: 1,
@@ -29,7 +29,8 @@ void main() {
         openEyesScore: 1,
         compositionScore: 1,
       );
-      expect(low.totalScore(), 1);
+      // 1 × 1.0 = 1.0/100 → 0.1 on 0-10 scale
+      expect(low.totalScore(), closeTo(0.1, 0.01));
     });
 
     test('fromJson round-trips toJson', () {
@@ -98,8 +99,9 @@ void main() {
     });
 
     test('ScoreSource labels are human-readable', () {
-      expect(ScoreSource.llm.label, 'AI Scored');
-      expect(ScoreSource.heuristic.label, 'Estimated · Offline');
+      expect(ScoreSource.llm.label, 'Gemini AI');
+      expect(ScoreSource.heuristic.label, 'On-device');
+      expect(ScoreSource.hybrid.label, 'Apple Vision');
     });
   });
 }

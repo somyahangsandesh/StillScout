@@ -48,4 +48,40 @@ class StillScoutImagePrep {
       return null;
     }
   }
+
+  /// Returns path → base64 JPEG at [StillScoutConstants.gridThumbnailWidth]px
+  /// (384px). Designed for the Gemini batch selection call — small enough to
+  /// keep token counts low, large enough to judge expressions and sharpness.
+  /// Runs in an isolate via `compute()`.
+  static Map<String, String> prepareGridThumbnails(List<String> filePaths) {
+    final payloads = <String, String>{};
+    for (final path in filePaths) {
+      final payload = _prepareGrid(path);
+      if (payload != null) payloads[path] = payload;
+    }
+    return payloads;
+  }
+
+  static String? _prepareGrid(String path) {
+    try {
+      final bytes = File(path).readAsBytesSync();
+      final decoded = img.decodeImage(bytes);
+      if (decoded == null) return null;
+
+      final resized = decoded.width > StillScoutConstants.gridThumbnailWidth
+          ? img.copyResize(
+              decoded,
+              width: StillScoutConstants.gridThumbnailWidth,
+              interpolation: img.Interpolation.average,
+            )
+          : decoded;
+
+      // Slightly higher quality than the deep-score upload because at 384px
+      // JPEG artefacts are more visible than at 512px.
+      final jpg = img.encodeJpg(resized, quality: 75);
+      return base64Encode(jpg);
+    } catch (_) {
+      return null;
+    }
+  }
 }

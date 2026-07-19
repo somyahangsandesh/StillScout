@@ -8,6 +8,10 @@ import 'face_quality_detector.dart';
 
 /// On-device polish — gentle levels, clarity, and optional face exposure.
 /// Conservative by design: a bad polish is worse than no polish.
+///
+/// All pixel work is forced through uint8 RGB before encode. That avoids the
+/// red/blue/white channel corruption that can happen when `image` filters run
+/// on float / multi-channel JPEG decodes and then get re-encoded.
 class StillScoutAutoPolish {
   StillScoutAutoPolish._();
 
@@ -46,7 +50,13 @@ class StillScoutAutoPolish {
 
       _cache[cacheKey] = outPath;
       if (_cache.length > 24) {
-        _cache.remove(_cache.keys.first);
+        final evictedPath = _cache.remove(_cache.keys.first);
+        if (evictedPath != null) {
+          try {
+            final evicted = File(evictedPath);
+            if (evicted.existsSync()) evicted.deleteSync();
+          } catch (_) {}
+        }
       }
       return outPath;
     } catch (e) {
@@ -71,32 +81,29 @@ class StillScoutAutoPolish {
     NormalizedFaceBounds? face,
   }) {
     final inputMean = _meanLuma(source);
-    var image = _normalizeSource(source);
+    var image = _toUint8Rgb(source);
 
-    image = img.adjustColor(
-      image,
-      contrast: 1.05,
-      brightness: 1.02,
-      saturation: 1.04,
-      gamma: 0.98,
-    );
-
+    // Manual gentle levels — avoid `adjustColor`, which can corrupt channels
+    // on non-uint8 / multi-channel JPEG sources.
+    image = _gentleLevels(image);
     if (face != null && _faceBoundsValid(face)) {
-      image = _applyFaceExposure(image, face, boost: 0.05);
+      image = _applyFaceExposure(image, face, boost: 0.08);
     }
-
-    image = _sharpen(image, amount: 0.22);
-    image = _liftShadows(image, amount: 0.03);
+    image = _sharpen(image, amount: 0.16);
+    image = _liftShadows(image, amount: 0.025);
+    image = _toUint8Rgb(image);
 
     if (!_isPlausibleOutput(source, image, inputMean)) {
-      return _normalizeSource(source);
+      return _toUint8Rgb(source);
     }
     return image;
   }
 
   static Uint8List? encodePolishedJpeg(img.Image image, {int quality = 92}) {
     try {
-      return Uint8List.fromList(img.encodeJpg(image, quality: quality));
+      return Uint8List.fromList(
+        img.encodeJpg(_toUint8Rgb(image), quality: quality),
+      );
     } catch (_) {
       return null;
     }
@@ -127,22 +134,67 @@ class StillScoutAutoPolish {
     }
   }
 
-  static img.Image _normalizeSource(img.Image source) {
-    final oriented = img.bakeOrientation(img.Image.from(source));
-    if (oriented.numChannels == 3) return oriented;
+  /// Force a stable uint8 RGB buffer so later pixel math + JPEG encode
+  /// cannot pick up float / RGBA / palette channel quirks.
+  static img.Image _toUint8Rgb(img.Image source) {
+    final oriented = img.bakeOrientation(source);
+    if (oriented.format == img.Format.uint8 && oriented.numChannels == 3) {
+      return img.Image.from(oriented);
+    }
+
+    final converted = oriented.convert(
+      format: img.Format.uint8,
+      numChannels: 3,
+    );
+    if (converted.format == img.Format.uint8 && converted.numChannels == 3) {
+      return converted;
+    }
 
     final out = img.Image(
       width: oriented.width,
       height: oriented.height,
       numChannels: 3,
+      format: img.Format.uint8,
     );
     for (var y = 0; y < oriented.height; y++) {
       for (var x = 0; x < oriented.width; x++) {
         final p = oriented.getPixel(x, y);
-        out.setPixelRgb(x, y, p.r.toInt(), p.g.toInt(), p.b.toInt());
+        out.setPixelRgb(
+          x,
+          y,
+          p.r.toInt().clamp(0, 255),
+          p.g.toInt().clamp(0, 255),
+          p.b.toInt().clamp(0, 255),
+        );
       }
     }
     return out;
+  }
+
+  static img.Image _gentleLevels(img.Image image) {
+    // contrast ~1.04, brightness ~1.015, saturation ~1.03 — applied in RGB.
+    const contrast = 1.04;
+    const brightness = 1.015;
+    const saturation = 1.03;
+    for (final p in image) {
+      var r = p.r * brightness;
+      var g = p.g * brightness;
+      var b = p.b * brightness;
+
+      r = ((r - 128) * contrast) + 128;
+      g = ((g - 128) * contrast) + 128;
+      b = ((b - 128) * contrast) + 128;
+
+      final gray = _luma(r, g, b);
+      r = gray + (r - gray) * saturation;
+      g = gray + (g - gray) * saturation;
+      b = gray + (b - gray) * saturation;
+
+      p.r = _clampByte(r);
+      p.g = _clampByte(g);
+      p.b = _clampByte(b);
+    }
+    return image;
   }
 
   static bool _faceBoundsValid(NormalizedFaceBounds face) {
@@ -175,18 +227,27 @@ class StillScoutAutoPolish {
     if (afterMean < 18 || afterMean > 245) return false;
     if ((afterMean - beforeMean).abs() > 90) return false;
 
-    var clipped = 0;
+    var bad = 0;
     var samples = 0;
     final step = (after.width / 24).ceil().clamp(1, after.width);
     for (var y = 0; y < after.height; y += step) {
       for (var x = 0; x < after.width; x += step) {
         final p = after.getPixel(x, y);
+        final r = p.r.toInt();
+        final g = p.g.toInt();
+        final b = p.b.toInt();
         samples++;
-        if (p.r < 8 && p.g < 8 && p.b < 8) clipped++;
-        if (p.r > 250 && p.g < 30 && p.b < 30) clipped++;
+        // Near-black / near-white blowouts.
+        if (r < 8 && g < 8 && b < 8) bad++;
+        if (r > 250 && g > 250 && b > 250) bad++;
+        // Channel-cast corruption (classic broken polish colors).
+        if (r > 250 && g < 40 && b < 40) bad++;
+        if (b > 250 && r < 40 && g < 40) bad++;
+        if (r > 250 && g > 250 && b < 40) bad++; // yellow-white cast
+        if (r < 40 && g > 250 && b > 250) bad++; // cyan cast
       }
     }
-    return samples == 0 || clipped / samples < 0.35;
+    return samples == 0 || bad / samples < 0.20;
   }
 
   static img.Image _applyFaceExposure(
@@ -209,35 +270,38 @@ class StillScoutAutoPolish {
         if (dist > 1) continue;
         final weight = (1 - dist) * boost;
         final p = image.getPixel(x, y);
-        p.r = _clampByte(p.r + 255 * weight);
-        p.g = _clampByte(p.g + 255 * weight);
-        p.b = _clampByte(p.b + 255 * weight * 0.96);
+        final lift = 255 * weight;
+        p.r = _clampByte(p.r + lift);
+        p.g = _clampByte(p.g + lift);
+        p.b = _clampByte(p.b + lift);
       }
     }
     return image;
   }
 
   static img.Image _sharpen(img.Image image, {required double amount}) {
-    final blurred = img.gaussianBlur(img.Image.from(image), radius: 1);
-    for (var y = 0; y < image.height; y++) {
-      for (var x = 0; x < image.width; x++) {
-        final o = image.getPixel(x, y);
+    final base = _toUint8Rgb(image);
+    final blurred = img.gaussianBlur(img.Image.from(base), radius: 1);
+    for (var y = 0; y < base.height; y++) {
+      for (var x = 0; x < base.width; x++) {
+        final o = base.getPixel(x, y);
         final b = blurred.getPixel(x, y);
         o.r = _clampByte(o.r + (o.r - b.r) * amount);
         o.g = _clampByte(o.g + (o.g - b.g) * amount);
         o.b = _clampByte(o.b + (o.b - b.b) * amount);
       }
     }
-    return image;
+    return base;
   }
 
   static img.Image _liftShadows(img.Image image, {required double amount}) {
     for (final p in image) {
       final l = _luma(p.r, p.g, p.b) / 255.0;
       final lift = (1 - l) * amount;
-      p.r = _clampByte(p.r + 255 * lift);
-      p.g = _clampByte(p.g + 255 * lift);
-      p.b = _clampByte(p.b + 255 * lift);
+      final delta = 255 * lift;
+      p.r = _clampByte(p.r + delta);
+      p.g = _clampByte(p.g + delta);
+      p.b = _clampByte(p.b + delta);
     }
     return image;
   }

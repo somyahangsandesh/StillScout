@@ -18,15 +18,15 @@ void main() {
       );
     });
 
-    test('free users cannot view frames beyond rank 2', () {
+    test('free users cannot view frames beyond rank 4 (limit is now 5)', () {
       expect(StillScoutAccessPolicy.canViewFrame(rank: 0, isPro: false), isTrue);
-      expect(StillScoutAccessPolicy.canViewFrame(rank: 2, isPro: false), isTrue);
-      expect(StillScoutAccessPolicy.canViewFrame(rank: 3, isPro: false), isFalse);
+      expect(StillScoutAccessPolicy.canViewFrame(rank: 4, isPro: false), isTrue);
+      expect(StillScoutAccessPolicy.canViewFrame(rank: 5, isPro: false), isFalse);
     });
 
-    test('pro users can view up to 10 keepers', () {
-      expect(StillScoutAccessPolicy.canViewFrame(rank: 9, isPro: true), isTrue);
-      expect(StillScoutAccessPolicy.canViewFrame(rank: 10, isPro: true), isFalse);
+    test('pro users can view up to 20 keepers', () {
+      expect(StillScoutAccessPolicy.canViewFrame(rank: 19, isPro: true), isTrue);
+      expect(StillScoutAccessPolicy.canViewFrame(rank: 20, isPro: true), isFalse);
     });
 
     test('timestamps hidden for free tier', () {
@@ -45,8 +45,8 @@ void main() {
 
     test('semantics omit timecodes for free users', () {
       expect(
-        StillScoutAccessPolicy.semanticsLabel(rank: 0, isPro: false, score: 88),
-        'Top Pick #1, score 88',
+        StillScoutAccessPolicy.semanticsLabel(rank: 0, isPro: false, score: 8.8),
+        'Top Pick #1, score 8.8',
       );
     });
 
@@ -87,7 +87,7 @@ void main() {
           isPro: true,
           exportsUsedThisSession: 0,
         ),
-        'Unlimited polished saves',
+        'Unlimited saves',
       );
     });
 
@@ -111,10 +111,14 @@ void main() {
     test('browsable ranks exclude locked free frames', () {
       expect(
         StillScoutAccessPolicy.browsableRanks(totalFrames: 12, isPro: false),
-        [0, 1, 2],
+        [0, 1, 2, 3, 4],
       );
       expect(
         StillScoutAccessPolicy.browsableRanks(totalFrames: 12, isPro: true).length,
+        12, // capped by available frames
+      );
+      expect(
+        StillScoutAccessPolicy.browsableRanks(totalFrames: 25, isPro: true).length,
         StillScoutConstants.proKeeperLimit,
       );
     });
@@ -123,36 +127,55 @@ void main() {
       expect(
         StillScoutAccessPolicy.scoutsAllowanceLabel(
           isPro: true,
-          scoutsRemainingThisWeek: 0,
+          scoutsRemainingToday: 0,
         ),
-        'Unlimited scouts',
+        'Unlimited AI Pro scouts',
       );
       expect(
         StillScoutAccessPolicy.scoutsAllowanceLabel(
           isPro: false,
-          scoutsRemainingThisWeek: 0,
+          scoutsRemainingToday: 0,
           isLoading: true,
         ),
-        'Checking weekly allowance…',
+        'Checking daily allowance…',
       );
       expect(
         StillScoutAccessPolicy.scoutsAllowanceLabel(
           isPro: false,
-          scoutsRemainingThisWeek: 8,
+          scoutsRemainingToday: StillScoutConstants.freeScoutsPerDay,
         ),
-        '8 free scouts left this week',
+        '${StillScoutConstants.freeScoutsPerDay} free scouts left today',
       );
       expect(
         StillScoutAccessPolicy.scoutsAllowanceLabel(
           isPro: false,
-          scoutsRemainingThisWeek: 0,
+          scoutsRemainingToday: 0,
         ),
-        'No scouts left this week',
+        'No free scouts left today',
+      );
+      expect(
+        StillScoutAccessPolicy.scoutsAllowanceLabel(
+          isPro: false,
+          scoutsRemainingToday: 2,
+          isAiProTrialAvailable: true,
+        ),
+        'Free AI Trial ready · needs internet',
+      );
+      expect(
+        StillScoutAccessPolicy.scoutRequiresNetwork(
+          isPro: false,
+          isAiProTrialAvailable: true,
+        ),
+        isTrue,
+      );
+      expect(
+        StillScoutAccessPolicy.scoutRequiresNetwork(isPro: false),
+        isFalse,
       );
     });
 
     test('persisted json redacts locked free frames', () {
-      final frame = ScoredFrame(
+      const frame = ScoredFrame(
         frame: ExtractedFrame(
           id: 'f1',
           filePath: '/cache/frame.jpg',
@@ -161,8 +184,8 @@ void main() {
           height: 720,
           sourceVideoPath: '/videos/clip.mp4',
         ),
-        score: 80,
-        metadata: const FrameScoreMetadata(
+        score: 8.0,
+        metadata: FrameScoreMetadata(
           blurScore: 80,
           lightingScore: 70,
           openEyesScore: 75,
@@ -178,6 +201,7 @@ void main() {
       expect(unlockedJson['timestampMs'], 12500);
       expect(unlockedJson['sourceVideoPath'], '/videos/clip.mp4');
 
+      // rank 5 is still locked (freeKeeperLimit = 5, so ranks 0-4 are unlocked).
       final lockedView = StillScoutAccessPolicy.fromPersistedJson(
         lockedJson,
         isPro: false,

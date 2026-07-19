@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -38,6 +39,8 @@ class _StillScoutSessionDetailScreenState
   String _tierLabel = '';
   late StillScoutSession _session;
   late int _exportsUsedThisView;
+  // Cached so repeated _loadTierLabel calls don't fire extra SharedPreferences reads.
+  int? _cachedScoutsRemaining;
 
   @override
   void initState() {
@@ -49,9 +52,14 @@ class _StillScoutSessionDetailScreenState
 
   Future<void> _loadTierLabel() async {
     final isPro = ref.read(stillScoutProvider).isPro;
+    // Read quota from SharedPreferences only once per screen visit.
+    _cachedScoutsRemaining ??= await StillScoutScoutQuotaTracker.remainingToday(
+      isPro: isPro,
+    );
     final label = await StillScoutSubscriptionManager.tierLabel(
       isPro: isPro,
       exportsUsedThisSession: _exportsUsedThisView,
+      scoutsRemainingToday: _cachedScoutsRemaining,
     );
     if (mounted) setState(() => _tierLabel = label);
   }
@@ -85,6 +93,17 @@ class _StillScoutSessionDetailScreenState
   Future<void> _showPaywall({String? reason}) async {
     final isPro = ref.read(stillScoutProvider).isPro;
     if (isPro) return;
+    // Compute locked counts for personalised paywall hook.
+    final lockedCount = StillScoutAccessPolicy.lockedCount(
+      totalFrames: _frames.length,
+      isPro: false,
+    );
+    final lockedFrames = _frames.length > lockedCount
+        ? _frames.skip(_frames.length - lockedCount)
+        : <ScoredFrame>[];
+    final bestLockedScore = lockedFrames.isEmpty
+        ? null
+        : lockedFrames.map((f) => f.score).reduce((a, b) => a > b ? a : b);
     await StillScoutPaywallSheet.show(
       context,
       exportsRemaining: StillScoutAccessPolicy.exportsRemainingThisScout(
@@ -92,6 +111,8 @@ class _StillScoutSessionDetailScreenState
         exportsUsedThisSession: _exportsUsedThisView,
       ),
       reason: reason,
+      lockedCount: lockedCount > 0 ? lockedCount : null,
+      bestLockedScore: bestLockedScore,
       onPurchased: () async {
         await ref.read(stillScoutProvider.notifier).refreshSubscriptionState();
         await _loadTierLabel();
@@ -101,6 +122,12 @@ class _StillScoutSessionDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Refresh tier label and unlock state whenever the subscription changes
+    // (e.g. user upgrades via paywall while the detail screen is open).
+    ref.listen(stillScoutProvider.select((s) => s.isPro), (_, __) {
+      unawaited(_loadTierLabel());
+    });
+
     final frames = _frames;
     final state = ref.watch(stillScoutProvider);
     final topPicks = _topPicks;
@@ -121,11 +148,6 @@ class _StillScoutSessionDetailScreenState
           style: StillScoutTextStyles.title,
         ),
         actions: [
-          IconButton(
-            tooltip: 'Start over',
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.refresh_rounded, color: StillScoutColors.chalk),
-          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: StillScoutColors.silver),
             color: StillScoutColors.slate,
@@ -150,7 +172,7 @@ class _StillScoutSessionDetailScreenState
         decoration: const BoxDecoration(gradient: StillScoutColors.vignette),
         child: SafeArea(
           child: frames.isEmpty
-              ? _UnavailableFrames()
+              ? _UnavailableFrames(onScoutAgain: _rescoutVideo)
               : StillScoutResultsGallery(
                   frames: frames,
                   topPicks: topPicks,
@@ -158,8 +180,13 @@ class _StillScoutSessionDetailScreenState
                   processingTimeMs: _session.processingTimeMs,
                   isPro: state.isPro,
                   exportsUsedThisSession: _exportsUsedThisView,
+                  onUpgradeAiPro: () => _showPaywall(
+                    reason:
+                        'AI finds your best moment and turns it into a professional photo.',
+                  ),
                   onLockedFrameTap: () => _showPaywall(
-                    reason: 'Unlock all ranked picks from past scouts with Pro.',
+                    reason:
+                        'Unlock Gemini judgment, 20 keepers, and native 4K.',
                   ),
                   onFrameTap: (frame, rank) {
                     if (StillScoutAccessPolicy.isLocked(
@@ -168,7 +195,7 @@ class _StillScoutSessionDetailScreenState
                     )) {
                       _showPaywall(
                         reason:
-                            'Unlock all ranked picks from past scouts with Pro.',
+                            'Unlock Gemini judgment, 20 keepers, and native 4K.',
                       );
                     } else {
                       _onFrameTap(frame, state.isPro, frames, rank);
@@ -200,6 +227,10 @@ class _StillScoutSessionDetailScreenState
       allFrames: allFrames,
       initialIndex: rank,
       onExportPressed: _handleExport,
+      onUnlockAiPro: () => _showPaywall(
+        reason:
+            'AI Auto Polish and Gemini Flash scoring unlock with AI Pro.',
+      ),
     );
   }
 
@@ -207,7 +238,7 @@ class _StillScoutSessionDetailScreenState
     ScoredFrame frame,
     StillScoutExportAction action, {
     required StillScoutCropRatio cropRatio,
-    bool applyPolish = true,
+    bool applyPolish = false,
     String? precomputedPolishPath,
   }) async {
     final isPro = ref.read(stillScoutProvider).isPro;
@@ -220,7 +251,7 @@ class _StillScoutSessionDetailScreenState
       )) {
         if (!mounted) return;
         await _showPaywall(
-          reason: 'You\'ve used all ${StillScoutConstants.freeExportsPerScout} polished saves for this past scout.',
+          reason: 'You\'ve used all ${StillScoutConstants.freeExportsPerScout} saves for this past scout.',
         );
         return;
       }
@@ -234,6 +265,7 @@ class _StillScoutSessionDetailScreenState
             applyPolish: applyPolish,
             faceDetector: faceDetector,
             precomputedPolishPath: precomputedPolishPath,
+            permissionContext: context,
           )
         : await StillScoutExportService.share(
             frame,
@@ -290,7 +322,13 @@ class _StillScoutSessionDetailScreenState
   }
 
   Future<void> _rescoutVideo() async {
-    if (!ref.read(isOnlineProvider)) {
+    final isPro = ref.read(stillScoutProvider).isPro;
+    // Only block offline when the user actually needs cloud AI (Pro or trial).
+    // Free on-device scouts run fine without connectivity.
+    final needsOnline =
+        StillScoutAccessPolicy.canUseCloudAi(isPro: isPro) ||
+        StillScoutAiProTrialTracker.isTrialAvailable;
+    if (needsOnline && !ref.read(isOnlineProvider)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -301,8 +339,6 @@ class _StillScoutSessionDetailScreenState
       );
       return;
     }
-
-    final isPro = ref.read(stillScoutProvider).isPro;
     if (!isPro &&
         !await StillScoutScoutQuotaTracker.canStartScout(isPro: false)) {
       if (!mounted) return;
@@ -330,7 +366,14 @@ class _StillScoutSessionDetailScreenState
 
     if (!mounted) return;
     Navigator.of(context).pop();
-    await ref.read(stillScoutProvider.notifier).onVideoPicked(path);
+    final notifier = ref.read(stillScoutProvider.notifier);
+    await notifier.onVideoPicked(path);
+    // Start scouting immediately — "Scout again" should not stop at pre-flight.
+    if (!mounted) return;
+    final state = ref.read(stillScoutProvider);
+    if (state.videoPath != null && state.phase == StillScoutPhase.idle) {
+      await notifier.processVideo(state.videoPath!);
+    }
   }
 
   static String _formatDate(DateTime dt) {
@@ -344,16 +387,50 @@ class _StillScoutSessionDetailScreenState
 }
 
 class _UnavailableFrames extends StatelessWidget {
+  const _UnavailableFrames({required this.onScoutAgain});
+  final VoidCallback onScoutAgain;
+
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(StillScoutSpacing.xl),
-        child: Text(
-          'Frames from this session are no longer available. '
-          'Re-scout the same video to regenerate them.',
-          style: StillScoutTextStyles.body,
-          textAlign: TextAlign.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.image_not_supported_outlined,
+              size: 56,
+              color: StillScoutColors.silver.withValues(alpha: 0.45),
+            ),
+            const SizedBox(height: StillScoutSpacing.m),
+            Text(
+              'Frames unavailable',
+              style: StillScoutTextStyles.subtitle,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: StillScoutSpacing.s),
+            Text(
+              'Cached frames from this session have been cleared. '
+              'Re-scout the original video to regenerate them.',
+              style: StillScoutTextStyles.body,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: StillScoutSpacing.l),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onScoutAgain,
+                icon: const Icon(Icons.search_rounded),
+                label: const Text('Scout this video again'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: StillScoutColors.accent,
+                  foregroundColor: StillScoutColors.voidBlack,
+                  minimumSize: const Size(0, 52),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

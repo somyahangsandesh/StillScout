@@ -45,6 +45,19 @@ class StillScoutTopPicksSelector {
     return picks;
   }
 
+  /// Gemini top scouts in model pick order (best-first), then score fallback.
+  static List<ScoredFrame> geminiOrderedTopPicks(List<ScoredFrame> frames) {
+    return frames.where((f) => f.isTopScout).toList()
+      ..sort((a, b) {
+        final ra = a.geminiPickRank;
+        final rb = b.geminiPickRank;
+        if (ra != null && rb != null) return ra.compareTo(rb);
+        if (ra != null) return -1;
+        if (rb != null) return 1;
+        return b.score.compareTo(a.score);
+      });
+  }
+
   static bool _satisfiesGap(
     ScoredFrame candidate,
     List<ScoredFrame> picks,

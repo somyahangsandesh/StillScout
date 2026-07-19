@@ -53,6 +53,11 @@ class VideoRepositoryImpl implements VideoRepository {
       );
     } on StillScoutCancelledException {
       throw const CancelledFailure();
+    } on CancelledFailure {
+      // Progress callbacks may throw CancelledFailure — keep it typed.
+      rethrow;
+    } on StillScoutFailure {
+      rethrow;
     } on VideoFrameExtractorException catch (e) {
       throw _mapExtractorException(e);
     } catch (e) {
@@ -66,6 +71,8 @@ class VideoRepositoryImpl implements VideoRepository {
         return const VideoNotFoundFailure();
       case VideoFrameExtractorErrorCode.tooShort:
         return const VideoTooShortFailure();
+      case VideoFrameExtractorErrorCode.tooLong:
+        return const VideoTooLongFailure();
       case VideoFrameExtractorErrorCode.timeout:
         return const VideoReadTimeoutFailure();
       case VideoFrameExtractorErrorCode.unreadable:

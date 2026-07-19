@@ -36,6 +36,19 @@ class SessionRepositoryImpl implements SessionRepository {
   }
 
   @override
+  Future<StillScoutSession?> getSession(String id) async {
+    try {
+      final raw = _box.get(id);
+      if (raw is Map) return StillScoutSession.fromJson(raw);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[SessionRepo] Failed to parse session $id: $e');
+      }
+    }
+    return null;
+  }
+
+  @override
   Future<void> deleteSession(String id) async {
     await _box.delete(id);
     await StillScoutCacheJanitor.deleteSession(id);

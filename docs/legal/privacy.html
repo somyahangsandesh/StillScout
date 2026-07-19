@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StillScout Privacy Policy</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 42rem; margin: 2rem auto; padding: 0 1.25rem 3rem; line-height: 1.55; color: #111; }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.15rem; margin-top: 1.75rem; }
+    nav a { margin-right: 0.75rem; color: #0b57d0; }
+    .muted { color: #666; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+    <a href="support.html">Support</a>
+  </nav>
+  <h1>StillScout Privacy Policy</h1>
+  <p class="muted"><em>Last updated: July 13, 2026</em></p>
+  <p>StillScout (“we”, “us”) respects your privacy. This policy explains what information the StillScout mobile app processes when you use frame scouting, polishing, and export features.</p>
+  <h2>1. Information we process</h2>
+  <ul>
+    <li>Videos and still frames you choose to import or record in the app.</li>
+    <li>Derived frame images sent to cloud AI solely to score composition, sharpness, and face/eye quality.</li>
+    <li>A random on-device identifier used only to enforce fair daily AI usage limits.</li>
+    <li>Purchase and entitlement status via Apple In-App Purchase and RevenueCat (no full payment card numbers are collected by StillScout).</li>
+    <li>Local session history and cached frames stored on your device (Hive / app documents).</li>
+  </ul>
+  <h2>2. How we use information</h2>
+  <ul>
+    <li>To extract, rank, polish, and export stills you request.</li>
+    <li>To operate Pro subscriptions and restore purchases.</li>
+    <li>To protect shared AI capacity with per-device quotas.</li>
+  </ul>
+  <p>We do not sell your personal information. We do not use your videos for advertising.</p>
+  <h2>3. Cloud AI and third parties</h2>
+  <p>When you use AI Pro while online, selected still frames (downsized JPEGs) may be sent to our scoring proxy (Supabase Edge Functions), which forwards them to Google Gemini Flash to return quality scores and a short explanation. Free on-device scouting uses Apple Vision and local heuristics entirely on your device and does not upload frames for AI scoring. Providers process images according to their policies and our server configuration.</p>
+  <p>Purchases are processed by Apple and RevenueCat under their privacy policies.</p>
+  <h2>4. On-device processing</h2>
+  <p>Face and eye quality checks may run on-device with Apple Vision. That analysis stays on your device unless a frame is also sent for cloud scoring as described above.</p>
+  <h2>5. Data retention</h2>
+  <p>Scout history and frame caches live on your device until you clear app data, uninstall, or the app evicts old sessions under its storage limits. Server-side quota counters tied to the random device id are retained only as needed to enforce limits.</p>
+  <h2>6. Your choices</h2>
+  <ul>
+    <li>You control which videos you import or record.</li>
+    <li>You can deny camera, microphone, or photo library permission in iOS Settings (some features will stop working).</li>
+    <li>You can delete the app to remove local caches.</li>
+    <li>Manage or cancel StillScout Pro in Apple ID → Subscriptions.</li>
+  </ul>
+  <h2>7. Children</h2>
+  <p>StillScout is not directed at children under 13. Do not use the app to scout media of children if you are not authorized to do so.</p>
+  <h2>8. Contact</h2>
+  <p>Questions about privacy: <a href="mailto:privacy@stillscout.app">privacy@stillscout.app</a></p>
+  <h2>9. Changes</h2>
+  <p>We may update this policy. The “Last updated” date above will change when we do. Continued use after an update means you accept the revised policy.</p>
+</body>
+</html>

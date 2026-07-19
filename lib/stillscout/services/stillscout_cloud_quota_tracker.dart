@@ -7,7 +7,7 @@ import '../domain/stillscout_constants.dart';
 /// This is not a replacement for a production backend proxy, but it prevents a
 /// single install from exhausting the app-wide free-tier pool during shipathon
 /// or early beta. Once the daily cap is reached, callers skip cloud providers
-/// and fall back to on-device ML Kit + heuristic scoring.
+/// and fall back to on-device Apple Vision + heuristic scoring.
 class StillScoutCloudQuotaTracker {
   StillScoutCloudQuotaTracker._();
 

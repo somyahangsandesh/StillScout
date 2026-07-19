@@ -1,0 +1,7 @@
+# Hosted legal page URLs (public HTTPS)
+# Canonical host — must match StillScoutConfig defaults / App Store Connect.
+# Source HTML: docs/legal/*.html
+privacy=https://stillscout.app/legal/privacy
+terms=https://stillscout.app/legal/terms
+support=https://stillscout.app/legal/support
+index=https://stillscout.app/legal/

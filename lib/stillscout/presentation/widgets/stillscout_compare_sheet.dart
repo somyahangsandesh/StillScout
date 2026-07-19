@@ -273,22 +273,31 @@ class _ScoreRow extends StatelessWidget {
   const _ScoreRow(this.label, this.scoreA, this.scoreB, {this.isTotal = false});
 
   final String label;
-  final int scoreA;
-  final int scoreB;
+  final num scoreA;
+  final num scoreB;
   final bool isTotal;
 
-  Color _barColor(int score, int other) {
+  Color _barColor(num score, num other) {
     if (score > other) return StillScoutColors.accent;
     if (score < other) return StillScoutColors.silver;
     return StillScoutColors.silver;
   }
+
+  String _fmt(num v) {
+    if (!isTotal) return '${v.round()}';
+    final d = v.toDouble();
+    return d >= 10.0 ? '10' : d.toStringAsFixed(1);
+  }
+
+  // Normalise to 0–1 for the progress bar.
+  double _fill(num v) =>
+      isTotal ? (v.toDouble() / 10.0).clamp(0.0, 1.0) : (v.toDouble() / 100.0).clamp(0.0, 1.0);
 
   @override
   Widget build(BuildContext context) {
     final aStyle = isTotal
         ? StillScoutTextStyles.subtitle.copyWith(fontSize: 17)
         : StillScoutTextStyles.body;
-    final bStyle = aStyle;
 
     return Row(
       children: [
@@ -298,22 +307,22 @@ class _ScoreRow extends StatelessWidget {
         ),
         Expanded(
           child: _ScoreBar(
-            score: scoreA,
+            fill: _fill(scoreA),
             color: _barColor(scoreA, scoreB),
             alignment: Alignment.centerRight,
           ),
         ),
         const SizedBox(width: StillScoutSpacing.s),
-        Text('$scoreA', style: aStyle),
+        Text(_fmt(scoreA), style: aStyle),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.xs),
           child: Text('·', style: StillScoutTextStyles.caption),
         ),
-        Text('$scoreB', style: bStyle),
+        Text(_fmt(scoreB), style: aStyle),
         const SizedBox(width: StillScoutSpacing.s),
         Expanded(
           child: _ScoreBar(
-            score: scoreB,
+            fill: _fill(scoreB),
             color: _barColor(scoreB, scoreA),
             alignment: Alignment.centerLeft,
           ),
@@ -325,12 +334,12 @@ class _ScoreRow extends StatelessWidget {
 
 class _ScoreBar extends StatelessWidget {
   const _ScoreBar({
-    required this.score,
+    required this.fill,
     required this.color,
     required this.alignment,
   });
 
-  final int score;
+  final double fill; // 0.0–1.0
   final Color color;
   final Alignment alignment;
 
@@ -338,7 +347,7 @@ class _ScoreBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth * (score / 100);
+        final width = constraints.maxWidth * fill.clamp(0.0, 1.0);
         return Stack(
           alignment: alignment,
           children: [

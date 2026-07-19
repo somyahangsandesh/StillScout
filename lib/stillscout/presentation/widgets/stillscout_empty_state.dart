@@ -1,22 +1,25 @@
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../domain/stillscout_online_status.dart';
 import '../../domain/stillscout_constants.dart';
+import '../../services/stillscout_permissions.dart';
+import '../widgets/stillscout_legal_links.dart';
 import '../widgets/stillscout_logo.dart';
 import '../widgets/stillscout_source_sheet.dart';
-import '../widgets/stillscout_online_banner.dart';
 import '../theme/stillscout_theme.dart';
 
 typedef VideoSelectedCallback = void Function(String path);
 
 /// Native video picker — library import or in-app camera record.
 class StillScoutVideoPicker {
-  StillScoutVideoPicker({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
+  StillScoutVideoPicker({ImagePicker? picker})
+      : _picker = picker ?? ImagePicker();
 
   final ImagePicker _picker;
 
@@ -26,7 +29,9 @@ class StillScoutVideoPicker {
   }) async {
     if (!context.mounted) return;
 
-    // Gallery uses the system picker — no pre-flight permission on iOS or Android.
+    final allowed = await StillScoutPermissions.ensureGalleryRead(context);
+    if (!allowed || !context.mounted) return;
+
     try {
       final file = await _picker.pickVideo(
         source: ImageSource.gallery,
@@ -55,18 +60,13 @@ class StillScoutVideoPicker {
       return;
     }
 
-    final camera = await Permission.camera.request();
-    final mic = await Permission.microphone.request();
-    if (!context.mounted) return;
-    if (!camera.isGranted || !mic.isGranted) {
-      _showPermissionSnack(context, 'Camera and microphone access are required.');
-      return;
-    }
+    final allowed = await StillScoutPermissions.ensureCameraRecord(context);
+    if (!allowed || !context.mounted) return;
 
     try {
       final file = await _picker.pickVideo(
         source: ImageSource.camera,
-        maxDuration: const Duration(minutes: 5),
+        maxDuration: const Duration(minutes: 10),
       );
       if (file != null) onVideoSelected(file.path);
     } catch (e) {
@@ -112,9 +112,10 @@ class StillScoutEmptyState extends StatefulWidget {
 }
 
 class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _picker = StillScoutVideoPicker();
   late final AnimationController _pulseCtrl;
+  late final AnimationController _ambientCtrl;
   bool _isDragOver = false;
 
   @override
@@ -124,11 +125,18 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+    // Very slow drift so the empty state feels alive without drawing focus —
+    // a full cycle takes almost half a minute.
+    _ambientCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 26),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _pulseCtrl.dispose();
+    _ambientCtrl.dispose();
     super.dispose();
   }
 
@@ -140,160 +148,225 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
         final uploadHeight = compact ? 240.0 : 300.0;
         final titleSize = compact ? 28.0 : 32.0;
 
-        final canScout = widget.onlineStatus == OnlineStatus.online;
-        final enabled = widget.isEnabled && canScout;
+        const canScout = true;
+        final enabled = widget.isEnabled;
         final isChecking = widget.onlineStatus == OnlineStatus.checking;
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight - 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const StillScoutLogo(size: 56, animateGlow: true, glowStrength: 0.28),
-                const SizedBox(height: StillScoutSpacing.m),
-                Text(
-                  'Scout → Polish → Post',
-                  style: StillScoutTextStyles.display.copyWith(fontSize: titleSize),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: StillScoutSpacing.s),
-                Text(
-                  'AI ranks your sharpest frames. Auto Polish makes them post-ready.',
-                  style: StillScoutTextStyles.body,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: StillScoutSpacing.m),
-                StillScoutOnlineRequirementChip(status: widget.onlineStatus),
-                const SizedBox(height: StillScoutSpacing.m),
-                const _HowItWorksStrip(),
-                SizedBox(height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
-                DragTarget<String>(
-                  onWillAcceptWithDetails: (_) => enabled,
-                  onMove: (_) {
-                    if (enabled) setState(() => _isDragOver = true);
-                  },
-                  onLeave: (_) => setState(() => _isDragOver = false),
-                  onAcceptWithDetails: (details) => widget.onVideoSelected(details.data),
-                  builder: (context, candidate, rejected) {
-                    return GestureDetector(
-                      onTap: enabled ? () => _showSourceSheet(context) : null,
-                      child: AnimatedBuilder(
-                        animation: _pulseCtrl,
-                        builder: (context, child) {
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: double.infinity,
-                            height: uploadHeight,
-                            decoration: StillScoutDecorations.glassCard(
-                              borderColor: _isDragOver
-                                  ? StillScoutColors.accent
-                                  : StillScoutColors.silver.withValues(alpha: 0.35),
-                              borderWidth: _isDragOver ? 2 : 1,
-                            ),
-                            child: child,
-                          );
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              canScout
-                                  ? Icons.movie_filter_outlined
-                                  : isChecking
-                                      ? Icons.sync_rounded
-                                      : Icons.wifi_off_rounded,
-                              size: compact ? 48 : 56,
-                              color: canScout
-                                  ? StillScoutColors.chalk.withValues(alpha: 0.9)
-                                  : StillScoutColors.silver.withValues(alpha: 0.55),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              canScout
-                                  ? 'Tap to upload video'
-                                  : isChecking
-                                      ? 'Checking connection…'
-                                      : 'Connect to the internet',
-                              style: StillScoutTextStyles.title.copyWith(fontSize: 18),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              canScout
-                                  ? 'or drop a clip here'
-                                  : isChecking
-                                      ? 'Verifying AI scouting is available'
-                                      : 'AI scouting needs Wi‑Fi or mobile data',
-                              style: StillScoutTextStyles.caption,
-                              textAlign: TextAlign.center,
-                            ),
-                            if (canScout) ...[
-                              const SizedBox(height: 18),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _QuickImportChip(
-                                    icon: Icons.photo_library_rounded,
-                                    label: 'Gallery',
-                                    accent: const Color(0xFFB8A4FF),
-                                    onTap: enabled
-                                        ? () => _runPickerAfterSheet(() {
-                                              _picker.pickFromGallery(
-                                                context: context,
-                                                onVideoSelected: widget.onVideoSelected,
-                                              );
-                                            })
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  _QuickImportChip(
-                                    icon: Icons.videocam_rounded,
-                                    label: 'Record',
-                                    accent: StillScoutColors.accent,
-                                    onTap: enabled
-                                        ? () => _runPickerAfterSheet(() {
-                                              _picker.recordVideo(
-                                                context: context,
-                                                onVideoSelected: widget.onVideoSelected,
-                                              );
-                                            })
-                                        : null,
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                'AI-ranked stills · works on clips up to 10 minutes',
-                                style: StillScoutTextStyles.caption.copyWith(
-                                  color: StillScoutColors.silver.withValues(alpha: 0.7),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
-                if (!compact) ...[
-                  const _DemoPreviewRow(),
-                  const SizedBox(height: StillScoutSpacing.m),
-                ],
-                Text(
-                  'AI ranks your sharpest frames — ${StillScoutConstants.freeScoutsPerWeek} free scouts per week, clean exports.',
-                  style: StillScoutTextStyles.caption.copyWith(
-                    color: StillScoutColors.silver.withValues(alpha: 0.8),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: _AmbientGlow(animation: _ambientCtrl),
+              ),
             ),
-          ),
+            _buildContent(context, constraints,
+                compact: compact,
+                uploadHeight: uploadHeight,
+                titleSize: titleSize,
+                canScout: canScout,
+                enabled: enabled,
+                isChecking: isChecking),
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    BoxConstraints constraints, {
+    required bool compact,
+    required double uploadHeight,
+    required double titleSize,
+    required bool canScout,
+    required bool enabled,
+    required bool isChecking,
+  }) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: constraints.maxHeight - 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const StillScoutLogo(
+                size: 56, animateGlow: true, glowStrength: 0.28),
+            const SizedBox(height: StillScoutSpacing.m),
+            Text(
+              'Scout → Polish → Post',
+              style: StillScoutTextStyles.display.copyWith(fontSize: titleSize),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: StillScoutSpacing.s),
+            Text(
+              'Instant offline frame ranking. AI Pro adds deeper analysis and polish.',
+              style: StillScoutTextStyles.body,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: StillScoutSpacing.m),
+            const _HowItWorksStrip(),
+            SizedBox(
+                height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
+            DragTarget<String>(
+              onWillAcceptWithDetails: (_) => enabled,
+              onMove: (_) {
+                if (enabled) setState(() => _isDragOver = true);
+              },
+              onLeave: (_) => setState(() => _isDragOver = false),
+              onAcceptWithDetails: (details) =>
+                  widget.onVideoSelected(details.data),
+              builder: (context, candidate, rejected) {
+                return GestureDetector(
+                  onTap: enabled ? () => _showSourceSheet(context) : null,
+                  child: AnimatedScale(
+                    scale: _isDragOver ? 1.02 : 1.0,
+                    duration: StillScoutMotion.fast,
+                    curve: StillScoutMotion.toggle,
+                    child: ClipRRect(
+                      borderRadius: StillScoutRadius.card,
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+                        child: AnimatedBuilder(
+                          animation: _pulseCtrl,
+                          builder: (context, child) {
+                            final baseDecoration =
+                                StillScoutDecorations.glassCard(
+                              borderColor: _isDragOver
+                                  ? StillScoutColors.accent
+                                  : StillScoutColors.silver
+                                      .withValues(alpha: 0.35),
+                              borderWidth: _isDragOver ? 2 : 1,
+                            );
+                            return AnimatedContainer(
+                              duration: StillScoutMotion.fast,
+                              curve: StillScoutMotion.toggle,
+                              width: double.infinity,
+                              height: uploadHeight,
+                              decoration: _isDragOver
+                                  ? baseDecoration.copyWith(
+                                      boxShadow: [
+                                        ...?baseDecoration.boxShadow,
+                                        BoxShadow(
+                                          color: StillScoutColors.accentGlow
+                                              .withValues(alpha: 0.6),
+                                          blurRadius: 40,
+                                          spreadRadius: 4,
+                                        ),
+                                      ],
+                                    )
+                                  : baseDecoration,
+                              child: child,
+                            );
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                canScout
+                                    ? Icons.movie_filter_outlined
+                                    : isChecking
+                                        ? Icons.sync_rounded
+                                        : Icons.wifi_off_rounded,
+                                size: compact ? 48 : 56,
+                                color: canScout
+                                    ? StillScoutColors.chalk
+                                        .withValues(alpha: 0.9)
+                                    : StillScoutColors.silver
+                                        .withValues(alpha: 0.55),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                canScout
+                                    ? 'Tap to upload video'
+                                    : isChecking
+                                        ? 'Checking connection…'
+                                        : 'Connect to the internet',
+                                style: StillScoutTextStyles.title
+                                    .copyWith(fontSize: 18),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                canScout
+                                    ? 'or drop a clip here'
+                                    : isChecking
+                                        ? 'Setting things up…'
+                                        : 'AI Pro scouting needs Wi‑Fi or mobile data',
+                                style: StillScoutTextStyles.caption,
+                                textAlign: TextAlign.center,
+                              ),
+                              if (canScout) ...[
+                                const SizedBox(height: 18),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _QuickImportChip(
+                                      icon: Icons.photo_library_rounded,
+                                      label: 'Gallery',
+                                      accent: StillScoutColors.secondaryAccent,
+                                      onTap: enabled
+                                          ? () => _runPickerAfterSheet(() {
+                                                _picker.pickFromGallery(
+                                                  context: context,
+                                                  onVideoSelected:
+                                                      widget.onVideoSelected,
+                                                );
+                                              })
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    _QuickImportChip(
+                                      icon: Icons.videocam_rounded,
+                                      label: 'Record',
+                                      accent: StillScoutColors.accent,
+                                      onTap: enabled
+                                          ? () => _runPickerAfterSheet(() {
+                                                _picker.recordVideo(
+                                                  context: context,
+                                                  onVideoSelected:
+                                                      widget.onVideoSelected,
+                                                );
+                                              })
+                                          : null,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  'Ranked stills · works on clips up to 10 minutes',
+                                  style: StillScoutTextStyles.caption.copyWith(
+                                    color: StillScoutColors.silver
+                                        .withValues(alpha: 0.7),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            SizedBox(
+                height: compact ? StillScoutSpacing.l : StillScoutSpacing.xl),
+            if (!compact) ...[
+              const _DemoPreviewRow(),
+              const SizedBox(height: StillScoutSpacing.m),
+            ],
+            Text(
+              'On-device Vision ranks your sharpest frames — ${StillScoutConstants.freeScoutsPerDay} free scouts per day.',
+              style: StillScoutTextStyles.caption.copyWith(
+                color: StillScoutColors.silver.withValues(alpha: 0.8),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: StillScoutSpacing.m),
+            const StillScoutLegalLinks(compact: true),
+          ],
+        ),
+      ),
     );
   }
 
@@ -323,6 +396,57 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
   }
 }
 
+/// Slow, low-opacity drifting glow behind the empty-state content — purely
+/// ambient, never intercepts touches (always wrapped in [IgnorePointer] by
+/// the caller).
+class _AmbientGlow extends StatelessWidget {
+  const _AmbientGlow({required this.animation});
+
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final t = animation.value * 2 * math.pi;
+        final primaryCenter = Alignment(
+          math.cos(t) * 0.7,
+          math.sin(t * 0.6) * 0.8 - 0.2,
+        );
+        final secondaryCenter = Alignment(
+          math.cos(t * 0.5 + math.pi) * 0.8,
+          math.sin(t * 0.8 + math.pi) * 0.6 + 0.4,
+        );
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: primaryCenter,
+              radius: 1.1,
+              colors: [
+                StillScoutColors.accent.withValues(alpha: 0.05),
+                Colors.transparent,
+              ],
+            ),
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: secondaryCenter,
+                radius: 0.9,
+                colors: [
+                  StillScoutColors.secondaryAccent.withValues(alpha: 0.04),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _HowItWorksStrip extends StatelessWidget {
   const _HowItWorksStrip();
 
@@ -330,11 +454,17 @@ class _HowItWorksStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Row(
       children: [
-        Expanded(child: _HowItWorksStep(icon: Icons.upload_rounded, label: 'Import')),
+        Expanded(
+            child:
+                _HowItWorksStep(icon: Icons.upload_rounded, label: 'Import')),
         _HowItWorksArrow(),
-        Expanded(child: _HowItWorksStep(icon: Icons.auto_awesome, label: 'AI Scout')),
+        Expanded(
+            child:
+                _HowItWorksStep(icon: Icons.auto_awesome, label: 'AI Scout')),
         _HowItWorksArrow(),
-        Expanded(child: _HowItWorksStep(icon: Icons.ios_share_rounded, label: 'Export')),
+        Expanded(
+            child: _HowItWorksStep(
+                icon: Icons.ios_share_rounded, label: 'Export')),
       ],
     );
   }

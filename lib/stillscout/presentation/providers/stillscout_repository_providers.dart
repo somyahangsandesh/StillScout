@@ -14,15 +14,13 @@ import '../../services/face_quality_detector.dart';
 /// Override these in tests via `ProviderScope(overrides: [...])` to inject
 /// fake implementations without touching the production code.
 
-/// Singleton ML Kit face detector shared across the scoring session.
+/// Singleton face detector shared across the scoring session.
 ///
-/// Riverpod keeps this alive for the lifetime of the app — one detector
-/// instance, one native model load, reused across every scouting session.
-/// The detector is self-managing; [MlKitFaceQualityDetector.close] can be
-/// called from an `onDispose` hook if the provider is ever scoped.
+/// StillScout is **iOS-only** — always uses [VisionFaceQualityDetector]
+/// (Apple Vision via native method channel).
 final faceDetectorProvider = Provider<FaceQualityDetector>(
   (ref) {
-    final detector = MlKitFaceQualityDetector();
+    final detector = VisionFaceQualityDetector();
     ref.onDispose(detector.close);
     return detector;
   },

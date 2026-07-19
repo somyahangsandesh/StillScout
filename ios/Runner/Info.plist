@@ -54,13 +54,18 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>StillScout needs access to your photo library to save polished frame exports.</string>
+	<string>StillScout needs access to your photo library to import videos for scouting and to save polished frame exports.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>StillScout saves your best scouted frames to your photo library.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>StillScout may use the camera when you record clips to scout for stills.</string>
+	<string>StillScout uses the camera when you record clips to scout for stills.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>StillScout may access the microphone when recording video clips to scout.</string>
+	<string>StillScout uses the microphone when recording video clips to scout.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -69,6 +74,9 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<!-- Portrait-only: opt out of iPad multitasking so ASC does not require all 4 orientations -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<!-- Only standard HTTPS/TLS is used (Supabase, RevenueCat, AI providers) —
 	     this skips App Store Connect's export-compliance prompt on every build. -->
 	<key>ITSAppUsesNonExemptEncryption</key>

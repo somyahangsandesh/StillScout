@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -85,107 +87,118 @@ class _StillScoutSourceSheetState extends State<StillScoutSourceSheet>
             StillScoutSpacing.m,
             bottomInset + StillScoutSpacing.m,
           ),
-          child: DecoratedBox(
-            decoration: StillScoutDecorations.glassCard(
-              borderColor: StillScoutColors.accent.withValues(alpha: 0.28),
-            ).copyWith(
-              borderRadius: BorderRadius.circular(StillScoutRadius.xl),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(StillScoutRadius.xl),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -StillScoutSpacing.xl,
-                    right: -StillScoutSpacing.m,
-                    child: Container(
-                      width: StillScoutSpacing.xxl * 2.9,
-                      height: StillScoutSpacing.xxl * 2.9,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: StillScoutColors.accent.withValues(alpha: 0.08),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(StillScoutRadius.xl),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: DecoratedBox(
+                decoration: StillScoutDecorations.glassCard(
+                  borderColor: StillScoutColors.accent.withValues(alpha: 0.28),
+                ).copyWith(
+                  borderRadius: BorderRadius.circular(StillScoutRadius.xl),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(StillScoutRadius.xl),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: -StillScoutSpacing.xl,
+                        right: -StillScoutSpacing.m,
+                        child: Container(
+                          width: StillScoutSpacing.xxl * 2.9,
+                          height: StillScoutSpacing.xxl * 2.9,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
+                                StillScoutColors.accent.withValues(alpha: 0.08),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      StillScoutSpacing.m + 6,
-                      StillScoutSpacing.s + 6,
-                      StillScoutSpacing.m + 6,
-                      StillScoutSpacing.m + 6,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: StillScoutSpacing.xl + StillScoutSpacing.s,
-                            height: StillScoutSpacing.xs,
-                            margin: const EdgeInsets.only(
-                              bottom: StillScoutSpacing.m + 2,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          StillScoutSpacing.m + 6,
+                          StillScoutSpacing.s + 6,
+                          StillScoutSpacing.m + 6,
+                          StillScoutSpacing.m + 6,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Center(
+                              child: Container(
+                                width:
+                                    StillScoutSpacing.xl + StillScoutSpacing.s,
+                                height: StillScoutSpacing.xs,
+                                margin: const EdgeInsets.only(
+                                  bottom: StillScoutSpacing.m + 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: StillScoutColors.silver
+                                      .withValues(alpha: 0.35),
+                                  borderRadius: BorderRadius.circular(
+                                      StillScoutRadius.xs),
+                                ),
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color:
-                                  StillScoutColors.silver.withValues(alpha: 0.35),
-                              borderRadius:
-                                  BorderRadius.circular(StillScoutRadius.xs),
+                            Text(
+                              'Import footage',
+                              style: StillScoutTextStyles.title
+                                  .copyWith(fontSize: 22),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                        ),
-                        Text(
-                          'Import footage',
-                          style: StillScoutTextStyles.title.copyWith(fontSize: 22),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: StillScoutSpacing.xs + 2),
-                        Text(
-                          'Scout the sharpest, most expressive stills from any clip.',
-                          style: StillScoutTextStyles.bodySmall.copyWith(
-                            color: StillScoutColors.silver.withValues(alpha: 0.9),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: StillScoutSpacing.m + 6),
-                        _SourceCard(
-                          delayMs: 0,
-                          icon: Icons.photo_library_rounded,
-                          title: 'Choose from library',
-                          subtitle: 'Any video up to 10 minutes',
-                          badge: 'Most popular',
-                          gradient: const [
-                            Color(0xFF2A2340),
-                            Color(0xFF171322),
+                            const SizedBox(height: StillScoutSpacing.xs + 2),
+                            Text(
+                              'Scout the sharpest, most expressive stills from any clip.',
+                              style: StillScoutTextStyles.bodySmall.copyWith(
+                                color: StillScoutColors.silver
+                                    .withValues(alpha: 0.9),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: StillScoutSpacing.m + 6),
+                            _SourceCard(
+                              delayMs: 0,
+                              icon: Icons.photo_library_rounded,
+                              title: 'Choose from library',
+                              subtitle: 'Any video up to 10 minutes',
+                              badge: 'Most popular',
+                              gradient: const [
+                                Color(0xFF2A2340),
+                                Color(0xFF171322),
+                              ],
+                              accent: StillScoutColors.secondaryAccent,
+                              onTap: () => _pick(widget.onGallery),
+                            ),
+                            const SizedBox(height: StillScoutSpacing.s + 4),
+                            _SourceCard(
+                              delayMs: 80,
+                              icon: Icons.videocam_rounded,
+                              title: 'Record new video',
+                              subtitle: 'Shoot fresh footage up to 5 minutes',
+                              badge: 'Live capture',
+                              gradient: const [
+                                Color(0xFF2E2418),
+                                Color(0xFF17130E),
+                              ],
+                              accent: StillScoutColors.accent,
+                              onTap: () => _pick(widget.onCamera),
+                            ),
+                            const SizedBox(height: StillScoutSpacing.s + 6),
+                            Text(
+                              'AI ranks blur, lighting, eyes & composition for you.',
+                              style: StillScoutTextStyles.caption.copyWith(
+                                color: StillScoutColors.silver
+                                    .withValues(alpha: 0.65),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ],
-                          accent: const Color(0xFFB8A4FF),
-                          onTap: () => _pick(widget.onGallery),
                         ),
-                        const SizedBox(height: StillScoutSpacing.s + 4),
-                        _SourceCard(
-                          delayMs: 80,
-                          icon: Icons.videocam_rounded,
-                          title: 'Record new video',
-                          subtitle: 'Shoot fresh footage up to 5 minutes',
-                          badge: 'Live capture',
-                          gradient: const [
-                            Color(0xFF2E2418),
-                            Color(0xFF17130E),
-                          ],
-                          accent: StillScoutColors.accent,
-                          onTap: () => _pick(widget.onCamera),
-                        ),
-                        const SizedBox(height: StillScoutSpacing.s + 6),
-                        Text(
-                          'AI ranks blur, lighting, eyes & composition for you.',
-                          style: StillScoutTextStyles.caption.copyWith(
-                            color: StillScoutColors.silver.withValues(alpha: 0.65),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -339,7 +352,8 @@ class _SourceCardState extends State<_SourceCard>
                       Text(
                         widget.subtitle,
                         style: StillScoutTextStyles.caption.copyWith(
-                          color: StillScoutColors.silver.withValues(alpha: 0.85),
+                          color:
+                              StillScoutColors.silver.withValues(alpha: 0.85),
                         ),
                       ),
                     ],

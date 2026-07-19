@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +9,9 @@ import '../../services/stillscout_auto_polish.dart';
 import '../../services/stillscout_export_service.dart';
 import '../providers/stillscout_repository_providers.dart';
 import '../theme/stillscout_theme.dart';
+import 'stillscout_buttons.dart';
 import 'stillscout_crop_picker.dart';
+import 'stillscout_glass_surface.dart';
 import 'stillscout_polish_compare.dart';
 
 typedef ExportRequestedCallback = Future<void> Function(
@@ -36,18 +36,24 @@ class StillScoutFrameDetailSheet extends StatefulWidget {
     required this.onExportPressed,
     required this.tierLabel,
     required this.isPro,
+    this.isFirstScout = false,
+    this.isAiProTrial = false,
     required this.rank,
     this.allFrames,
     this.initialIndex,
+    this.onUnlockAiPro,
   });
 
   final ScoredFrame frame;
   final ExportRequestedCallback onExportPressed;
   final String tierLabel;
   final bool isPro;
+  final bool isFirstScout;
+  final bool isAiProTrial;
   final int rank;
   final List<ScoredFrame>? allFrames;
   final int? initialIndex;
+  final VoidCallback? onUnlockAiPro;
 
   static Future<void> show(
     BuildContext context, {
@@ -55,9 +61,12 @@ class StillScoutFrameDetailSheet extends StatefulWidget {
     required ExportRequestedCallback onExportPressed,
     required String tierLabel,
     required bool isPro,
+    bool isFirstScout = false,
+    bool isAiProTrial = false,
     required int rank,
     List<ScoredFrame>? allFrames,
     int? initialIndex,
+    VoidCallback? onUnlockAiPro,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -71,9 +80,12 @@ class StillScoutFrameDetailSheet extends StatefulWidget {
         onExportPressed: onExportPressed,
         tierLabel: tierLabel,
         isPro: isPro,
+        isFirstScout: isFirstScout,
+        isAiProTrial: isAiProTrial,
         rank: rank,
         allFrames: allFrames,
         initialIndex: initialIndex,
+        onUnlockAiPro: onUnlockAiPro,
       ),
     );
   }
@@ -83,7 +95,8 @@ class StillScoutFrameDetailSheet extends StatefulWidget {
       _StillScoutFrameDetailSheetState();
 }
 
-class _StillScoutFrameDetailSheetState extends State<StillScoutFrameDetailSheet> {
+class _StillScoutFrameDetailSheetState
+    extends State<StillScoutFrameDetailSheet> {
   late final PageController? _pageController;
   late int _pageIndex;
 
@@ -96,6 +109,7 @@ class _StillScoutFrameDetailSheetState extends State<StillScoutFrameDetailSheet>
   List<int> get _browsableRanks => StillScoutAccessPolicy.browsableRanks(
         totalFrames: _frames.length,
         isPro: widget.isPro,
+        isFirstScout: widget.isFirstScout,
       );
 
   bool get _swipeEnabled => _browsableRanks.length > 1;
@@ -140,8 +154,9 @@ class _StillScoutFrameDetailSheetState extends State<StillScoutFrameDetailSheet>
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.88,
-      minChildSize: 0.55,
+      minChildSize: 0.25,
       maxChildSize: 0.95,
+      shouldCloseOnMinExtent: true,
       builder: (context, scrollController) {
         return Padding(
           padding: EdgeInsets.only(bottom: bottomInset),
@@ -196,7 +211,10 @@ class _StillScoutFrameDetailSheetState extends State<StillScoutFrameDetailSheet>
                             scrollController: scrollController,
                             tierLabel: widget.tierLabel,
                             isPro: widget.isPro,
+                            isFirstScout: widget.isFirstScout,
+                            isAiProTrial: widget.isAiProTrial,
                             onExportPressed: widget.onExportPressed,
+                            onUnlockAiPro: widget.onUnlockAiPro,
                           );
                         },
                       )
@@ -206,7 +224,10 @@ class _StillScoutFrameDetailSheetState extends State<StillScoutFrameDetailSheet>
                         scrollController: scrollController,
                         tierLabel: widget.tierLabel,
                         isPro: widget.isPro,
+                        isFirstScout: widget.isFirstScout,
+                        isAiProTrial: widget.isAiProTrial,
                         onExportPressed: widget.onExportPressed,
+                        onUnlockAiPro: widget.onUnlockAiPro,
                       ),
               ),
             ],
@@ -224,7 +245,10 @@ class _FrameDetailPage extends ConsumerStatefulWidget {
     required this.scrollController,
     required this.tierLabel,
     required this.isPro,
+    this.isFirstScout = false,
+    this.isAiProTrial = false,
     required this.onExportPressed,
+    this.onUnlockAiPro,
   });
 
   final ScoredFrame frame;
@@ -232,29 +256,33 @@ class _FrameDetailPage extends ConsumerStatefulWidget {
   final ScrollController scrollController;
   final String tierLabel;
   final bool isPro;
+  final bool isFirstScout;
+  final bool isAiProTrial;
   final ExportRequestedCallback onExportPressed;
+  final VoidCallback? onUnlockAiPro;
 
   @override
   ConsumerState<_FrameDetailPage> createState() => _FrameDetailPageState();
 }
 
 class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
-  bool applyPolish = true;
+  bool applyPolish = false;
   String? _polishedPath;
-  bool _polishLoading = true;
+  bool _polishLoading = false;
   bool _exportBusy = false;
 
   @override
   void initState() {
     super.initState();
-    _loadPolish();
   }
 
   @override
   void didUpdateWidget(covariant _FrameDetailPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.frame.frame.filePath != widget.frame.frame.filePath) {
-      _loadPolish();
+      _polishedPath = null;
+      _polishLoading = false;
+      applyPolish = false;
     }
   }
 
@@ -273,6 +301,21 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
       _polishedPath = polished;
       _polishLoading = false;
     });
+  }
+
+  Future<void> _onPolishToggled(bool enabled) async {
+    if (enabled &&
+        !StillScoutAccessPolicy.canUseAiPolish(
+          isPro: widget.isPro,
+          isAiProTrial: widget.isAiProTrial,
+        )) {
+      widget.onUnlockAiPro?.call();
+      return;
+    }
+    setState(() => applyPolish = enabled);
+    if (!enabled || !mounted) return;
+    if (_polishedPath != null || _polishLoading) return;
+    await _loadPolish();
   }
 
   String _summaryText(FrameScoreMetadata m) {
@@ -307,7 +350,20 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
     if (!StillScoutAccessPolicy.canExportFrame(
       rank: widget.rank,
       isPro: widget.isPro,
+      isFirstScout: widget.isFirstScout,
     )) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Upgrade to unlock this frame for export.',
+            style: StillScoutTextStyles.caption.copyWith(
+              color: StillScoutColors.chalk,
+            ),
+          ),
+          backgroundColor: StillScoutColors.slate,
+        ),
+      );
       return;
     }
     final cropRatio = await StillScoutCropPicker.show(
@@ -323,8 +379,7 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
         action,
         cropRatio: cropRatio,
         applyPolish: applyPolish,
-        precomputedPolishPath:
-            applyPolish ? _polishedPath : null,
+        precomputedPolishPath: applyPolish ? _polishedPath : null,
       );
     } finally {
       if (mounted) setState(() => _exportBusy = false);
@@ -334,51 +389,63 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
   @override
   Widget build(BuildContext context) {
     final summary = _summaryText(widget.frame.metadata);
-    final polishedReady =
-        _polishedPath != null && _polishedPath != widget.frame.frame.filePath;
     final bottomSafe = MediaQuery.paddingOf(context).bottom;
 
     return ListView(
       controller: widget.scrollController,
       padding: EdgeInsets.fromLTRB(20, 16, 20, 28 + bottomSafe),
       children: [
-        if (_polishLoading)
-          StillScoutPolishLoadingPreview(imagePath: widget.frame.frame.filePath)
-        else if (polishedReady)
-          StillScoutPolishCompare(
-            beforePath: widget.frame.frame.filePath,
-            afterPath: _polishedPath!,
-          )
-        else
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: AspectRatio(
-              aspectRatio: 3 / 4,
-              child: Image.file(
-                File(widget.frame.frame.filePath),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+        StillScoutPolishStage(
+          imagePath: widget.frame.frame.filePath,
+          isLoading: applyPolish && _polishLoading,
+          polishedPath: applyPolish ? _polishedPath : null,
+        ),
         const SizedBox(height: 12),
         _PolishToggleRow(
           enabled: applyPolish,
-          onChanged: (v) => setState(() => applyPolish = v),
+          locked: !StillScoutAccessPolicy.canUseAiPolish(
+            isPro: widget.isPro,
+            isAiProTrial: widget.isAiProTrial,
+          ),
+          onChanged: _onPolishToggled,
         ),
+        if (applyPolish && _polishedPath != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.swipe_rounded,
+                  size: 14,
+                  color: StillScoutColors.silver.withValues(alpha: 0.6)),
+              const SizedBox(width: 4),
+              Text(
+                'Drag the divider to compare before & after',
+                style: StillScoutTextStyles.caption.copyWith(
+                  color: StillScoutColors.silver.withValues(alpha: 0.6),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 16),
         Row(
           children: [
             if (widget.frame.isTopScout)
               Container(
                 margin: const EdgeInsets.only(right: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: StillScoutColors.scoutGold,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text('TOP SCOUT', style: StillScoutTextStyles.badge),
               ),
-            Text('Score ${widget.frame.score}', style: StillScoutTextStyles.title),
+            Text(
+              'Score ${widget.frame.score >= 10.0 ? '10' : widget.frame.score.toStringAsFixed(1)}',
+              style: StillScoutTextStyles.title,
+            ),
             const Spacer(),
             if (StillScoutAccessPolicy.showTimestamp(isPro: widget.isPro))
               Row(
@@ -392,10 +459,12 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
                     tooltip: 'Copy timecode',
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
                     onPressed: () {
                       Clipboard.setData(
-                        ClipboardData(text: widget.frame.frame.formattedTimestamp),
+                        ClipboardData(
+                            text: widget.frame.frame.formattedTimestamp),
                       );
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -405,7 +474,8 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.copy_rounded, size: 16, color: StillScoutColors.silver),
+                    icon: const Icon(Icons.copy_rounded,
+                        size: 16, color: StillScoutColors.silver),
                   ),
                 ],
               )
@@ -475,78 +545,28 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
         Row(
           children: [
             Expanded(
-              child: SizedBox(
+              child: StillScoutSecondaryButton(
+                label: 'Share',
+                icon: Icons.ios_share_rounded,
+                isLoading: _exportBusy,
                 height: 52,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: StillScoutColors.chalk,
-                    side: const BorderSide(color: StillScoutColors.silver),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                  ),
-                  onPressed: _exportBusy
-                      ? null
-                      : () => _handleExport(StillScoutExportAction.share),
-                  icon: _exportBusy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.ios_share_rounded, size: 18),
-                  label: Text(_exportBusy ? 'Sharing…' : 'Share'),
-                ),
+                onPressed: () => _handleExport(StillScoutExportAction.share),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: StillScoutSpacing.m),
             Expanded(
               flex: 2,
-              child: SizedBox(
+              child: StillScoutPrimaryButton(
+                label: applyPolish
+                    ? (widget.isPro ? 'Save 4K' : 'Save Polished')
+                    : (widget.isPro ? 'Save Full-Res' : 'Save'),
+                icon: applyPolish
+                    ? Icons.auto_fix_high_rounded
+                    : Icons.download_rounded,
+                isLoading: _exportBusy,
                 height: 52,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: StillScoutColors.accent,
-                    foregroundColor: StillScoutColors.voidBlack,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                  ),
-                  onPressed: _exportBusy
-                      ? null
-                      : () =>
-                          _handleExport(StillScoutExportAction.saveToGallery),
-                  icon: _exportBusy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: StillScoutColors.voidBlack,
-                          ),
-                        )
-                      : Icon(
-                          applyPolish
-                              ? Icons.auto_fix_high_rounded
-                              : Icons.download_rounded,
-                          size: 20,
-                        ),
-                  label: Text(
-                    _exportBusy
-                        ? 'Saving…'
-                        : applyPolish
-                            ? (widget.isPro ? 'Save 4K' : 'Save Polished')
-                            : (widget.isPro ? 'Save Full-Res' : 'Save'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: StillScoutTextStyles.title.copyWith(
-                      fontSize: 14,
-                      color: StillScoutColors.voidBlack,
-                    ),
-                  ),
-                ),
+                onPressed: () =>
+                    _handleExport(StillScoutExportAction.saveToGallery),
               ),
             ),
           ],
@@ -557,68 +577,72 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
 }
 
 class _PolishToggleRow extends StatelessWidget {
-  const _PolishToggleRow({required this.enabled, required this.onChanged});
+  const _PolishToggleRow({
+    required this.enabled,
+    required this.onChanged,
+    this.locked = false,
+  });
 
   final bool enabled;
+  final bool locked;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: StillScoutColors.slate.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.auto_fix_high_rounded,
-              size: 18,
-              color: enabled ? StillScoutColors.accent : StillScoutColors.silver,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Auto Polish',
-                    style: StillScoutTextStyles.caption.copyWith(
-                      color: StillScoutColors.chalk,
-                      fontWeight: FontWeight.w700,
-                    ),
+    return StillScoutGlassSurface(
+      borderRadius: BorderRadius.circular(StillScoutRadius.m),
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.auto_fix_high_rounded,
+            size: 18,
+            color: enabled ? StillScoutColors.accent : StillScoutColors.silver,
+          ),
+          const SizedBox(width: StillScoutSpacing.s),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  locked ? 'AI Auto Polish · AI Pro' : 'AI Auto Polish',
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.chalk,
+                    fontWeight: FontWeight.w700,
                   ),
-                  Text(
-                    'Levels, clarity & face-aware exposure',
-                    style: StillScoutTextStyles.caption.copyWith(
-                      color: StillScoutColors.silver,
-                      fontSize: 11,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Transform.scale(
-              scale: 0.92,
-              child: Switch.adaptive(
-                value: enabled,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                activeTrackColor: StillScoutColors.accent.withValues(alpha: 0.45),
-                thumbColor: WidgetStateProperty.resolveWith(
-                  (states) => states.contains(WidgetState.selected)
-                      ? StillScoutColors.accent
-                      : StillScoutColors.silver,
                 ),
-                onChanged: onChanged,
-              ),
+                Text(
+                  locked
+                      ? 'Gemini-ready polish with before/after — unlock AI Pro'
+                      : 'Lighting, color, sharpness & face-aware exposure',
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.silver,
+                    fontSize: 11,
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Transform.scale(
+            scale: 0.92,
+            child: Switch.adaptive(
+              value: enabled,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              activeTrackColor: StillScoutColors.accent.withValues(alpha: 0.45),
+              thumbColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? StillScoutColors.accent
+                    : StillScoutColors.silver,
+              ),
+              onChanged: onChanged,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -633,7 +657,10 @@ class _ScoreSourceBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (IconData icon, Color color) = switch (source) {
       ScoreSource.llm => (Icons.auto_awesome_rounded, StillScoutColors.accent),
-      ScoreSource.hybrid => (Icons.face_retouching_natural, StillScoutColors.success),
+      ScoreSource.hybrid => (
+          Icons.face_retouching_natural,
+          StillScoutColors.success
+        ),
       ScoreSource.heuristic => (Icons.bolt_outlined, StillScoutColors.silver),
     };
     return Row(
@@ -666,7 +693,8 @@ class _AiSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: StillScoutColors.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: StillScoutColors.accent.withValues(alpha: 0.25)),
+        border:
+            Border.all(color: StillScoutColors.accent.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

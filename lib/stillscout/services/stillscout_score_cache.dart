@@ -98,6 +98,16 @@ class StillScoutScoreCache {
     }
   }
 
+  /// Clears all cached AI scores (Settings → Clear cache).
+  static Future<void> clearAll() async {
+    try {
+      final box = await _openBox();
+      await box.clear();
+    } catch (e) {
+      debugPrint('[StillScoutScoreCache] clearAll failed: $e');
+    }
+  }
+
   /// Bounds unbounded growth over the life of the app install.
   static Future<void> evictIfOversized({int maxEntries = 5000}) async {
     try {
