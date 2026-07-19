@@ -8,6 +8,7 @@ import '../../domain/stillscout_access_policy.dart';
 import '../../domain/stillscout_constants.dart';
 import '../providers/stillscout_notifier.dart';
 import '../theme/stillscout_theme.dart';
+import 'stillscout_buttons.dart';
 import 'stillscout_legal_links.dart';
 
 typedef PaywallPurchasedCallback = void Function();
@@ -201,74 +202,51 @@ class _StillScoutPaywallSheetState extends ConsumerState<StillScoutPaywallSheet>
                     savingsBadge: offering.yearlySavingsLabel ?? 'BEST VALUE',
                   ),
                 const SizedBox(height: StillScoutSpacing.m),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: Semantics(
+                Semantics(
+                  label: storeReady
+                      ? 'Start Pro for $price'
+                      : 'Pro prices unavailable',
+                  button: true,
+                  child: StillScoutPrimaryButton(
                     label: storeReady
-                        ? 'Unlock Pro for $price'
-                        : 'Pro prices unavailable',
-                    button: true,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: StillScoutColors.scoutGold,
-                        foregroundColor: StillScoutColors.voidBlack,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(StillScoutRadius.m),
-                        ),
-                        minimumSize: const Size.fromHeight(56),
-                      ),
-                      onPressed: (_loading ||
-                              _loadingPackages ||
-                              !storeReady)
-                          ? null
-                          : () => _purchase(selected),
-                      child: _loading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.bolt, size: 18),
-                                const SizedBox(width: 6),
-                                Text(
-                                  storeReady
-                                      ? 'Start Pro · $price'
-                                      : 'Prices unavailable',
-                                  style: StillScoutTextStyles.subtitle.copyWith(
-                                    color: StillScoutColors.voidBlack,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
+                        ? 'Start Pro · $price'
+                        : 'Prices unavailable',
+                    icon: Icons.bolt_rounded,
+                    height: 56,
+                    expand: true,
+                    backgroundColor: StillScoutColors.scoutGold,
+                    foregroundColor: StillScoutColors.voidBlack,
+                    isLoading: _loading,
+                    onPressed: (_loading ||
+                            _loadingPackages ||
+                            !storeReady)
+                        ? null
+                        : () => _purchase(selected),
                   ),
                 ),
                 const SizedBox(height: StillScoutSpacing.s),
-                // W2.3 — prominent one-tap Restore
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: _loading ? null : _restore,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: StillScoutColors.chalk,
-                      side: BorderSide(
-                        color: StillScoutColors.silver.withValues(alpha: 0.45),
+                Center(
+                  child: Semantics(
+                    label: 'Restore purchases',
+                    button: true,
+                    child: TextButton.icon(
+                      onPressed: _loading ? null : _restore,
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            StillScoutColors.silver.withValues(alpha: 0.9),
+                        minimumSize: const Size(44, 44),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: StillScoutSpacing.m,
+                          vertical: StillScoutSpacing.s,
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(StillScoutRadius.m),
-                      ),
-                    ),
-                    icon: const Icon(Icons.restore_rounded, size: 18),
-                    label: Text(
-                      'Restore Purchases',
-                      style: StillScoutTextStyles.subtitle.copyWith(
-                        color: StillScoutColors.chalk,
-                        fontSize: 15,
+                      icon: const Icon(Icons.restore_rounded, size: 18),
+                      label: Text(
+                        'Restore Purchases',
+                        style: StillScoutTextStyles.caption.copyWith(
+                          color: StillScoutColors.chalk,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),

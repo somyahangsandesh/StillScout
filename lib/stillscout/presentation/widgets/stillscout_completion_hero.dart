@@ -94,131 +94,135 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
         (outcome == CloudScoringOutcome.degraded ||
             outcome == CloudScoringOutcome.quotaExceeded);
 
+    final title = widget.isPro
+        ? 'AI Pro scout complete'
+        : widget.isAiProTrial
+            ? 'AI Trial scout complete'
+            : 'Scout complete';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         StillScoutSpacing.m,
         StillScoutSpacing.s,
         StillScoutSpacing.m,
-        StillScoutSpacing.m,
+        StillScoutSpacing.s,
       ),
-      child: ClipRRect(
-        borderRadius: StillScoutRadius.card,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-          child: AnimatedBuilder(
-            animation: _shimmer,
-            builder: (context, child) {
-              final t = Curves.easeOutCubic.transform(_shimmer.value);
-              return DecoratedBox(
-                decoration: StillScoutDecorations.glassCard(
-                  borderColor: Color.lerp(
-                    StillScoutColors.scoutGold.withValues(alpha: 0.35),
-                    StillScoutColors.accent.withValues(alpha: 0.55),
-                    t,
+      child: Semantics(
+        label:
+            '$title. Top score ${widget.topScore >= 10.0 ? '10' : widget.topScore.toStringAsFixed(1)}. $polishLabel',
+        child: ClipRRect(
+          borderRadius: StillScoutRadius.card,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: AnimatedBuilder(
+              animation: _shimmer,
+              builder: (context, child) {
+                final animT =
+                    StillScoutMotion.entrance.transform(_shimmer.value);
+                return DecoratedBox(
+                  decoration: StillScoutDecorations.glassCard(
+                    borderColor: Color.lerp(
+                      StillScoutColors.scoutGold.withValues(alpha: 0.40),
+                      StillScoutColors.accent.withValues(alpha: 0.55),
+                      animT,
+                    ),
+                    borderWidth: 1.5,
                   ),
-                  borderWidth: 1.5,
-                ),
-                child: child,
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(StillScoutSpacing.m),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _GoldPulseBadge(
-                        score: widget.topScore,
-                        shimmer: _shimmer,
-                        pulse: _idlePulse,
-                      ),
-                      const SizedBox(width: StillScoutSpacing.m),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    widget.isPro
-                                        ? 'AI Pro scout complete'
-                                        : widget.isAiProTrial
-                                            ? 'AI Trial scout complete'
-                                            : 'Scout complete',
-                                    style:
-                                        StillScoutTextStyles.subtitle.copyWith(
-                                      color: StillScoutColors.scoutGold,
-                                    ),
-                                  ),
-                                ),
-                                if (widget.isAiProTrial) ...[
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: StillScoutColors.scoutGold
-                                          .withValues(alpha: 0.18),
-                                      borderRadius: BorderRadius.circular(
-                                          StillScoutRadius.pill),
-                                      border: Border.all(
-                                        color: StillScoutColors.scoutGold
-                                            .withValues(alpha: 0.6),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'TRIAL',
-                                      style:
-                                          StillScoutTextStyles.badge.copyWith(
-                                        color: StillScoutColors.scoutGold,
-                                        fontSize: 9,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              polishLabel,
-                              style: StillScoutTextStyles.caption.copyWith(
-                                color: StillScoutColors.chalk,
-                              ),
-                            ),
-                            if (widget.totalFrames > 0) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.isPro || widget.isAiProTrial
-                                    ? '${widget.aiScoredCount} of ${widget.totalFrames} frames Gemini-scored'
-                                    : '${widget.totalFrames} frames ranked on-device · upgrade for Gemini',
-                                style: StillScoutTextStyles.caption.copyWith(
-                                  color: StillScoutColors.silver,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ],
+                  child: child,
+                );
+              },
+              child: Padding(
+                padding: StillScoutSpacing.cardPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _GoldPulseBadge(
+                          score: widget.topScore,
+                          shimmer: _shimmer,
+                          pulse: _idlePulse,
                         ),
-                      ),
-                      Icon(
-                        Icons.auto_fix_high_rounded,
-                        color: StillScoutColors.accent.withValues(alpha: 0.9),
-                      ),
+                        const SizedBox(width: StillScoutSpacing.m),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      title,
+                                      style: StillScoutTextStyles.subtitle
+                                          .copyWith(
+                                        color: StillScoutColors.scoutGold,
+                                      ),
+                                    ),
+                                  ),
+                                  if (widget.isAiProTrial) ...[
+                                    const SizedBox(width: StillScoutSpacing.s),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: StillScoutColors.scoutGold
+                                            .withValues(alpha: 0.18),
+                                        borderRadius: BorderRadius.circular(
+                                            StillScoutRadius.pill),
+                                        border: Border.all(
+                                          color: StillScoutColors.scoutGold
+                                              .withValues(alpha: 0.6),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'TRIAL',
+                                        style: StillScoutTextStyles.badge
+                                            .copyWith(
+                                          color: StillScoutColors.scoutGold,
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: StillScoutSpacing.xs),
+                              Text(
+                                polishLabel,
+                                style: StillScoutTextStyles.caption.copyWith(
+                                  color: StillScoutColors.chalk,
+                                ),
+                              ),
+                              if (widget.totalFrames > 0) ...[
+                                const SizedBox(height: StillScoutSpacing.xs),
+                                Text(
+                                  widget.isPro || widget.isAiProTrial
+                                      ? '${widget.aiScoredCount} of ${widget.totalFrames} frames Gemini-scored'
+                                      : '${widget.totalFrames} frames ranked on-device · upgrade for Gemini',
+                                  style: StillScoutTextStyles.caption.copyWith(
+                                    color: StillScoutColors.silver,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (showOutcomeBanner) ...[
+                      const SizedBox(height: StillScoutSpacing.m),
+                      if (outcome == CloudScoringOutcome.quotaExceeded)
+                        _QuotaExceededBanner(
+                          isPro: widget.isPro,
+                          onUpgrade:
+                              widget.isPro ? null : widget.onUpgradeAiPro,
+                        )
+                      else
+                        _DegradedGeminiBanner(onRetry: widget.onRetryCloudAi),
                     ],
-                  ),
-                  if (showOutcomeBanner) ...[
-                    const SizedBox(height: StillScoutSpacing.s),
-                    if (outcome == CloudScoringOutcome.quotaExceeded)
-                      _QuotaExceededBanner(
-                        isPro: widget.isPro,
-                        onUpgrade: widget.isPro ? null : widget.onUpgradeAiPro,
-                      )
-                    else
-                      _DegradedGeminiBanner(onRetry: widget.onRetryCloudAi),
                   ],
-                ],
+                ),
               ),
             ),
           ),

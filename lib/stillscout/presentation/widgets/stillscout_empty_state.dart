@@ -189,13 +189,24 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const StillScoutLogo(
-                size: 56, animateGlow: true, glowStrength: 0.28),
+            Semantics(
+              header: true,
+              label: 'StillScout',
+              child: const StillScoutLogo(
+                size: 56,
+                animateGlow: true,
+                glowStrength: 0.28,
+              ),
+            ),
             const SizedBox(height: StillScoutSpacing.m),
-            Text(
-              'Scout → Polish → Post',
-              style: StillScoutTextStyles.display.copyWith(fontSize: titleSize),
-              textAlign: TextAlign.center,
+            Semantics(
+              header: true,
+              child: Text(
+                'Scout → Polish → Post',
+                style:
+                    StillScoutTextStyles.display.copyWith(fontSize: titleSize),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: StillScoutSpacing.s),
             Text(
@@ -215,7 +226,18 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
               onAcceptWithDetails: (details) =>
                   widget.onVideoSelected(details.data),
               builder: (context, candidate, rejected) {
-                return GestureDetector(
+                final uploadLabel = !enabled
+                    ? 'Upload unavailable'
+                    : canScout
+                        ? 'Upload video to scout. Tap for gallery or camera.'
+                        : isChecking
+                            ? 'Checking connection'
+                            : 'Connect to the internet to scout';
+                return Semantics(
+                  button: true,
+                  enabled: enabled && canScout,
+                  label: uploadLabel,
+                  child: GestureDetector(
                   onTap: enabled ? () => _showSourceSheet(context) : null,
                   child: AnimatedScale(
                     scale: _isDragOver ? 1.02 : 1.0,
@@ -301,7 +323,7 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
                                     _QuickImportChip(
                                       icon: Icons.photo_library_rounded,
                                       label: 'Gallery',
-                                      accent: StillScoutColors.secondaryAccent,
+                                      accent: StillScoutColors.scoutGold,
                                       onTap: enabled
                                           ? () => _runPickerAfterSheet(() {
                                                 _picker.pickFromGallery(
@@ -344,6 +366,7 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
                         ),
                       ),
                     ),
+                  ),
                   ),
                 );
               },
@@ -448,7 +471,15 @@ class _QuickImportChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: label == 'Gallery'
+          ? 'Import from photo library'
+          : label == 'Record'
+              ? 'Record a new video'
+              : label,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap == null
@@ -459,7 +490,7 @@ class _QuickImportChip extends StatelessWidget {
               },
         borderRadius: BorderRadius.circular(999),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             color: accent.withValues(alpha: 0.12),
@@ -477,6 +508,7 @@ class _QuickImportChip extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -59,6 +59,7 @@ class StillScoutPrimaryButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.height = 56,
+    this.expand = false,
     this.backgroundColor,
     this.foregroundColor,
   });
@@ -68,6 +69,7 @@ class StillScoutPrimaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final double height;
+  final bool expand;
   final Color? backgroundColor;
   final Color? foregroundColor;
 
@@ -83,6 +85,7 @@ class StillScoutPrimaryButton extends StatelessWidget {
         opacity: enabled ? 1 : 0.55,
         duration: StillScoutMotion.fast,
         child: Container(
+          width: expand ? double.infinity : null,
           height: height,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(

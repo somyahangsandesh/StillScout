@@ -112,14 +112,18 @@ class _EmptyHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StillScoutStatusView(
-      icon: Icons.history_edu_rounded,
-      iconColor: StillScoutColors.silver,
-      title: 'No past scouts yet',
-      body: 'Completed scouts appear here so you can revisit them anytime.',
-      primaryLabel: 'Start a scout',
-      primaryIcon: Icons.movie_filter_outlined,
-      onPrimary: onStartScout,
+    return Semantics(
+      label:
+          'No past scouts yet. Completed scouts appear here. Start a scout to return home.',
+      child: StillScoutStatusView(
+        icon: Icons.history_edu_rounded,
+        iconColor: StillScoutColors.silver,
+        title: 'No past scouts yet',
+        body: 'Completed scouts appear here so you can revisit them anytime.',
+        primaryLabel: 'Start a scout',
+        primaryIcon: Icons.movie_filter_outlined,
+        onPrimary: onStartScout,
+      ),
     );
   }
 }

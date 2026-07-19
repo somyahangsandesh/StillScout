@@ -210,9 +210,9 @@ class _StillScoutResultsGalleryState extends State<StillScoutResultsGallery> {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             StillScoutSpacing.m,
+            StillScoutSpacing.s,
             StillScoutSpacing.m,
-            StillScoutSpacing.m,
-            StillScoutSpacing.xs,
+            StillScoutSpacing.s,
           ),
           sliver: SliverToBoxAdapter(
             child: Row(
@@ -260,16 +260,16 @@ class _StillScoutResultsGalleryState extends State<StillScoutResultsGallery> {
           ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
-            StillScoutSpacing.s + 4,
+            StillScoutSpacing.m,
             0,
-            StillScoutSpacing.s + 4,
-            120,
+            StillScoutSpacing.m,
+            StillScoutSpacing.xxl * 2 + StillScoutSpacing.l,
           ),
           sliver: SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
-              mainAxisSpacing: StillScoutSpacing.s + 4,
-              crossAxisSpacing: StillScoutSpacing.s + 4,
+              mainAxisSpacing: StillScoutSpacing.s,
+              crossAxisSpacing: StillScoutSpacing.s,
               childAspectRatio: 0.72,
             ),
             delegate: SliverChildBuilderDelegate(
@@ -285,9 +285,9 @@ class _StillScoutResultsGalleryState extends State<StillScoutResultsGallery> {
                 return TweenAnimationBuilder<double>(
                   tween: Tween(begin: 0, end: 1),
                   duration: Duration(
-                    milliseconds: 320 + (index * 40).clamp(0, 400),
+                    milliseconds: 280 + (index * 36).clamp(0, 360),
                   ),
-                  curve: Curves.easeOutCubic,
+                  curve: StillScoutMotion.entrance,
                   builder: (context, value, child) {
                     return Transform.translate(
                       offset: Offset(0, (1 - value) * 18),

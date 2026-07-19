@@ -13,20 +13,23 @@ class StillScoutLiveStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (frames.isEmpty) return const SizedBox.shrink();
-    return SizedBox(
-      height: 72,
+    return Semantics(
+      label: 'Live frame strip, ${frames.length} frames',
+      child: SizedBox(
+      height: 56,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.m),
+        padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.s),
         reverse: true,
         itemCount: frames.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
+        separatorBuilder: (_, __) => const SizedBox(width: 5),
         itemBuilder: (context, i) {
           final frame = frames[i];
           // Keyed by frame id so each thumbnail's entrance animation plays
           // exactly once, even as the strip keeps growing during extraction.
           return _LiveStripThumbnail(key: ValueKey(frame.id), frame: frame);
         },
+      ),
       ),
     );
   }
@@ -84,12 +87,12 @@ class _LiveStripThumbnailState extends State<_LiveStripThumbnail>
             borderRadius: BorderRadius.circular(StillScoutRadius.xs),
             child: Image.file(
               File(widget.frame.filePath),
-              width: 44,
-              height: 72,
+              width: 36,
+              height: 56,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
-                width: 44,
-                height: 72,
+                width: 36,
+                height: 56,
                 color: StillScoutColors.slate,
               ),
             ),

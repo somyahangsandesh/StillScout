@@ -82,95 +82,108 @@ class StillScoutProcessingState extends StatelessWidget {
           ),
         ),
       SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(32, 16, 32, 16 + bottomSafe),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isAiProTrial) ...[
-              Container(
-                margin: const EdgeInsets.only(bottom: StillScoutSpacing.m),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: StillScoutSpacing.m,
-                  vertical: StillScoutSpacing.s,
-                ),
-                decoration: BoxDecoration(
-                  color: StillScoutColors.scoutGold.withValues(alpha: 0.12),
-                  borderRadius: StillScoutRadius.badge,
-                  border: Border.all(
-                    color: StillScoutColors.scoutGold.withValues(alpha: 0.5),
+          padding: EdgeInsets.fromLTRB(
+            StillScoutSpacing.xl,
+            StillScoutSpacing.m,
+            StillScoutSpacing.xl,
+            StillScoutSpacing.m + bottomSafe,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isAiProTrial) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: StillScoutSpacing.m),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: StillScoutSpacing.m,
+                    vertical: StillScoutSpacing.s,
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.bolt_rounded,
-                      color: StillScoutColors.scoutGold,
-                      size: 16,
+                  decoration: BoxDecoration(
+                    color: StillScoutColors.scoutGold.withValues(alpha: 0.10),
+                    borderRadius: StillScoutRadius.badge,
+                    border: Border.all(
+                      color: StillScoutColors.scoutGold.withValues(alpha: 0.4),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'One-time AI Trial — Gemini Flash running',
-                      style: StillScoutTextStyles.caption.copyWith(
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.bolt_rounded,
                         color: StillScoutColors.scoutGold,
-                        fontWeight: FontWeight.w600,
+                        size: 16,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            StillScoutLiveStrip(frames: liveFrames),
-              if (liveFrames.isNotEmpty)
-                const SizedBox(height: StillScoutSpacing.m),
-              _ScoutProgressRing(
-                progress: progress.clamp(0.0, 1.0),
-                percentLabel: '$percent%',
-              ),
-              const SizedBox(height: 24),
-              Text(
-                _titleFor(stage),
-                style: StillScoutTextStyles.title,
-                textAlign: TextAlign.center,
-              ),
-              if (isExtracting && totalFrames > 0) ...[
-                const SizedBox(height: 6),
-                Text(
-                  '$framesExtracted of $totalFrames frames scouted',
-                  style: StillScoutTextStyles.caption.copyWith(
-                    color: StillScoutColors.silver.withValues(alpha: 0.8),
+                      const SizedBox(width: 6),
+                      Text(
+                        'AI Trial · Gemini Flash',
+                        style: StillScoutTextStyles.caption.copyWith(
+                          color: StillScoutColors.scoutGold,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-              const SizedBox(height: 14),
-              _PhaseSteps(stage: stage),
-              const SizedBox(height: 14),
-              Text(
-                message,
-                style: StillScoutTextStyles.body,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress.clamp(0, 1),
-                  minHeight: 4,
-                  backgroundColor: StillScoutColors.slate,
-                  color: StillScoutColors.scoutGold,
+              Semantics(
+                label:
+                    'Scouting progress $percent percent. ${_titleFor(stage)}',
+                child: _ScoutProgressRing(
+                  progress: progress.clamp(0.0, 1.0),
+                  percentLabel: '$percent%',
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: StillScoutSpacing.l),
+              Text(
+                _titleFor(stage),
+                style: StillScoutTextStyles.title.copyWith(fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
+              if (isExtracting && totalFrames > 0) ...[
+                const SizedBox(height: StillScoutSpacing.xs),
+                Text(
+                  '$framesExtracted of $totalFrames frames',
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.silver.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+              const SizedBox(height: StillScoutSpacing.m),
+              _PhaseSteps(stage: stage),
+              if (message.trim().isNotEmpty) ...[
+                const SizedBox(height: StillScoutSpacing.s),
+                Text(
+                  message,
+                  style: StillScoutTextStyles.caption.copyWith(
+                    color: StillScoutColors.silver.withValues(alpha: 0.85),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              if (liveFrames.isNotEmpty) ...[
+                const SizedBox(height: StillScoutSpacing.l),
+                StillScoutLiveStrip(frames: liveFrames),
+              ],
+              const SizedBox(height: StillScoutSpacing.l),
               _BackgroundScoutTipCarousel(isCloudScout: isPro || isAiProTrial),
-              const SizedBox(height: 16),
-              TextButton.icon(
-                onPressed: onCancel,
-                icon: const Icon(Icons.close_rounded,
-                    size: 18, color: StillScoutColors.silver),
-                label: Text(
-                  'Cancel',
-                  style: StillScoutTextStyles.caption
-                      .copyWith(color: StillScoutColors.silver),
+              const SizedBox(height: StillScoutSpacing.m),
+              Semantics(
+                button: true,
+                label: 'Cancel scout',
+                child: TextButton.icon(
+                  onPressed: onCancel,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                  ),
+                  icon: const Icon(Icons.close_rounded,
+                      size: 18, color: StillScoutColors.silver),
+                  label: Text(
+                    'Cancel',
+                    style: StillScoutTextStyles.caption
+                        .copyWith(color: StillScoutColors.silver),
+                  ),
                 ),
               ),
             ],
@@ -216,17 +229,17 @@ class _ScoutProgressRingState extends State<_ScoutProgressRing>
       builder: (context, child) {
         final glow = StillScoutMotion.toggle.transform(_pulseController.value);
         return Container(
-          width: 132,
-          height: 132,
+          width: 124,
+          height: 124,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: StillScoutColors.accentGlow
-                    .withValues(alpha: 0.16 + glow * 0.22),
-                blurRadius: 22 + glow * 20,
-                spreadRadius: 1 + glow * 3,
+                    .withValues(alpha: 0.10 + glow * 0.14),
+                blurRadius: 16 + glow * 12,
+                spreadRadius: glow * 1.5,
               ),
             ],
           ),
@@ -323,7 +336,7 @@ class _BackgroundScoutTipCarousel extends StatefulWidget {
 
 class _BackgroundScoutTipCarouselState
     extends State<_BackgroundScoutTipCarousel> {
-  static const _rotateInterval = Duration(seconds: 3);
+  static const _rotateInterval = Duration(seconds: 5);
 
   late final List<_ScoutTip> _tips = _buildTips();
   Timer? _timer;
@@ -386,7 +399,7 @@ class _BackgroundScoutTipCarouselState
     return StillScoutGlassSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(StillScoutSpacing.m),
-      borderColor: StillScoutColors.accent.withValues(alpha: 0.35),
+      borderColor: StillScoutColors.silver.withValues(alpha: 0.22),
       child: AnimatedSwitcher(
         duration: StillScoutMotion.base,
         switchInCurve: StillScoutMotion.entrance,

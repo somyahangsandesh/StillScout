@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/stillscout_constants.dart';
 import '../theme/stillscout_theme.dart';
 import '../widgets/stillscout_buttons.dart';
+import '../widgets/stillscout_logo.dart';
 import '../widgets/stillscout_paywall_sheet.dart';
 
 /// Key stored in SharedPreferences after the user completes or skips onboarding.
@@ -69,12 +70,12 @@ class _StillScoutOnboardingScreenState
       _totalPages,
       (i) => AnimationController(
         vsync: this,
-        duration: const Duration(milliseconds: 600),
+        duration: StillScoutMotion.slow,
       ),
     );
     _stepFades = _stepControllers
         .map(
-          (c) => CurvedAnimation(parent: c, curve: Curves.easeOutCubic),
+          (c) => CurvedAnimation(parent: c, curve: StillScoutMotion.entrance),
         )
         .toList();
 
@@ -94,8 +95,8 @@ class _StillScoutOnboardingScreenState
     HapticFeedback.selectionClick();
     await _pageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 380),
-      curve: Curves.easeInOut,
+      duration: StillScoutMotion.slow,
+      curve: StillScoutMotion.toggle,
     );
   }
 
@@ -152,6 +153,7 @@ class _StillScoutOnboardingScreenState
               _OnboardingStep(
                 stepIndex: 0,
                 fade: _stepFades[0],
+                brandFirst: true,
                 illustration: const _PickIllustration(),
                 headline: 'Drop any clip.',
                 subline: 'Even 4K.',
@@ -209,6 +211,7 @@ class _OnboardingStep extends StatelessWidget {
     required this.headline,
     required this.subline,
     required this.body,
+    this.brandFirst = false,
   });
 
   final int stepIndex;
@@ -217,6 +220,7 @@ class _OnboardingStep extends StatelessWidget {
   final String headline;
   final String subline;
   final String body;
+  final bool brandFirst;
 
   @override
   Widget build(BuildContext context) {
@@ -230,28 +234,48 @@ class _OnboardingStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: StillScoutSpacing.xl),
-              Expanded(
-                flex: 5,
-                child: Center(child: illustration),
+              SizedBox(
+                height: brandFirst ? StillScoutSpacing.m : StillScoutSpacing.xl,
               ),
-              const SizedBox(height: StillScoutSpacing.xl),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: StillScoutSpacing.s, vertical: 3),
-                decoration: BoxDecoration(
-                  color: StillScoutColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(StillScoutRadius.pill),
-                  border: Border.all(
-                    color: StillScoutColors.accent.withValues(alpha: 0.35),
+              if (brandFirst) ...[
+                Semantics(
+                  header: true,
+                  label: 'StillScout',
+                  child: const Center(
+                    child: StillScoutLogo(
+                      size: 44,
+                      showWordmark: true,
+                      animateGlow: true,
+                      glowStrength: 0.22,
+                    ),
                   ),
                 ),
-                child: Text(
-                  'STEP ${stepIndex + 1} OF 3',
-                  style: StillScoutTextStyles.badge.copyWith(
-                    color: StillScoutColors.accent,
-                    fontSize: 10,
-                    letterSpacing: 1.5,
+                const SizedBox(height: StillScoutSpacing.m),
+              ],
+              Expanded(
+                flex: brandFirst ? 4 : 5,
+                child: Center(child: illustration),
+              ),
+              const SizedBox(height: StillScoutSpacing.l),
+              Semantics(
+                label: 'Step ${stepIndex + 1} of 3',
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: StillScoutSpacing.s, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: StillScoutColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(StillScoutRadius.pill),
+                    border: Border.all(
+                      color: StillScoutColors.accent.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Text(
+                    'STEP ${stepIndex + 1} OF 3',
+                    style: StillScoutTextStyles.badge.copyWith(
+                      color: StillScoutColors.accent,
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -259,7 +283,7 @@ class _OnboardingStep extends StatelessWidget {
               Text(
                 headline,
                 style: StillScoutTextStyles.display.copyWith(
-                  fontSize: 38,
+                  fontSize: brandFirst ? 36 : 38,
                   height: 1.05,
                   color: StillScoutColors.chalk,
                 ),
@@ -267,8 +291,8 @@ class _OnboardingStep extends StatelessWidget {
               Text(
                 subline,
                 style: StillScoutTextStyles.display.copyWith(
-                  fontSize: 28,
-                  color: StillScoutColors.accent,
+                  fontSize: 26,
+                  color: StillScoutColors.scoutGold,
                 ),
               ),
               const SizedBox(height: StillScoutSpacing.m),
@@ -582,10 +606,10 @@ class _AmbientGlowState extends State<_AmbientGlow>
   )..repeat(reverse: true);
 
   static const _pageColors = [
-    StillScoutColors.secondaryAccent, // Pick — purple
-    StillScoutColors.accent,          // Scout — gold
-    StillScoutColors.success,         // Save — green
-    StillScoutColors.accent,          // Pro — gold/premium
+    StillScoutColors.scoutGold,
+    StillScoutColors.accent,
+    StillScoutColors.success,
+    StillScoutColors.scoutGold,
   ];
 
   @override
@@ -698,18 +722,18 @@ class _PickIllustrationState extends State<_PickIllustration>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      StillScoutColors.secondaryAccent.withValues(alpha: 0.25),
-                      StillScoutColors.secondaryAccent.withValues(alpha: 0.08),
+                      StillScoutColors.scoutGold.withValues(alpha: 0.22),
+                      StillScoutColors.accent.withValues(alpha: 0.08),
                     ],
                   ),
                   border: Border.all(
-                    color: StillScoutColors.secondaryAccent.withValues(alpha: 0.5),
+                    color: StillScoutColors.scoutGold.withValues(alpha: 0.5),
                   ),
                 ),
                 child: const Center(
                   child: Icon(
                     Icons.movie_creation_outlined,
-                    color: StillScoutColors.secondaryAccent,
+                    color: StillScoutColors.scoutGold,
                     size: 32,
                   ),
                 ),
@@ -750,7 +774,7 @@ class _ScoutIllustrationState extends State<_ScoutIllustration>
 
   late final Animation<double> _ring = CurvedAnimation(
     parent: _ctrl,
-    curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+    curve: const Interval(0.2, 1.0, curve: StillScoutMotion.entrance),
   );
 
   late final Animation<double> _fade =
