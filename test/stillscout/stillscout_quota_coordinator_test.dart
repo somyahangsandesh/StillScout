@@ -7,34 +7,33 @@ import 'package:stillscout/stillscout/services/stillscout_scout_quota_tracker.da
 void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    SharedPreferences.setMockInitialValues({});
     _setupSecureStorageMock();
   });
 
-  const coordinator = StillScoutQuotaCoordinator();
-
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     await StillScoutScoutQuotaTracker.resetForTests();
     await StillScoutAiProTrialTracker.resetForTests();
     await StillScoutFirstScoutTracker.resetForTests();
   });
 
-  test('degraded trial scout does not consume scout credit or trial', () async {
-    final usedBefore = await StillScoutScoutQuotaTracker.usedToday();
+  const coordinator = StillScoutQuotaCoordinator();
 
+  test('successful Vision scout burns daily credit and first-scout bonus',
+      () async {
     await coordinator.recordScoutCompletion(
       isPro: false,
-      trialActive: true,
+      trialActive: false,
       geminiReached: false,
       isFirstScout: true,
     );
 
-    expect(await StillScoutScoutQuotaTracker.usedToday(), usedBefore);
-    expect(StillScoutAiProTrialTracker.isTrialAvailable, isTrue);
+    expect(await StillScoutScoutQuotaTracker.usedToday(), 1);
     expect(StillScoutFirstScoutTracker.isFirstScout, isFalse);
+    expect(StillScoutAiProTrialTracker.isTrialAvailable, isTrue);
   });
 
-  test('successful trial scout consumes scout credit and trial', () async {
+  test('successful AI trial consumes trial and burns daily credit', () async {
     await coordinator.recordScoutCompletion(
       isPro: false,
       trialActive: true,
@@ -47,15 +46,45 @@ void main() {
     expect(StillScoutFirstScoutTracker.isFirstScout, isFalse);
   });
 
-  test('pro scouts skip quota bookkeeping', () async {
+  test(
+    'degraded AI trial does not burn daily credit, trial, or first-scout bonus',
+    () async {
+      await coordinator.recordScoutCompletion(
+        isPro: false,
+        trialActive: true,
+        geminiReached: false,
+        isFirstScout: true,
+      );
+
+      expect(
+        await StillScoutScoutQuotaTracker.usedToday(),
+        0,
+        reason: 'failed trial must not burn a free scout credit',
+      );
+      expect(
+        StillScoutAiProTrialTracker.isTrialAvailable,
+        isTrue,
+        reason: 'user never experienced Gemini — trial remains',
+      );
+      expect(
+        StillScoutFirstScoutTracker.isFirstScout,
+        isTrue,
+        reason: 'failed trial must not consume the first-scout keeper bonus',
+      );
+    },
+  );
+
+  test('Pro completion does not touch free-tier trackers', () async {
     await coordinator.recordScoutCompletion(
       isPro: true,
       trialActive: false,
       geminiReached: true,
-      isFirstScout: false,
+      isFirstScout: true,
     );
 
     expect(await StillScoutScoutQuotaTracker.usedToday(), 0);
+    expect(StillScoutAiProTrialTracker.isTrialAvailable, isTrue);
+    expect(StillScoutFirstScoutTracker.isFirstScout, isTrue);
   });
 }
 
