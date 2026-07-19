@@ -547,6 +547,74 @@ void main() {
     );
 
     test(
+      'processVideo loads trial tracker before deciding cloud AI path',
+      () async {
+        // Simulate cold start: Keychain says trial available, memory unloaded.
+        await StillScoutAiProTrialTracker.resetForTests();
+        StillScoutAiProTrialTracker.markUnloadedForTests();
+        expect(StillScoutAiProTrialTracker.isTrialAvailable, isFalse);
+        addTearDown(StillScoutAiProTrialTracker.consumeTrial);
+
+        final container = _makeContainer(
+          connectivity: FakeStillScoutConnectivity(alwaysOnline: false),
+        );
+        addTearDown(container.dispose);
+
+        await container
+            .read(stillScoutProvider.notifier)
+            .processVideo('/fake/video.mp4');
+
+        final state = container.read(stillScoutProvider);
+        // After awaited load(), trial becomes available → offline cloud gate.
+        expect(state.phase, StillScoutPhase.error);
+        expect(
+          state.errorMessage,
+          const OfflineFailure().displayMessage,
+          reason: 'processVideo must await trial load then require network',
+        );
+      },
+    );
+
+    test('tryReserveSessionExports blocks over-cap and release refunds',
+        () async {
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      await container
+          .read(stillScoutProvider.notifier)
+          .processVideo('/fake/video.mp4');
+
+      final notifier = container.read(stillScoutProvider.notifier);
+      expect(await notifier.tryReserveSessionExports(2), isTrue);
+      expect(container.read(stillScoutProvider).exportsUsedThisSession, 2);
+      // freeExportsPerScout == 3 → one slot left; reserving 2 must fail.
+      expect(await notifier.tryReserveSessionExports(2), isFalse);
+      expect(container.read(stillScoutProvider).exportsUsedThisSession, 2);
+
+      await notifier.releaseSessionExports(1);
+      expect(container.read(stillScoutProvider).exportsUsedThisSession, 1);
+      expect(await notifier.tryReserveSessionExports(2), isTrue);
+      expect(container.read(stillScoutProvider).exportsUsedThisSession, 3);
+    });
+
+    test('Pro tryReserveSessionExports never consumes free export slots',
+        () async {
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      await container
+          .read(stillScoutProvider.notifier)
+          .processVideo('/fake/video.mp4');
+      container
+          .read(stillScoutProvider.notifier)
+          .onPurchaseCompleted(hasPro: true);
+
+      final notifier = container.read(stillScoutProvider.notifier);
+      expect(await notifier.tryReserveSessionExports(99), isTrue);
+      expect(container.read(stillScoutProvider).exportsUsedThisSession, 0);
+    });
+
+    test(
       'abortForOffline does not cancel a scout that is already scoring',
       () async {
         final gate = Completer<void>();

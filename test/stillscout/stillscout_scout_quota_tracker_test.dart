@@ -55,6 +55,33 @@ void main() {
     expect(StillScoutAiProTrialTracker.isTrialAvailable, isFalse);
   });
 
+  test('trial is unavailable until load completes (cold start)', () async {
+    await StillScoutAiProTrialTracker.resetForTests();
+    StillScoutAiProTrialTracker.markUnloadedForTests();
+    expect(
+      StillScoutAiProTrialTracker.isTrialAvailable,
+      isFalse,
+      reason: 'unloaded tracker must not optimistically grant a trial',
+    );
+
+    await StillScoutAiProTrialTracker.load();
+    expect(StillScoutAiProTrialTracker.isTrialAvailable, isTrue);
+  });
+
+  test('load restores consumed trial from Keychain after unload', () async {
+    await StillScoutAiProTrialTracker.resetForTests();
+    await StillScoutAiProTrialTracker.consumeTrial();
+    StillScoutAiProTrialTracker.markUnloadedForTests();
+    expect(StillScoutAiProTrialTracker.isTrialAvailable, isFalse);
+
+    await StillScoutAiProTrialTracker.load();
+    expect(
+      StillScoutAiProTrialTracker.isTrialAvailable,
+      isFalse,
+      reason: 'Keychain-consumed trial must stay consumed after reload',
+    );
+  });
+
   test('first-scout tracker flips only after markFirstScoutDone', () async {
     await StillScoutFirstScoutTracker.resetForTests();
     expect(StillScoutFirstScoutTracker.isFirstScout, isTrue);

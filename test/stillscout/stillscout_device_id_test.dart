@@ -45,10 +45,32 @@ void main() {
     ]);
     expect(results.toSet(), hasLength(1));
   });
+
+  test('single-flight survives slow Keychain reads', () async {
+    await StillScoutDeviceId.resetForTests();
+    var readCount = 0;
+    _setupSecureStorageMock(
+      onRead: () async {
+        readCount++;
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+      },
+    );
+    addTearDown(_setupSecureStorageMock);
+
+    final results = await Future.wait([
+      StillScoutDeviceId.get(),
+      StillScoutDeviceId.get(),
+      StillScoutDeviceId.get(),
+      StillScoutDeviceId.get(),
+    ]);
+
+    expect(results.toSet(), hasLength(1));
+    // Only the shared inflight load should hit Keychain once for the miss.
+    expect(readCount, 1);
+  });
 }
 
-
-void _setupSecureStorageMock() {
+void _setupSecureStorageMock({Future<void> Function()? onRead}) {
   final store = <String, String>{};
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
@@ -60,6 +82,7 @@ void _setupSecureStorageMock() {
               call.arguments['value'] as String? ?? '';
           return null;
         case 'read':
+          if (onRead != null) await onRead();
           return store[call.arguments['key'] as String];
         case 'delete':
           store.remove(call.arguments['key'] as String);

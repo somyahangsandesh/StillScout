@@ -171,9 +171,9 @@ class StillScoutAiProTrialTracker {
 
   /// True when the complimentary AI Pro scout has not yet been used.
   ///
-  /// Uses `!= true` rather than `== false` so the trial is granted when
-  /// [load] has not yet completed (_used is still null) — avoids a race
-  /// where processVideo starts before the async _init() finishes.
+  /// Requires [load] to have completed (`_used == false`). While unloaded
+  /// (`_used == null`) this is false — [StillScoutNotifier.processVideo]
+  /// awaits [load] before reading so cold-start never falsely grants a trial.
   static bool get isTrialAvailable => _used == false;
 
   /// Permanently consumes the trial. Safe to call multiple times.
@@ -189,6 +189,12 @@ class StillScoutAiProTrialTracker {
   static Future<void> resetForTests() async {
     _used = false;
     await _keychain.write(key: _keychainKey, value: 'false');
+  }
+
+  /// Simulates pre-[load] cold start for tests (`_used == null`).
+  @visibleForTesting
+  static void markUnloadedForTests() {
+    _used = null;
   }
 }
 
