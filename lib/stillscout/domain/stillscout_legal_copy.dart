@@ -49,7 +49,7 @@ Scout history and frame caches live on your device until you clear app data, uni
 StillScout is not directed at children under 13. Do not use the app to scout media of children if you are not authorized to do so.
 
 8. Contact
-Questions about privacy: privacy@stillscout.app
+Questions about privacy: stillscout.support@gmail.com
 You can also open an issue on GitHub (avoid posting personal media): https://github.com/somyahangsandesh/StillScout/issues
 
 9. Changes
@@ -94,7 +94,7 @@ In addition to these Terms, Apple’s Licensed Application End User License Agre
 https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 11. Contact
-support@stillscout.app
+stillscout.support@gmail.com
 GitHub Issues: https://github.com/somyahangsandesh/StillScout/issues
 
 12. Changes
