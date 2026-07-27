@@ -8,7 +8,7 @@ class StillScoutLegalCopy {
   static const String privacyPolicyTitle = 'Privacy Policy';
   static const String termsOfUseTitle = 'Terms of Use';
 
-  static const String lastUpdated = 'July 13, 2026';
+  static const String lastUpdated = 'July 27, 2026';
 
   static const String privacyPolicyBody = '''
 Last updated: $lastUpdated
@@ -17,19 +17,19 @@ StillScout (“we”, “us”) respects your privacy. This policy explains what
 
 1. Information we process
 • Videos and still frames you choose to import or record in the app.
-• Derived frame images sent to cloud AI solely to score composition, sharpness, and face/eye quality.
+• Derived frame images sent to cloud AI solely to score composition, sharpness, and face/eye quality — only when you use AI Pro or your complimentary AI trial while online.
 • A random on-device identifier used only to enforce fair daily AI usage limits.
-• Purchase and entitlement status via Apple In-App Purchase and RevenueCat (no full payment card numbers are collected by StillScout).
+• Purchase and entitlement status via Apple In-App Purchase and RevenueCat (StillScout never collects full payment card numbers).
 • Local session history and cached frames stored on your device (Hive / app documents).
 
 2. How we use information
 • To extract, rank, polish, and export stills you request.
 • To operate Pro subscriptions and restore purchases.
 • To protect shared AI capacity with per-device quotas.
-We do not sell your personal information. We do not use your videos for advertising.
+We do not sell your personal information. We do not use your videos for advertising or train public models on your media.
 
 3. Cloud AI and third parties
-When you use AI Pro while online, selected still frames (downsized JPEGs) may be sent to our scoring proxy (Supabase Edge Functions), which forwards them to Google Gemini Flash to return quality scores and a short explanation. Free on-device scouting uses Apple Vision and local heuristics entirely on your device and does not upload frames for AI scoring. Providers process images according to their policies and our server configuration.
+Free scouts (default) use on-device Apple Vision and local heuristics — frames stay on your phone for scoring. When you use AI Pro or your complimentary AI trial while online, selected still frames (downsized JPEGs) may be sent to our scoring proxy (Supabase Edge Functions), which forwards them to Google Gemini to return quality scores and a short explanation. The free trial is a one-time cloud scoring pass when online. Providers process images according to their policies and our server configuration.
 Purchases are processed by Apple and RevenueCat under their privacy policies.
 
 4. On-device processing
@@ -41,6 +41,7 @@ Scout history and frame caches live on your device until you clear app data, uni
 6. Your choices
 • You control which videos you import or record.
 • You can deny camera, microphone, or photo library permission in iOS Settings (some features will stop working).
+• You can skip cloud AI and use free on-device scouts (daily limits apply).
 • You can delete the app to remove local caches.
 • Manage or cancel StillScout Pro in Apple ID → Subscriptions.
 
@@ -49,6 +50,7 @@ StillScout is not directed at children under 13. Do not use the app to scout med
 
 8. Contact
 Questions about privacy: privacy@stillscout.app
+You can also open an issue on GitHub (avoid posting personal media): https://github.com/somyahangsandesh/StillScout/issues
 
 9. Changes
 We may update this policy. The “Last updated” date above will change when we do. Continued use after an update means you accept the revised policy.
@@ -60,10 +62,10 @@ Last updated: $lastUpdated
 These Terms of Use govern your use of the StillScout mobile application. By downloading or using StillScout you agree to these terms. If you do not agree, do not use the app.
 
 1. The service
-StillScout helps creators extract, rank, polish, and export still frames from video. Cloud AI scoring requires a network connection. Features and limits may differ between Free and Pro.
+StillScout helps creators extract, rank, polish, and export still frames from video. Free scouts run on-device. Cloud AI scoring (AI Pro or complimentary trial) requires a network connection. Features and limits may differ between Free and Pro.
 
 2. Accounts and purchases
-StillScout uses Apple In-App Purchase for StillScout Pro (auto-renewable subscription). Payment is charged to your Apple ID. Subscriptions renew automatically unless canceled at least 24 hours before the end of the current period. Manage or cancel in iOS Settings → Apple ID → Subscriptions. Restore purchases is available in the app.
+StillScout uses Apple In-App Purchase for StillScout Pro (auto-renewable subscription). Payment is charged to your Apple ID. Subscriptions renew automatically unless canceled at least 24 hours before the end of the current period. Manage or cancel in iOS Settings → Apple ID → Subscriptions. Restore purchases is available in the app paywall and Settings.
 Title, length, and price of each subscription are shown on the purchase sheet before you confirm.
 
 3. License
@@ -93,6 +95,7 @@ https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 11. Contact
 support@stillscout.app
+GitHub Issues: https://github.com/somyahangsandesh/StillScout/issues
 
 12. Changes
 We may update these Terms. Continued use after an update constitutes acceptance.
