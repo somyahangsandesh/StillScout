@@ -187,6 +187,16 @@ Each concept is ~**15 seconds** across **3–5 frames** (~3–5s each). Film ver
 
 ---
 
+## Animated ad
+
+Self-contained **9:16 HTML animation** you can open in Chrome/Safari and screen-record for Stories (or loop in the browser):
+
+**File:** [`stillscout_story_ad_animated.html`](./stillscout_story_ad_animated.html)  
+**Concept:** Scroll Trap (~14.5s) — scrub problem → StillScout finds the frame → brand + soft CTA  
+**Record:** Open the file → screen-record the 1080×1920 stage (QuickTime selection or iPhone Screen Recording) → export/crop to 1080×1920 → preview in Instagram drafts. Recording tips are in an HTML comment at the top of the file.
+
+---
+
 ## Filming Shot List (iPhone)
 
 Use this as a one-afternoon checklist. Shoot everything **vertical (9:16)**. Lock exposure when possible.
