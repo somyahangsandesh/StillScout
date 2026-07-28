@@ -46,14 +46,26 @@ In **App Store Connect → StillScout → App Information**:
 
 ### 3. Supabase
 
-Deploy the `vision-score` Edge Function and set the Gemini secret:
+Project ref: `zyadgkgumdgussvkgtsr` (must match `secrets.local.dart` and
+`tool/deploy_vision_score.sh`).
+
+Deploy order matters — push migrations **before** the new edge functions:
 
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
-supabase login
+export PATH="$HOME/.local/share/supabase:$HOME/.local/bin:$PATH"
+supabase login   # or export SUPABASE_ACCESS_TOKEN=sbp_…
+supabase link --project-ref zyadgkgumdgussvkgtsr --yes
+supabase db push --linked --yes
 bash tool/deploy_vision_score.sh
-supabase secrets set GEMINI_API_KEY='your_key' --project-ref iklpevzosgvdaouudaim
+supabase functions deploy revenuecat-webhook --project-ref zyadgkgumdgussvkgtsr --no-verify-jwt
+supabase functions deploy usage-alert --project-ref zyadgkgumdgussvkgtsr
+# Only if GEMINI_API_KEY is not already set:
+# supabase secrets set GEMINI_API_KEY='your_key' --project-ref zyadgkgumdgussvkgtsr
 ```
+
+Then finish webhook + optional alerts:
+- `docs/REVENUECAT_WEBHOOK_SETUP.md`
+- `docs/USAGE_ALERTS_SETUP.md`
 
 Confirm `supabaseUrl` / anon key in `secrets.local.dart` match the dashboard.
 

@@ -14,16 +14,19 @@ flag. Now:
    Any DB error / missing row / expired row falls back to the free cap —
    never the other way around.
 
-Nothing here can be fully configured from this sandbox (no Supabase deploy
-credentials, no RevenueCat dashboard access). Follow the steps below after
-merging.
+Supabase deploy (migrations + functions + `REVENUECAT_WEBHOOK_SECRET`) can be
+done from the CLI. The RevenueCat dashboard webhook URL/auth paste is still
+manual — follow step 4 below after deploy.
+
+Project ref: `zyadgkgumdgussvkgtsr`.
 
 ## 1. Apply the new migration
 
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/share/supabase:$HOME/.local/bin:$PATH"
 supabase login   # or export SUPABASE_ACCESS_TOKEN=sbp_…
-supabase db push --project-ref "$SUPABASE_PROJECT_REF"
+supabase link --project-ref zyadgkgumdgussvkgtsr --yes
+supabase db push --linked --yes
 ```
 
 This creates `pro_entitlements`, `global_daily_spend`, and their RPCs
@@ -34,8 +37,11 @@ by pasting it into the Supabase SQL editor if you'd rather not use the CLI.
 ## 2. Deploy both edge functions
 
 ```bash
-supabase functions deploy revenuecat-webhook --project-ref "$SUPABASE_PROJECT_REF"
-supabase functions deploy vision-score --project-ref "$SUPABASE_PROJECT_REF"
+# --no-verify-jwt is REQUIRED: RevenueCat sends Bearer <shared-secret>,
+# not a Supabase JWT. Gateway JWT verify would 401 before our check runs.
+supabase functions deploy revenuecat-webhook \
+  --project-ref zyadgkgumdgussvkgtsr --no-verify-jwt
+supabase functions deploy vision-score --project-ref zyadgkgumdgussvkgtsr
 ```
 
 ## 3. Generate and set the webhook shared secret
@@ -50,7 +56,7 @@ Set it as a Supabase secret — **never commit this value**:
 
 ```bash
 supabase secrets set REVENUECAT_WEBHOOK_SECRET='paste_the_generated_value' \
-  --project-ref "$SUPABASE_PROJECT_REF"
+  --project-ref zyadgkgumdgussvkgtsr
 ```
 
 ## 4. Configure the webhook in RevenueCat
@@ -59,14 +65,17 @@ In the [RevenueCat dashboard](https://app.revenuecat.com):
 
 1. Go to **Project Settings → Integrations → Webhooks**
 2. Click **Add webhook** (or edit the existing one)
-3. **URL**: `https://<project-ref>.functions.supabase.co/revenuecat-webhook`
-   (replace `<project-ref>` with your Supabase project ref)
+3. **URL**: `https://zyadgkgumdgussvkgtsr.supabase.co/functions/v1/revenuecat-webhook`
 4. **Authorization header value**: `Bearer <the same secret from step 3>`
 5. Leave "Events to send" at the default (all events) — the function safely
    ignores event types it doesn't act on (see `decideEntitlementUpdate` in
    `supabase/functions/revenuecat-webhook/lib.ts`)
 6. Save, then use RevenueCat's **"Send test event"** button and confirm the
    function returns `200` in Supabase's function logs
+
+Until this webhook fires at least once for a subscriber, `vision-score`
+fails safe to the free daily cap for that `app_user_id` (no entitlement
+row yet). That is intentional — do **not** backfill Pro without verification.
 
 ## 5. Tune the global spend circuit-breaker (optional)
 
@@ -83,7 +92,7 @@ margin (3–5×), and set:
 
 ```bash
 supabase secrets set GLOBAL_DAILY_PICK_CEILING='20000' \
-  --project-ref "$SUPABASE_PROJECT_REF"
+  --project-ref zyadgkgumdgussvkgtsr
 ```
 
 Watch function logs for `GLOBAL_CAP_REACHED` after launch — if it ever trips

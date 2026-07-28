@@ -18,12 +18,15 @@ If `USAGE_ALERT_WEBHOOK_URL` isn't set, the function logs a warning and
 returns `200 { alerted: false }` — it never fails/crashes on missing
 config, so it's safe to deploy before you've set up a webhook.
 
+Project ref: `zyadgkgumdgussvkgtsr`.
+
 ## 1. Apply the new migration
 
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/share/supabase:$HOME/.local/bin:$PATH"
 supabase login   # or export SUPABASE_ACCESS_TOKEN=sbp_…
-supabase db push --project-ref "$SUPABASE_PROJECT_REF"
+supabase link --project-ref zyadgkgumdgussvkgtsr --yes
+supabase db push --linked --yes
 ```
 
 This creates `usage_alert_state` (from
@@ -34,7 +37,7 @@ not use the CLI.
 ## 2. Deploy the function
 
 ```bash
-supabase functions deploy usage-alert --project-ref "$SUPABASE_PROJECT_REF"
+supabase functions deploy usage-alert --project-ref zyadgkgumdgussvkgtsr
 ```
 
 ## 3. Create a webhook and set the secret
@@ -48,7 +51,7 @@ Set it as a Supabase secret — **never commit this value**:
 
 ```bash
 supabase secrets set USAGE_ALERT_WEBHOOK_URL='paste_the_webhook_url' \
-  --project-ref "$SUPABASE_PROJECT_REF"
+  --project-ref zyadgkgumdgussvkgtsr
 ```
 
 Optional tuning secrets (both default to sane values if unset):
@@ -56,11 +59,11 @@ Optional tuning secrets (both default to sane values if unset):
 ```bash
 # Fraction of GLOBAL_DAILY_PICK_CEILING that triggers the first ("warning") alert.
 supabase secrets set USAGE_ALERT_THRESHOLD_FRACTION='0.7' \
-  --project-ref "$SUPABASE_PROJECT_REF"
+  --project-ref zyadgkgumdgussvkgtsr
 
 # Must match the value set for vision-score — see docs/REVENUECAT_WEBHOOK_SETUP.md.
 supabase secrets set GLOBAL_DAILY_PICK_CEILING='20000' \
-  --project-ref "$SUPABASE_PROJECT_REF"
+  --project-ref zyadgkgumdgussvkgtsr
 ```
 
 ## 4. Schedule it — Supabase Dashboard Cron Job (recommended)
@@ -84,7 +87,7 @@ select cron.schedule(
   '*/30 * * * *',
   $$
   select net.http_post(
-    url := 'https://<project-ref>.functions.supabase.co/usage-alert',
+    url := 'https://zyadgkgumdgussvkgtsr.supabase.co/functions/v1/usage-alert',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
@@ -104,7 +107,7 @@ specific reason to keep scheduling as code.
 ## 5. Test it manually
 
 ```bash
-curl -i -X POST "https://<project-ref>.functions.supabase.co/usage-alert" \
+curl -i -X POST "https://zyadgkgumdgussvkgtsr.supabase.co/functions/v1/usage-alert" \
   -H "Authorization: Bearer <anon-or-service-role-key>"
 ```
 
