@@ -142,6 +142,21 @@ class StillScoutPurchaseService {
     }
   }
 
+  /// RevenueCat's stable subscriber id (anonymous until login, but always
+  /// present once configured). Sent to the `vision-score` edge function so
+  /// the server can look up a real, webhook-verified Pro entitlement rather
+  /// than trusting a client-supplied "isPro" flag. Returns null when the SDK
+  /// isn't initialized — callers fall back to the free/trial cap in that case.
+  static Future<String?> getAppUserId() async {
+    if (!_initialized) return null;
+    try {
+      return await Purchases.appUserID;
+    } catch (e) {
+      debugPrint('[StillScout IAP] getAppUserId error: $e');
+      return null;
+    }
+  }
+
   static Future<CustomerInfo?> getCustomerInfo() async {
     if (!_initialized) return null;
     try {

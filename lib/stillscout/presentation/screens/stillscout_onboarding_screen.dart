@@ -178,7 +178,7 @@ class _StillScoutOnboardingScreenState
                 headline: 'Export in\nseconds.',
                 subline: 'On-device scouting works offline.',
                 body:
-                    'Includes a one-time free ${StillScoutConfig.geminiModelDisplayName} trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for daily cloud AI at scale, unlimited scouts, and native 4K.',
+                    'Includes a one-time free ${StillScoutConfig.geminiModelDisplayName} trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for unlimited AI scouts and native 4K.',
               ),
               _ProUpsellStep(fade: _stepFades[3]),
             ],
@@ -323,7 +323,7 @@ final _kProFeatures = [
     '${StillScoutConstants.proKeeperLimit} keepers · exact timecodes',
     Icons.workspace_premium_rounded,
   ),
-  ('Unlimited scouts · native 4K', Icons.all_inclusive_rounded),
+  ('Unlimited AI scouts · native 4K', Icons.all_inclusive_rounded),
 ];
 
 class _ProUpsellStep extends StatelessWidget {

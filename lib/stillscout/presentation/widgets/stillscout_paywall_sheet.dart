@@ -561,7 +561,7 @@ class _FeatureBullets extends StatelessWidget {
         ),
         (
           Icons.all_inclusive_rounded,
-          'Unlimited scouts · native 4K saves',
+          'Unlimited AI scouts · native 4K saves',
         ),
       ];
 

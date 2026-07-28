@@ -13,12 +13,14 @@ const _keychain = FlutterSecureStorage(
   ),
 );
 
-/// Device-local guard for shared cloud AI keys.
-///
-/// This is not a replacement for a production backend proxy, but it prevents a
-/// single install from exhausting the app-wide free-tier pool during shipathon
-/// or early beta. Once the daily cap is reached, callers skip cloud providers
-/// and fall back to on-device Apple Vision + heuristic scoring.
+/// Device-local guard for the direct-Gemini **debug fallback** path only
+/// (used when a client-side Gemini key is present, e.g. `ALLOW_DIRECT_AI_KEYS`
+/// debug builds). It never gates the production Supabase `vision-score`
+/// proxy — that path's real, server-verified caps (free/trial vs.
+/// webhook-verified Pro) live entirely server-side in
+/// `supabase/functions/vision-score/lib.ts`. Once this local cap is reached,
+/// direct-Gemini callers skip cloud providers and fall back to on-device
+/// Apple Vision + heuristic scoring.
 ///
 /// Stored in the iOS Keychain (not SharedPreferences) so the counter is
 /// resilient to app delete + reinstall.

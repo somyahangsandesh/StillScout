@@ -158,9 +158,12 @@ class StillScoutAccessPolicy {
     return '$scoutsRemainingToday free scout${scoutsRemainingToday == 1 ? '' : 's'} left today';
   }
 
-  /// Settings blurb for Pro's cloud AI allowance — honest fair-use framing
-  /// (never "unlimited") so marketing/onboarding/settings copy can't drift
-  /// from the server's actual daily cap.
+  /// Blurb for the local, debug-only direct-Gemini fallback allowance (see
+  /// [StillScoutCloudQuotaTracker]) — NOT the real Pro entitlement, which is
+  /// now server-verified via RevenueCat + `pro_entitlements` and is
+  /// effectively unlimited (see [scoutsAllowanceLabel]). This only matters
+  /// on debug builds using a direct client-side Gemini key; the production
+  /// Supabase proxy path is unaffected by this local counter.
   static String cloudAiQuotaLabel({required int remainingToday}) {
     final fullScoutsLeft =
         (remainingToday / StillScoutConstants.maxCloudFramesPerScout).floor();
@@ -170,10 +173,11 @@ class StillScoutAccessPolicy {
     return '~$fullScoutsLeft full AI scout${fullScoutsLeft == 1 ? '' : 's'} left today ($remainingToday picks)';
   }
 
-  /// True once a Pro user's remaining cloud AI quota drops below
-  /// [StillScoutConstants.cloudQuotaLowWarningThreshold] of the daily cap —
-  /// used to decide whether Settings should surface the quota hint at all
-  /// (avoids nagging Pro users who are nowhere near the limit).
+  /// True once the local debug-only fallback counter (see
+  /// [cloudAiQuotaLabel]) drops below
+  /// [StillScoutConstants.cloudQuotaLowWarningThreshold] of its cap. Not used
+  /// by the production UI — Pro's real, server-verified allowance is
+  /// effectively unlimited and never shows a "running low" warning.
   static bool isCloudAiQuotaLow({required int remainingToday}) {
     const threshold = StillScoutConstants.maxCloudFramesPerDeviceDay *
         StillScoutConstants.cloudQuotaLowWarningThreshold;

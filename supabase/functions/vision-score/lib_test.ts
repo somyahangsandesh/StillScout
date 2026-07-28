@@ -2,15 +2,24 @@ import { assertEquals } from "jsr:@std/assert";
 import {
   _resetIpWindowsForTests,
   clientIp,
+  DEFAULT_GLOBAL_DAILY_PICK_CEILING,
+  FREE_DAILY_CAP,
   isIpRateLimited,
   isUuidish,
+  isVerifiedProEntitlement,
   MAX_BATCH_IMAGES,
   MAX_IMAGE_BASE64_CHARS,
   noteIpRequest,
   planQuotaFirstFlow,
   planQuotaFirstSingleFlow,
+  PRO_DAILY_CAP,
+  reserveDenialResponse,
+  resolveAppUserId,
+  resolveDailyCap,
   resolveDeviceKey,
+  resolveGlobalDailyCeiling,
   resolvePickCount,
+  UNREACHABLE_ENTITLEMENT_LOOKUP,
   validateBatchImages,
 } from "./lib.ts";
 
@@ -115,21 +124,144 @@ Deno.test("quota-first single contract", () => {
   );
 });
 
-Deno.test("batch path reserves before Gemini", async () => {
+Deno.test("batch path reserves (per-device + global) before Gemini", async () => {
   const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
   const batch = src.slice(
     src.indexOf("// ── Batch path"),
     src.indexOf("// ── Single-frame path"),
   );
-  assertEquals(batch.indexOf("tryReserveQuota") < batch.indexOf("tryGeminiBatch"), true);
+  assertEquals(
+    batch.indexOf("reserveTieredQuota") < batch.indexOf("tryGeminiBatch"),
+    true,
+  );
   assertEquals(batch.includes("releaseQuota"), true);
+  assertEquals(batch.includes("releaseGlobalQuota"), true);
 });
 
-Deno.test("single path reserves before Gemini", async () => {
+Deno.test("single path reserves (per-device + global) before Gemini", async () => {
   const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
   const single = src.slice(src.indexOf("// ── Single-frame path"));
   assertEquals(
-    single.indexOf("tryReserveQuota") < single.indexOf("tryGeminiSingle"),
+    single.indexOf("reserveTieredQuota") < single.indexOf("tryGeminiSingle"),
     true,
   );
+  assertEquals(single.includes("releaseGlobalQuota"), true);
+});
+
+// ── Pro entitlement verification ────────────────────────────────────────
+
+Deno.test("isVerifiedProEntitlement is true for an active, non-expired Pro row", () => {
+  const future = new Date(Date.now() + 60_000).toISOString();
+  assertEquals(
+    isVerifiedProEntitlement({ ok: true, isPro: true, expiresAt: future }),
+    true,
+  );
+});
+
+Deno.test("isVerifiedProEntitlement is true when Pro row has no recorded expiry", () => {
+  assertEquals(
+    isVerifiedProEntitlement({ ok: true, isPro: true, expiresAt: null }),
+    true,
+  );
+});
+
+Deno.test("isVerifiedProEntitlement is false once the recorded expiry has passed", () => {
+  const past = new Date(Date.now() - 60_000).toISOString();
+  assertEquals(
+    isVerifiedProEntitlement({ ok: true, isPro: true, expiresAt: past }),
+    false,
+  );
+});
+
+Deno.test("isVerifiedProEntitlement is false for a non-Pro row", () => {
+  assertEquals(
+    isVerifiedProEntitlement({ ok: true, isPro: false, expiresAt: null }),
+    false,
+  );
+});
+
+Deno.test("isVerifiedProEntitlement is false for an unparsable expiry", () => {
+  assertEquals(
+    isVerifiedProEntitlement({ ok: true, isPro: true, expiresAt: "not-a-date" }),
+    false,
+  );
+});
+
+Deno.test("isVerifiedProEntitlement fails safe (false) when the lookup itself failed", () => {
+  const future = new Date(Date.now() + 60_000).toISOString();
+  assertEquals(
+    isVerifiedProEntitlement({ ok: false, isPro: true, expiresAt: future }),
+    false,
+  );
+  assertEquals(isVerifiedProEntitlement(UNREACHABLE_ENTITLEMENT_LOOKUP), false);
+});
+
+Deno.test("resolveDailyCap grants the high Pro ceiling only when verified", () => {
+  assertEquals(resolveDailyCap({ verifiedPro: true }), PRO_DAILY_CAP);
+  assertEquals(resolveDailyCap({ verifiedPro: false }), FREE_DAILY_CAP);
+  assertEquals(PRO_DAILY_CAP > FREE_DAILY_CAP, true);
+});
+
+Deno.test("a DB lookup error never silently grants the Pro cap (fail-safe end-to-end)", () => {
+  const cap = resolveDailyCap({
+    verifiedPro: isVerifiedProEntitlement(UNREACHABLE_ENTITLEMENT_LOOKUP),
+  });
+  assertEquals(cap, FREE_DAILY_CAP);
+});
+
+Deno.test("resolveAppUserId accepts a trimmed non-empty string and rejects the rest", () => {
+  assertEquals(resolveAppUserId("  user-123  "), "user-123");
+  assertEquals(resolveAppUserId(""), null);
+  assertEquals(resolveAppUserId("   "), null);
+  assertEquals(resolveAppUserId(null), null);
+  assertEquals(resolveAppUserId(42), null);
+  assertEquals(resolveAppUserId("x".repeat(201)), null);
+});
+
+// ── Global spend circuit-breaker ────────────────────────────────────────
+
+Deno.test("resolveGlobalDailyCeiling parses a valid positive env value", () => {
+  assertEquals(resolveGlobalDailyCeiling("12345"), 12345);
+});
+
+Deno.test("resolveGlobalDailyCeiling falls back to the default for missing/invalid input", () => {
+  assertEquals(resolveGlobalDailyCeiling(undefined), DEFAULT_GLOBAL_DAILY_PICK_CEILING);
+  assertEquals(resolveGlobalDailyCeiling(""), DEFAULT_GLOBAL_DAILY_PICK_CEILING);
+  assertEquals(resolveGlobalDailyCeiling("not-a-number"), DEFAULT_GLOBAL_DAILY_PICK_CEILING);
+  assertEquals(resolveGlobalDailyCeiling("0"), DEFAULT_GLOBAL_DAILY_PICK_CEILING);
+  assertEquals(resolveGlobalDailyCeiling("-5"), DEFAULT_GLOBAL_DAILY_PICK_CEILING);
+});
+
+Deno.test("reserveDenialResponse denies with DAILY_CAP_REACHED when the per-user reserve fails", () => {
+  const denial = reserveDenialResponse({
+    userReserveOk: false,
+    globalReserveOk: false,
+  });
+  assertEquals(denial?.code, "DAILY_CAP_REACHED");
+});
+
+Deno.test("reserveDenialResponse denies with GLOBAL_CAP_REACHED when only the global breaker trips", () => {
+  const denial = reserveDenialResponse({
+    userReserveOk: true,
+    globalReserveOk: false,
+  });
+  assertEquals(denial?.code, "GLOBAL_CAP_REACHED");
+});
+
+Deno.test("reserveDenialResponse allows the request through when both reservations succeed", () => {
+  assertEquals(
+    reserveDenialResponse({ userReserveOk: true, globalReserveOk: true }),
+    null,
+  );
+});
+
+Deno.test("global circuit-breaker trips even for a verified Pro caller under their (high) per-user cap", () => {
+  // A verified Pro caller comfortably under PRO_DAILY_CAP can still be
+  // blocked once the global breaker has tripped — the global ceiling is
+  // an independent, tier-agnostic backstop.
+  const denial = reserveDenialResponse({
+    userReserveOk: true, // well under PRO_DAILY_CAP
+    globalReserveOk: false, // global ceiling already exceeded
+  });
+  assertEquals(denial, { error: "quota_exceeded", code: "GLOBAL_CAP_REACHED" });
 });

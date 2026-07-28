@@ -14,24 +14,31 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   clientIp,
+  EntitlementLookupResult,
   isIpRateLimited,
+  isVerifiedProEntitlement,
   MAX_BATCH_IMAGES,
   MAX_IMAGE_BASE64_CHARS,
   noteIpRequest,
   planQuotaFirstFlow,
   planQuotaFirstSingleFlow,
+  reserveDenialResponse,
+  resolveAppUserId,
+  resolveDailyCap,
   resolveDeviceKey,
+  resolveGlobalDailyCeiling,
   resolvePickCount,
+  UNREACHABLE_ENTITLEMENT_LOOKUP,
   validateBatchImages,
 } from "./lib.ts";
 
-// Raised from 200 → 400 so a paying AI Pro subscriber (20 picks/scout) gets
-// ~20 full scouts/device/day instead of ~10 before falling back to on-device
-// scoring. Still a fair-use cap, not "unlimited" — client copy must not
-// promise unbounded cloud AI. See docs/APP_STORE_LAUNCH.md security notes.
-const DAILY_CAP = 400;
-
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+// Pure circuit-breaker across ALL users/tiers, independent of per-device
+// caps. Tune via `supabase secrets set GLOBAL_DAILY_PICK_CEILING=<n>` based
+// on observed steady-state daily spend — see docs/REVENUECAT_WEBHOOK_SETUP.md.
+const GLOBAL_DAILY_PICK_CEILING = resolveGlobalDailyCeiling(
+  Deno.env.get("GLOBAL_DAILY_PICK_CEILING"),
+);
 const GEMINI_MODEL = "gemini-3.1-flash-lite";
 
 function serviceClient() {
@@ -112,6 +119,19 @@ function batchContextInstructionFor(context: string): string {
   }
 }
 
+// ── CORS ─────────────────────────────────────────────────────────────────
+// This endpoint is called exclusively by the StillScout iOS app (Dio/URLSession
+// over native networking), which never sends a browser `Origin` header — CORS
+// is a browser-enforced mechanism and simply does not apply to native mobile
+// callers. Restricting `Access-Control-Allow-Origin` here would not stop a
+// non-browser attacker (curl, Postman, a rogue script) from calling this
+// endpoint directly with the public anon key, since none of those send an
+// `Origin` header either. The real access controls are: the Supabase anon
+// key requirement, the per-device daily quota, the IP soft rate-limit below,
+// and — as of this change — server-verified Pro entitlement + a global spend
+// circuit-breaker. We keep `*` here deliberately rather than cargo-culting a
+// browser-oriented restriction that would break nothing for an attacker and
+// could break a legitimate future web/admin client.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -125,16 +145,17 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-/** Atomically reserve [count] daily units before calling Gemini. */
-/** Atomically reserve [count] daily units before calling Gemini. */
+/** Atomically reserve [count] daily units against [deviceId]'s tier cap
+ * before calling Gemini. */
 async function tryReserveQuota(
   deviceId: string,
   count: number,
+  cap: number,
 ): Promise<boolean> {
   const { data, error } = await serviceClient().rpc("try_reserve_vision_quota", {
     p_device_id: deviceId,
     p_count: count,
-    p_cap: DAILY_CAP,
+    p_cap: cap,
   });
 
   if (error) {
@@ -157,6 +178,89 @@ async function releaseQuota(deviceId: string, count: number): Promise<void> {
   if (error) {
     console.warn("[vision-score] release RPC error:", error.message);
   }
+}
+
+/** Atomically reserve [count] units against the global daily circuit-breaker.
+ * Only called after the per-device reservation already succeeded. */
+async function tryReserveGlobalQuota(count: number): Promise<boolean> {
+  const { data, error } = await serviceClient().rpc(
+    "try_reserve_global_quota",
+    { p_count: count, p_cap: GLOBAL_DAILY_PICK_CEILING },
+  );
+
+  if (error) {
+    console.warn(
+      "[vision-score] global reserve RPC error — failing closed:",
+      error.message,
+    );
+    return false;
+  }
+
+  return data === true;
+}
+
+async function releaseGlobalQuota(count: number): Promise<void> {
+  const { error } = await serviceClient().rpc("release_global_quota", {
+    p_count: count,
+  });
+  if (error) {
+    console.warn("[vision-score] global release RPC error:", error.message);
+  }
+}
+
+/**
+ * Looks up `pro_entitlements` for [appUserId]. Any failure (RPC error,
+ * thrown exception, unreachable DB) resolves to
+ * [UNREACHABLE_ENTITLEMENT_LOOKUP] so callers fail safe to the free cap —
+ * we never silently grant the Pro ceiling on a lookup error.
+ */
+async function lookupEntitlement(
+  appUserId: string,
+): Promise<EntitlementLookupResult> {
+  try {
+    const { data, error } = await serviceClient()
+      .from("pro_entitlements")
+      .select("is_pro, expires_at")
+      .eq("app_user_id", appUserId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn(
+        "[vision-score] entitlement lookup error — failing safe:",
+        error.message,
+      );
+      return UNREACHABLE_ENTITLEMENT_LOOKUP;
+    }
+    if (!data) {
+      return { ok: true, isPro: false, expiresAt: null };
+    }
+    return {
+      ok: true,
+      isPro: Boolean(data.is_pro),
+      expiresAt: (data.expires_at as string | null) ?? null,
+    };
+  } catch (e) {
+    console.warn("[vision-score] entitlement lookup threw — failing safe:", e);
+    return UNREACHABLE_ENTITLEMENT_LOOKUP;
+  }
+}
+
+/** Reserves per-device + global quota together; releases the per-device
+ * reservation if the global circuit-breaker rejects the request. */
+async function reserveTieredQuota(
+  deviceKey: string,
+  count: number,
+  cap: number,
+): Promise<{ userReserveOk: boolean; globalReserveOk: boolean }> {
+  const userReserveOk = await tryReserveQuota(deviceKey, count, cap);
+  if (!userReserveOk) {
+    return { userReserveOk: false, globalReserveOk: false };
+  }
+  const globalReserveOk = await tryReserveGlobalQuota(count);
+  if (!globalReserveOk) {
+    await releaseQuota(deviceKey, count);
+  }
+  return { userReserveOk, globalReserveOk };
 }
 
 interface ScoreResult {
@@ -352,6 +456,17 @@ Deno.serve(async (req) => {
   const ip = clientIp(req.headers);
   noteIpRequest(ip);
 
+  // Server-side Pro verification: never trust a client-supplied "isPro"
+  // claim. `app_user_id` is RevenueCat's stable subscriber id
+  // (Purchases.appUserID), looked up against the webhook-populated
+  // pro_entitlements cache. Any lookup failure fails safe to the free cap.
+  const appUserId = resolveAppUserId(body.app_user_id);
+  const entitlement = appUserId
+    ? await lookupEntitlement(appUserId)
+    : UNREACHABLE_ENTITLEMENT_LOOKUP;
+  const verifiedPro = isVerifiedProEntitlement(entitlement);
+  const dailyCap = resolveDailyCap({ verifiedPro });
+
   // Soft-block: reject before any quota reservation or Gemini spend when a
   // single IP is hammering the endpoint (abuse backstop on top of the
   // per-device daily quota, which remains the primary control).
@@ -386,15 +501,17 @@ Deno.serve(async (req) => {
     }
 
     // Reserve-before-Gemini: reject 429 without spending API tokens when
-    // the device is already at the daily cap. On Gemini failure, release
-    // so honest clients are not charged for failed scores.
-    const reserved = await tryReserveQuota(deviceKey, pickCount);
-    const deny = planQuotaFirstFlow({ reserveOk: reserved });
-    if (!deny.calledGemini) {
-      return jsonResponse(
-        { error: deny.error, code: deny.code },
-        deny.httpStatus,
-      );
+    // the device is already at its tier's daily cap, or when the global
+    // spend circuit-breaker has tripped. On Gemini failure, release so
+    // honest clients are not charged for failed scores.
+    const { userReserveOk, globalReserveOk } = await reserveTieredQuota(
+      deviceKey,
+      pickCount,
+      dailyCap,
+    );
+    const denial = reserveDenialResponse({ userReserveOk, globalReserveOk });
+    if (denial) {
+      return jsonResponse(denial, 429);
     }
 
     const batchResult = await tryGeminiBatch(images, pickCount, context);
@@ -403,6 +520,7 @@ Deno.serve(async (req) => {
       const plan = planQuotaFirstFlow({ reserveOk: true, scoring: outcome });
       if (plan.releaseReservation) {
         await releaseQuota(deviceKey, pickCount);
+        await releaseGlobalQuota(pickCount);
       }
       if (batchResult.incomplete) {
         return jsonResponse(
@@ -435,13 +553,10 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "gemini_not_configured" }, 503);
   }
 
-  const reservedSingle = await tryReserveQuota(deviceKey, 1);
-  const denySingle = planQuotaFirstSingleFlow({ reserveOk: reservedSingle });
-  if (!denySingle.calledGemini) {
-    return jsonResponse(
-      { error: denySingle.error, code: denySingle.code },
-      denySingle.httpStatus,
-    );
+  const singleReserve = await reserveTieredQuota(deviceKey, 1, dailyCap);
+  const singleDenial = reserveDenialResponse(singleReserve);
+  if (singleDenial) {
+    return jsonResponse(singleDenial, 429);
   }
 
   const score = await tryGeminiSingle(image, context);
@@ -449,6 +564,7 @@ Deno.serve(async (req) => {
     const plan = planQuotaFirstSingleFlow({ reserveOk: true, scoreOk: false });
     if (plan.releaseReservation) {
       await releaseQuota(deviceKey, 1);
+      await releaseGlobalQuota(1);
     }
     return jsonResponse({ error: "gemini_failed" }, 503);
   }

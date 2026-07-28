@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../config/stillscout_config.dart';
+import '../../../../services/stillscout_purchase_service.dart';
 import '../../../data/models/frame_score_metadata.dart';
 import '../../stillscout_device_id.dart';
 import '../vision_scoring_client.dart';
@@ -46,6 +47,7 @@ class SupabaseVisionClient implements VisionScoringClient {
     }
 
     final deviceId = await StillScoutDeviceId.get();
+    final appUserId = await StillScoutPurchaseService.getAppUserId();
 
     try {
       final response = await sharedVisionDio.post<Map<String, dynamic>>(
@@ -54,6 +56,7 @@ class SupabaseVisionClient implements VisionScoringClient {
           'images': base64Jpegs,
           'pick_count': pickCount,
           'device_id': deviceId,
+          if (appUserId != null) 'app_user_id': appUserId,
           'context': videoContext.name,
         },
         options: Options(
@@ -107,6 +110,7 @@ class SupabaseVisionClient implements VisionScoringClient {
     StillScoutVideoContext videoContext = StillScoutVideoContext.auto,
   }) async {
     final deviceId = await StillScoutDeviceId.get();
+    final appUserId = await StillScoutPurchaseService.getAppUserId();
 
     try {
       final response = await sharedVisionDio.post<Map<String, dynamic>>(
@@ -114,6 +118,7 @@ class SupabaseVisionClient implements VisionScoringClient {
         data: <String, dynamic>{
           'image': base64Jpeg,
           'device_id': deviceId,
+          if (appUserId != null) 'app_user_id': appUserId,
           'context': videoContext.name,
         },
         options: Options(
