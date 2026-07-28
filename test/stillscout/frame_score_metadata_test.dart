@@ -99,7 +99,7 @@ void main() {
     });
 
     test('ScoreSource labels are human-readable', () {
-      expect(ScoreSource.llm.label, 'Gemini AI');
+      expect(ScoreSource.llm.label, 'StillScout AI');
       expect(ScoreSource.heuristic.label, 'On-device');
       expect(ScoreSource.hybrid.label, 'Apple Vision');
     });

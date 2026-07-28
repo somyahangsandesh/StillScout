@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../data/models/scored_frame.dart';
 import '../../domain/failures/stillscout_failure.dart';
 import '../../domain/stillscout_access_policy.dart';
@@ -278,7 +280,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
               ? (next.isPro
                   ? 'Daily AI quota reached — showing on-device estimates. Try again tomorrow.'
                   : 'Daily AI quota reached — showing on-device estimates.')
-              : 'Gemini was unreachable — showing on-device estimates. '
+              : '${StillScoutConfig.geminiModelDisplayName} was unreachable — showing on-device estimates. '
                   'Reconnect and retry for AI results.';
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
@@ -536,13 +538,13 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
               : null,
           onUpgradeAiPro: () => _showPaywall(
             reason: state.isAiProTrial
-                ? 'You just used Gemini. Keep AI Pro for unlimited scouts, '
+                ? 'You just used ${StillScoutConfig.geminiModelDisplayName}. Keep AI Pro for unlimited scouts, '
                     '${StillScoutConstants.proKeeperLimit} keepers, and Auto Polish.'
                 : 'AI finds your best moment and turns it into a professional photo.',
           ),
           onLockedFrameTap: () => _showPaywall(
             reason:
-                'Unlock Gemini judgment, ${StillScoutConstants.proKeeperLimit} keepers, timecodes, and native 4K.',
+                'Unlock ${StillScoutConfig.geminiModelDisplayName} judgment, ${StillScoutConstants.proKeeperLimit} keepers, timecodes, and native 4K.',
           ),
           onFrameTap: (frame, rank) {
             if (_selectedIds.isNotEmpty) {
@@ -654,7 +656,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
       initialIndex: rank,
       onExportPressed: _handleExport,
       onUnlockAiPro: () => _showPaywall(
-        reason: 'AI Auto Polish and Gemini Flash scoring unlock with AI Pro.',
+        reason: 'AI Auto Polish and ${StillScoutConfig.geminiModelDisplayName} scoring unlock with AI Pro.',
       ),
     );
   }

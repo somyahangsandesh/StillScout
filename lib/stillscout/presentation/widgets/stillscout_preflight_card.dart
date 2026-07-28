@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../domain/stillscout_access_policy.dart';
 import '../../domain/stillscout_constants.dart';
 import '../../domain/stillscout_online_status.dart';
@@ -126,7 +128,7 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
               const SizedBox(height: StillScoutSpacing.s),
               Text(
                 trialAvailable
-                    ? 'Free Gemini trial · $scoutLabel'
+                    ? 'Free ${StillScoutConfig.geminiModelDisplayName} trial · $scoutLabel'
                     : scoutLabel,
                 style: StillScoutTextStyles.caption.copyWith(
                   color: quotaLoading

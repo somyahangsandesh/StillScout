@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../domain/stillscout_constants.dart';
 import '../theme/stillscout_theme.dart';
 import '../widgets/stillscout_buttons.dart';
@@ -176,7 +178,7 @@ class _StillScoutOnboardingScreenState
                 headline: 'Export in\nseconds.',
                 subline: 'On-device scouting works offline.',
                 body:
-                    'Includes a one-time free Gemini AI trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for unlimited Gemini and native 4K.',
+                    'Includes a one-time free ${StillScoutConfig.geminiModelDisplayName} trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for unlimited cloud AI and native 4K.',
               ),
               _ProUpsellStep(fade: _stepFades[3]),
             ],
@@ -315,7 +317,7 @@ class _OnboardingStep extends StatelessWidget {
 // ── Pro upsell step (page 4) ──────────────────────────────────────────────────
 
 final _kProFeatures = [
-  ('Gemini judgment on every scout', Icons.psychology_rounded),
+  ('${StillScoutConfig.geminiModelDisplayName} judgment on every scout', Icons.psychology_rounded),
   ('AI Auto Polish with before/after', Icons.auto_fix_high_rounded),
   (
     '${StillScoutConstants.proKeeperLimit} keepers · exact timecodes',

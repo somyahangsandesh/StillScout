@@ -12,7 +12,7 @@ enum ScoreSource {
   hybrid;
 
   String get label => switch (this) {
-        ScoreSource.llm => 'Gemini AI',
+        ScoreSource.llm => 'StillScout AI',
         ScoreSource.heuristic => 'On-device',
         ScoreSource.hybrid => 'Apple Vision',
       };

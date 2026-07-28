@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../domain/stillscout_constants.dart';
 import '../providers/stillscout_notifier.dart';
 import '../theme/stillscout_theme.dart';
@@ -84,7 +86,7 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
     final polishLabel = widget.isPro
         ? 'AI Pro · Deep analysis · Unlimited saves · 4K'
         : widget.isAiProTrial
-            ? 'Free AI Trial complete · Upgrade to keep Gemini quality'
+            ? 'Free AI Trial complete · Upgrade to keep ${StillScoutConfig.geminiModelDisplayName} quality'
             : widget.exportsRemaining > 0
                 ? '${widget.exportsRemaining}/${StillScoutConstants.freeExportsPerScout} saves left this scout'
                 : 'All saves used — upgrade for unlimited';
@@ -197,8 +199,8 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
                                 const SizedBox(height: StillScoutSpacing.xs),
                                 Text(
                                   widget.isPro || widget.isAiProTrial
-                                      ? '${widget.aiScoredCount} of ${widget.totalFrames} frames Gemini-scored'
-                                      : '${widget.totalFrames} frames ranked on-device · upgrade for Gemini',
+                                      ? '${widget.aiScoredCount} of ${widget.totalFrames} frames scored by ${StillScoutConfig.geminiModelDisplayName}'
+                                      : '${widget.totalFrames} frames ranked on-device · upgrade for ${StillScoutConfig.geminiModelDisplayName}',
                                   style: StillScoutTextStyles.caption.copyWith(
                                     color: StillScoutColors.silver,
                                     fontSize: 11,
@@ -243,12 +245,13 @@ class _DegradedGeminiBanner extends StatelessWidget {
     return _OutcomeBanner(
       icon: Icons.cloud_off_rounded,
       accent: StillScoutColors.silver,
-      message: 'Gemini was unavailable — showing on-device picks',
+      message:
+          '${StillScoutConfig.geminiModelDisplayName} was unavailable — showing on-device picks',
       actionLabel: onRetry == null ? null : 'Retry',
       onAction: onRetry,
       semanticsLabel: onRetry == null
-          ? 'Gemini was unavailable. Showing on-device picks.'
-          : 'Gemini was unavailable. Showing on-device picks. Double tap to retry.',
+          ? '${StillScoutConfig.geminiModelDisplayName} was unavailable. Showing on-device picks.'
+          : '${StillScoutConfig.geminiModelDisplayName} was unavailable. Showing on-device picks. Double tap to retry.',
     );
   }
 }

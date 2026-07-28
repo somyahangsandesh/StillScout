@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../data/models/scored_frame.dart';
 import '../../data/models/stillscout_session.dart';
 import '../../domain/failures/stillscout_failure.dart';
@@ -189,7 +191,7 @@ class _StillScoutSessionDetailScreenState
                   ),
                   onLockedFrameTap: () => _showPaywall(
                     reason:
-                        'Unlock Gemini judgment, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
+                        'Unlock ${StillScoutConfig.geminiModelDisplayName} judgment, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
                   ),
                   onFrameTap: (frame, rank) {
                     if (StillScoutAccessPolicy.isLocked(
@@ -199,7 +201,7 @@ class _StillScoutSessionDetailScreenState
                     )) {
                       _showPaywall(
                         reason:
-                            'Unlock Gemini judgment, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
+                            'Unlock ${StillScoutConfig.geminiModelDisplayName} judgment, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
                       );
                     } else {
                       _onFrameTap(frame, state.isPro, frames, rank);
@@ -238,7 +240,7 @@ class _StillScoutSessionDetailScreenState
       onExportPressed: _handleExport,
       onUnlockAiPro: () => _showPaywall(
         reason:
-            'AI Auto Polish and Gemini Flash scoring unlock with AI Pro.',
+            'AI Auto Polish and ${StillScoutConfig.geminiModelDisplayName} scoring unlock with AI Pro.',
       ),
     );
   }

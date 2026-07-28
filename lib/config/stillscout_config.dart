@@ -158,8 +158,11 @@ class StillScoutConfig {
   /// User-facing product name for the Pro entitlement.
   static const String aiProDisplayName = 'AI Pro';
 
-  /// User-facing cloud model name — avoid pinning a patch version in UI copy.
-  static const String geminiModelDisplayName = 'Gemini Flash';
+  /// User-facing cloud AI brand name — shown in UI instead of vendor model IDs.
+  static const String geminiModelDisplayName = 'StillScout AI';
+
+  /// Alias for [geminiModelDisplayName] in product copy.
+  static const String cloudAiDisplayName = geminiModelDisplayName;
 
   /// Primary offering identifier in RevenueCat (fallback: default, stillscout_main).
   static const String rcOfferingIdentifier = 'stillscout_main';

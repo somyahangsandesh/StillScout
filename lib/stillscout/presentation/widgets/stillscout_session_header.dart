@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../data/models/frame_score_metadata.dart';
 import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
@@ -171,10 +173,10 @@ class StillScoutSessionHeader extends StatelessWidget {
             ),
             child: Text(
               !(isPro || isAiProTrial)
-                  ? 'On-device Vision · Upgrade for Gemini'
+                  ? 'On-device Vision · Upgrade for ${StillScoutConfig.geminiModelDisplayName}'
                   : (aiCount == 0
-                      ? 'Gemini unavailable — on-device scores. Re-scout online for Gemini.'
-                      : '$aiCount/$total Gemini · ${total - aiCount} on-device'),
+                      ? '${StillScoutConfig.geminiModelDisplayName} unavailable — on-device scores. Re-scout online for cloud AI.'
+                      : '$aiCount/$total ${StillScoutConfig.geminiModelDisplayName} · ${total - aiCount} on-device'),
               style: StillScoutTextStyles.caption.copyWith(
                 color: StillScoutColors.silver.withValues(alpha: 0.85),
                 fontSize: dense ? 11 : 12,

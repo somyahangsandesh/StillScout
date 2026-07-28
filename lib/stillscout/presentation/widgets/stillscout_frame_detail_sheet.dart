@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../data/models/frame_score_metadata.dart';
 import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
@@ -600,7 +602,7 @@ class _PolishToggleRow extends StatelessWidget {
                 ),
                 Text(
                   locked
-                      ? 'Gemini-ready polish with before/after — unlock AI Pro'
+                      ? '${StillScoutConfig.geminiModelDisplayName}-ready polish with before/after — unlock AI Pro'
                       : 'Lighting, color, sharpness & face-aware exposure',
                   style: StillScoutTextStyles.caption.copyWith(
                     color: StillScoutColors.silver,

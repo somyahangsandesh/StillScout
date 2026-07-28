@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
 import 'package:stillscout/services/stillscout_purchase_service.dart';
 
 import '../../data/models/extracted_frame.dart';
@@ -24,6 +25,7 @@ import '../../services/stillscout_scout_quota_tracker.dart';
 import '../../services/stillscout_subscription_manager.dart';
 import '../../services/stillscout_gallery_cap.dart';
 import '../../services/stillscout_top_picks_selector.dart';
+import '../../services/stillscout_video_context_detector.dart';
 import '../../services/stillscout_vision_client.dart';
 import 'stillscout_connectivity_provider.dart';
 import 'stillscout_quota_coordinator.dart';
@@ -421,47 +423,14 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
   ///   – compositionScore 65+ signals clean, well-lit scenic framing.
   ///   – High blur variance + low mean blur = fast-moving subjects.
   StillScoutVideoContext _autoDetectContext(List<ScoredFrame> scored) {
-    if (scored.isEmpty) return StillScoutVideoContext.auto;
-    // Sample a representative cross-section: top-half of scored frames.
-    final sample = scored.take(scored.length.clamp(1, 30)).toList();
-    final n = sample.length;
-
-    final meanEyes = sample
-            .map((f) => f.metadata.openEyesScore.toDouble())
-            .reduce((a, b) => a + b) /
-        n;
-    final meanComposition = sample
-            .map((f) => f.metadata.compositionScore.toDouble())
-            .reduce((a, b) => a + b) /
-        n;
-    final blurValues =
-        sample.map((f) => f.metadata.blurScore.toDouble()).toList();
-    final meanBlur = blurValues.reduce((a, b) => a + b) / n;
-    final blurVariance = blurValues
-            .map((b) => (b - meanBlur) * (b - meanBlur))
-            .reduce((a, b) => a + b) /
-        n;
-
-    // --- Portrait: strong face signal across the sample ---
-    // With improved Vision (multi-face + EAR sigmoid), scores above 60
-    // reliably mean open-eyed, well-posed faces were detected.
-    if (meanEyes > 60) return StillScoutVideoContext.portrait;
-
-    // --- Landscape: good composition + no dominant faces ---
-    // Saliency boost means high compositionScore now genuinely indicates a
-    // clear subject (scenery, architecture, etc.).
-    if (meanComposition > 65 && meanEyes < 45) {
-      return StillScoutVideoContext.landscape;
-    }
-
-    // --- Action: blur variance signals mixed-motion footage ---
-    // Some frames very sharp (stationary subject), others blurry (motion) —
-    // high variance is a reliable action/sport indicator.
-    if (blurVariance > 320 && meanBlur < 68) {
-      return StillScoutVideoContext.action;
-    }
-
-    return StillScoutVideoContext.auto;
+    final sample = scored.take(scored.length.clamp(1, 30)).map(
+          (f) => (
+            openEyesScore: f.metadata.openEyesScore,
+            compositionScore: f.metadata.compositionScore,
+            blurScore: f.metadata.blurScore,
+          ),
+        );
+    return StillScoutVideoContextDetector.detectFromAxisScores(sample);
   }
 
   Future<void> processVideo(String videoPath) async {
@@ -575,7 +544,7 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
       if (useCloudAi) await _ensureOnline();
 
       final scoringMessage = useCloudAi
-          ? 'Gemini is analysing up to 48 frames in one pass…'
+          ? '${StillScoutConfig.geminiModelDisplayName} is picking the perfect frame for you…'
           : 'On-device Vision is ranking your frames…';
 
       state = state.copyWith(
@@ -794,7 +763,7 @@ class StillScoutNotifier extends StateNotifier<StillScoutState> {
     state = state.copyWith(
       phase: StillScoutPhase.scoring,
       progress: 0.60,
-      statusMessage: 'Retrying with Gemini…',
+      statusMessage: 'Retrying with ${StillScoutConfig.geminiModelDisplayName}…',
       clearError: true,
     );
 

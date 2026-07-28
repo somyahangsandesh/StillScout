@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
 import 'package:stillscout/services/stillscout_offering_resolver.dart';
 import 'package:stillscout/services/stillscout_purchase_service.dart';
 import '../../domain/stillscout_access_policy.dart';
@@ -552,7 +553,7 @@ class _HeroBadge extends StatelessWidget {
 class _FeatureBullets extends StatelessWidget {
   /// Four punchy lines — keeps the purchase CTA above the fold on most phones.
   static List<(IconData, String)> get _features => [
-        (Icons.auto_awesome, 'Gemini judgment on every scout'),
+        (Icons.auto_awesome, '${StillScoutConfig.geminiModelDisplayName} judgment on every scout'),
         (Icons.photo_filter_rounded, 'AI Auto Polish with before/after'),
         (
           Icons.workspace_premium_rounded,

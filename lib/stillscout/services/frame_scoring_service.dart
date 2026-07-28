@@ -14,6 +14,7 @@ import 'stillscout_diagnostics_log.dart';
 import 'stillscout_image_prep.dart';
 import 'stillscout_score_cache.dart';
 import 'stillscout_top_picks_selector.dart';
+import 'stillscout_video_context_detector.dart';
 import 'stillscout_vision_client.dart';
 import 'vision/vision_scoring_client.dart';
 
@@ -209,20 +210,19 @@ class FrameScoringService {
         // category-aware prompt even when the user left the picker on "Auto".
         var effectiveContext = videoContext;
         if (videoContext == StillScoutVideoContext.auto && survivors.isNotEmpty) {
-          final sample = survivors.take(survivors.length.clamp(1, 30)).toList();
-          final n = sample.length;
-          final meanEyes = sample
-                  .map((f) => preliminary[f.id]!.openEyesScore.toDouble())
-                  .reduce((a, b) => a + b) /
-              n;
-          final meanComp = sample
-                  .map((f) => preliminary[f.id]!.compositionScore.toDouble())
-                  .reduce((a, b) => a + b) /
-              n;
-          if (meanEyes > 60) {
-            effectiveContext = StillScoutVideoContext.portrait;
-          } else if (meanComp > 65 && meanEyes < 45) {
-            effectiveContext = StillScoutVideoContext.landscape;
+          final sample = survivors
+              .take(survivors.length.clamp(1, 30))
+              .map(
+                (f) => (
+                  openEyesScore: preliminary[f.id]!.openEyesScore,
+                  compositionScore: preliminary[f.id]!.compositionScore,
+                  blurScore: preliminary[f.id]!.blurScore,
+                ),
+              );
+          final detected =
+              StillScoutVideoContextDetector.detectFromAxisScores(sample);
+          if (detected != StillScoutVideoContext.auto) {
+            effectiveContext = detected;
           }
         }
 

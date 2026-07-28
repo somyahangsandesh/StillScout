@@ -122,7 +122,7 @@ final class OfflineFailure extends StillScoutFailure {
 
   @override
   String get displayMessage =>
-      'Gemini scoring needs a working internet connection. '
+      'Cloud AI scoring needs a working internet connection. '
       'Connect to Wi‑Fi or mobile data, then try again. '
       'Later free scouts (on-device Vision) work offline.';
 

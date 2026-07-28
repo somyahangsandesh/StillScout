@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../data/models/extracted_frame.dart';
 import '../providers/stillscout_notifier.dart';
 import '../theme/stillscout_theme.dart';
@@ -115,7 +117,7 @@ class StillScoutProcessingState extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'AI Trial · Gemini Flash',
+                        'AI Trial · ${StillScoutConfig.geminiModelDisplayName}',
                         style: StillScoutTextStyles.caption.copyWith(
                           color: StillScoutColors.scoutGold,
                           fontWeight: FontWeight.w600,

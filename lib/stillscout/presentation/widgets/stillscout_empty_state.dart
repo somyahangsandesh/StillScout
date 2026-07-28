@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:stillscout/config/stillscout_config.dart';
+
 import '../../domain/stillscout_online_status.dart';
 import '../../domain/stillscout_constants.dart';
 import '../../services/stillscout_permissions.dart';
@@ -211,7 +213,7 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
             const SizedBox(height: StillScoutSpacing.s),
             Text(
               'On-device ranking · ${StillScoutConstants.freeScoutsPerDay} free scouts/day · '
-              'AI Pro adds Gemini & polish',
+              'AI Pro adds ${StillScoutConfig.geminiModelDisplayName} & polish',
               style: StillScoutTextStyles.body,
               textAlign: TextAlign.center,
             ),
