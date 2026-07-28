@@ -1,6 +1,8 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
+  _resetIpWindowsForTests,
   clientIp,
+  isIpRateLimited,
   isUuidish,
   MAX_BATCH_IMAGES,
   MAX_IMAGE_BASE64_CHARS,
@@ -44,6 +46,28 @@ Deno.test("MAX_BATCH_IMAGES is 48", () => {
 
 Deno.test("noteIpRequest is safe to call repeatedly", () => {
   noteIpRequest("127.0.0.1");
+});
+
+Deno.test("isIpRateLimited is false for an unseen IP", () => {
+  _resetIpWindowsForTests();
+  assertEquals(isIpRateLimited("203.0.113.50"), false);
+});
+
+Deno.test("isIpRateLimited soft-blocks after the per-minute ceiling", () => {
+  _resetIpWindowsForTests();
+  const ip = "203.0.113.51";
+  for (let i = 0; i < 89; i++) noteIpRequest(ip);
+  assertEquals(isIpRateLimited(ip), false);
+  noteIpRequest(ip); // 90th request in the window
+  assertEquals(isIpRateLimited(ip), true);
+});
+
+Deno.test("isIpRateLimited does not affect other IPs", () => {
+  _resetIpWindowsForTests();
+  const hot = "203.0.113.52";
+  for (let i = 0; i < 90; i++) noteIpRequest(hot);
+  assertEquals(isIpRateLimited(hot), true);
+  assertEquals(isIpRateLimited("203.0.113.53"), false);
 });
 
 Deno.test("validateBatchImages rejects empty and oversized payloads", () => {

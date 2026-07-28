@@ -158,6 +158,28 @@ class StillScoutAccessPolicy {
     return '$scoutsRemainingToday free scout${scoutsRemainingToday == 1 ? '' : 's'} left today';
   }
 
+  /// Settings blurb for Pro's cloud AI allowance — honest fair-use framing
+  /// (never "unlimited") so marketing/onboarding/settings copy can't drift
+  /// from the server's actual daily cap.
+  static String cloudAiQuotaLabel({required int remainingToday}) {
+    final fullScoutsLeft =
+        (remainingToday / StillScoutConstants.maxCloudFramesPerScout).floor();
+    if (remainingToday <= 0) {
+      return 'Daily AI limit reached — scouts continue on-device today';
+    }
+    return '~$fullScoutsLeft full AI scout${fullScoutsLeft == 1 ? '' : 's'} left today ($remainingToday picks)';
+  }
+
+  /// True once a Pro user's remaining cloud AI quota drops below
+  /// [StillScoutConstants.cloudQuotaLowWarningThreshold] of the daily cap —
+  /// used to decide whether Settings should surface the quota hint at all
+  /// (avoids nagging Pro users who are nowhere near the limit).
+  static bool isCloudAiQuotaLow({required int remainingToday}) {
+    const threshold = StillScoutConstants.maxCloudFramesPerDeviceDay *
+        StillScoutConstants.cloudQuotaLowWarningThreshold;
+    return remainingToday <= threshold;
+  }
+
   /// Settings / marketing blurb for free-plan limits (single source of truth).
   static String get freePlanLimitsSummary {
     final firstScoutKeepers = keeperLimit(isPro: false, isFirstScout: true);

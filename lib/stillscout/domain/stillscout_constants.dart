@@ -75,9 +75,17 @@ class StillScoutConstants {
   static const String scoreCacheBoxName = 'stillscout_score_cache';
 
   /// Soft per-device daily cap on Gemini picks charged against the device.
-  /// Each scout costs [maxCloudFramesPerScout] picks (20). At 200 that allows
-  /// 10 full AI Pro scouts per day before fallback to on-device scoring.
-  static const int maxCloudFramesPerDeviceDay = 200;
+  /// Each scout costs [maxCloudFramesPerScout] picks (20). At 400 that allows
+  /// ~20 full AI Pro scouts per day before fallback to on-device scoring.
+  /// This is a fair-use ceiling, not "unlimited" — product copy must say so
+  /// (see [StillScoutAccessPolicy.cloudAiFairUseSummary]). Must match the
+  /// server-side `DAILY_CAP` in `supabase/functions/vision-score/index.ts`.
+  static const int maxCloudFramesPerDeviceDay = 400;
+
+  /// Below this fraction of [maxCloudFramesPerDeviceDay] remaining, Settings
+  /// surfaces a "running low" hint to Pro users so the cap is never a silent
+  /// surprise.
+  static const double cloudQuotaLowWarningThreshold = 0.2;
 
   static const String cloudQuotaCountKey = 'stillscout_cloud_quota_count';
   static const String cloudQuotaDateKey = 'stillscout_cloud_quota_date';

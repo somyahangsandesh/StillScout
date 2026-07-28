@@ -56,7 +56,7 @@ flutter run \
 | | Free | AI Pro |
 |---|------|--------|
 | Scouts | **5 / day** (UTC) | Unlimited |
-| Cloud AI | **1×** complimentary Gemini scout (needs internet; not consumed if Gemini never reaches) | Unlimited Gemini via Supabase |
+| Cloud AI | **1×** complimentary Gemini scout (needs internet; not consumed if Gemini never reaches) | Gemini via Supabase, fair-use capped (~20 full scouts/device/day), then falls back to on-device scoring |
 | Visible keepers | Top **5** ranks (**8** on first successful free scout) | **20** ranks |
 | AI Auto Polish | Locked | Unlocked |
 | Polished exports / scout | **3** | Unlimited |
@@ -70,9 +70,17 @@ RevenueCat entitlement: `pro` · Products: `stillscout_pro_monthly`, `stillscout
 
 ## Quotas & cache
 
-- **Cloud AI:** up to **20** keeper picks/scout; **48** frames sent per Gemini batch; **200** picks/device/day server cap (UTC)
+- **Cloud AI:** up to **20** keeper picks/scout; **48** frames sent per Gemini batch; **400** picks/device/day server cap (UTC) — a fair-use ceiling (~20 full AI Pro scouts/day), not unlimited. Past the cap, scouts silently fall back to on-device Vision scoring instead of failing.
 - **Session history:** max **20** scouts in Hive; LRU eviction
 - **Frame cache:** max **512 MB** on disk — oldest sessions evicted when over budget
+
+## Security notes (server-side entitlement)
+
+`vision-score` is a shared-key proxy, not a fully authenticated backend:
+
+- **No RevenueCat receipt verification server-side.** The edge function trusts the client's `device_id` and does not check whether the caller actually holds a `pro` entitlement — a modified client could call the proxy directly. Full server-side App Store receipt verification was judged too heavy for shipathon scope; the accepted mitigations are the per-device daily quota (`try_reserve_vision_quota` RPC, atomic, fails closed) and a per-IP soft rate limit (`isIpRateLimited` in `lib.ts`, 429 above 90 req/min/IP).
+- **Residual risk:** a sophisticated attacker with valid UUID device_ids distributed across IPs could still exceed intended free-tier usage. This is bounded by the daily cap (worst case: `DAILY_CAP` Gemini calls/device/day) and does not expose the Gemini key itself.
+- **Next step if abuse is observed:** add RevenueCat webhook-backed entitlement caching (Supabase table keyed by `app_user_id`, refreshed on `INITIAL_PURCHASE`/`RENEWAL`/`EXPIRATION` events) and require a signed device attestation header instead of a bare UUID.
 
 ## Supabase proxy
 

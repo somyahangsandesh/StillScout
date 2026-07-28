@@ -326,6 +326,45 @@ void main() {
       expect(firstScoutView.frame.sourceVideoPath, '/videos/clip.mp4');
     });
 
+    test('cloud AI quota label is honest fair-use copy, never "unlimited"', () {
+      expect(
+        StillScoutAccessPolicy.cloudAiQuotaLabel(remainingToday: 0),
+        contains('on-device'),
+      );
+      expect(
+        StillScoutAccessPolicy.cloudAiQuotaLabel(
+          remainingToday: StillScoutConstants.maxCloudFramesPerScout,
+        ),
+        '~1 full AI scout left today (${StillScoutConstants.maxCloudFramesPerScout} picks)',
+      );
+      expect(
+        StillScoutAccessPolicy.cloudAiQuotaLabel(
+          remainingToday: StillScoutConstants.maxCloudFramesPerScout * 3,
+        ),
+        contains('~3 full AI scouts left today'),
+      );
+    });
+
+    test('cloud AI quota is "low" only under the warning threshold', () {
+      final fullCap = StillScoutConstants.maxCloudFramesPerDeviceDay;
+      expect(
+        StillScoutAccessPolicy.isCloudAiQuotaLow(remainingToday: fullCap),
+        isFalse,
+      );
+      expect(
+        StillScoutAccessPolicy.isCloudAiQuotaLow(remainingToday: 0),
+        isTrue,
+      );
+      expect(
+        StillScoutAccessPolicy.isCloudAiQuotaLow(
+          remainingToday: (fullCap *
+                  StillScoutConstants.cloudQuotaLowWarningThreshold)
+              .round(),
+        ),
+        isTrue,
+      );
+    });
+
     test('restore messaging is shared across paywall and settings', () {
       expect(
         StillScoutAccessPolicy.noActiveProSubscriptionMessage,

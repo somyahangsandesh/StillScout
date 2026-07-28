@@ -29,7 +29,12 @@ jobs:
       - name: Test
         run: flutter test
 
-      - name: Check release secrets (example stub)
+      - name: Check release secrets (example stub — informational only)
+        # CI never has real secrets.local.dart (no appl_ key, no Supabase
+        # project), so this check is expected to fail here and is
+        # non-blocking. The real gate is tool/upload_testflight.sh, which
+        # runs this same script against the developer's real local secrets
+        # before every TestFlight build and hard-fails on any violation.
         continue-on-error: true
         run: dart run tool/check_release_secrets.dart
 

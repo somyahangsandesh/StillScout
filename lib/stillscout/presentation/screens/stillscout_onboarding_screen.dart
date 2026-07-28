@@ -178,7 +178,7 @@ class _StillScoutOnboardingScreenState
                 headline: 'Export in\nseconds.',
                 subline: 'On-device scouting works offline.',
                 body:
-                    'Includes a one-time free ${StillScoutConfig.geminiModelDisplayName} trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for unlimited cloud AI and native 4K.',
+                    'Includes a one-time free ${StillScoutConfig.geminiModelDisplayName} trial (internet required). Later free scouts run fully on-device. Upgrade to AI Pro for daily cloud AI at scale, unlimited scouts, and native 4K.',
               ),
               _ProUpsellStep(fade: _stepFades[3]),
             ],

@@ -10,6 +10,7 @@ import 'package:stillscout/services/stillscout_purchase_service.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../../domain/stillscout_access_policy.dart';
 import '../../services/stillscout_cache_janitor.dart';
+import '../../services/stillscout_cloud_quota_tracker.dart';
 import '../../services/stillscout_diagnostics_log.dart';
 import '../../services/stillscout_score_cache.dart';
 import '../providers/stillscout_notifier.dart';
@@ -40,11 +41,19 @@ class _StillScoutSettingsScreenState
   bool _retryingStore = false;
   bool _clearing = false;
   String _versionLabel = StillScoutConfig.appVersion;
+  int? _cloudQuotaRemaining;
 
   @override
   void initState() {
     super.initState();
     _loadVersion();
+    _loadCloudQuota();
+  }
+
+  Future<void> _loadCloudQuota() async {
+    final remaining = await StillScoutCloudQuotaTracker.remainingToday();
+    if (!mounted) return;
+    setState(() => _cloudQuotaRemaining = remaining);
   }
 
   Future<void> _loadVersion() async {
@@ -128,6 +137,18 @@ class _StillScoutSettingsScreenState
                 ),
               ],
             ),
+            if (isPro &&
+                _cloudQuotaRemaining != null &&
+                StillScoutAccessPolicy.isCloudAiQuotaLow(
+                  remainingToday: _cloudQuotaRemaining!,
+                )) ...[
+              const SizedBox(height: StillScoutSpacing.s),
+              _CloudQuotaHint(
+                label: StillScoutAccessPolicy.cloudAiQuotaLabel(
+                  remainingToday: _cloudQuotaRemaining!,
+                ),
+              ),
+            ],
             const SizedBox(height: StillScoutSpacing.l),
             const _SectionLabel('Support & legal'),
             _SettingsGroup(
@@ -379,6 +400,50 @@ class _StoreStatusCard extends StatelessWidget {
             style: StillScoutTextStyles.caption.copyWith(
               color: StillScoutColors.silver,
               height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown to Pro users only when the shared per-device cloud AI fair-use cap
+/// is running low — keeps the daily limit from being a silent surprise.
+class _CloudQuotaHint extends StatelessWidget {
+  const _CloudQuotaHint({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: StillScoutSpacing.m,
+        vertical: StillScoutSpacing.s,
+      ),
+      decoration: BoxDecoration(
+        color: StillScoutColors.scoutGold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(StillScoutRadius.m),
+        border: Border.all(
+          color: StillScoutColors.scoutGold.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.cloud_outlined,
+            size: 16,
+            color: StillScoutColors.scoutGold.withValues(alpha: 0.9),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: StillScoutTextStyles.caption.copyWith(
+                color: StillScoutColors.chalk,
+              ),
             ),
           ),
         ],

@@ -69,6 +69,12 @@ EOF
   exit 1
 fi
 
+echo "==> Checking release secrets (secrets.local.dart must be Supabase + RevenueCat only)"
+if ! dart run tool/check_release_secrets.dart; then
+  echo "ERROR: secrets.local.dart is not release-safe. Fix it, then re-run this script." >&2
+  exit 1
+fi
+
 echo "==> flutter pub get"
 flutter pub get
 

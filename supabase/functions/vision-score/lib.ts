@@ -36,12 +36,23 @@ const ipWindows = new Map<string, { count: number; windowStart: number }>();
 const RATE_WINDOW_MS = 60_000;
 const RATE_WARN_THRESHOLD = 30;
 
-export function noteIpRequest(ip: string): void {
+/**
+ * Hard per-IP ceiling within [RATE_WINDOW_MS]. This is a coarse abuse
+ * backstop on top of the per-device daily quota (which is the primary
+ * control) — it exists to blunt a single IP hammering the function with
+ * spoofed/rotating device_ids (e.g. NAT/carrier-shared IPs get a generous
+ * allowance; a genuinely malicious client hammering the endpoint does not).
+ */
+const RATE_BLOCK_THRESHOLD = 90;
+
+/** Records one request from [ip] and returns the request count so far in
+ * the current window (used by [isIpRateLimited]). */
+export function noteIpRequest(ip: string): number {
   const now = Date.now();
   const entry = ipWindows.get(ip);
   if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
     ipWindows.set(ip, { count: 1, windowStart: now });
-    return;
+    return 1;
   }
   entry.count += 1;
   if (entry.count === RATE_WARN_THRESHOLD + 1) {
@@ -49,6 +60,27 @@ export function noteIpRequest(ip: string): void {
       `[vision-score] high request rate from ${ip}: ${entry.count}/min`,
     );
   }
+  if (entry.count === RATE_BLOCK_THRESHOLD) {
+    console.warn(
+      `[vision-score] soft-blocking ${ip}: ${entry.count}/min exceeds cap`,
+    );
+  }
+  return entry.count;
+}
+
+/** True once [ip] has exceeded [RATE_BLOCK_THRESHOLD] requests in the
+ * current 1-minute window — callers should reject with 429 before doing
+ * any quota reservation or Gemini spend. */
+export function isIpRateLimited(ip: string): boolean {
+  const entry = ipWindows.get(ip);
+  if (!entry) return false;
+  if (Date.now() - entry.windowStart > RATE_WINDOW_MS) return false;
+  return entry.count >= RATE_BLOCK_THRESHOLD;
+}
+
+/** Exposed for tests only — clears in-memory rate-limit state. */
+export function _resetIpWindowsForTests(): void {
+  ipWindows.clear();
 }
 
 export function validateBatchImages(

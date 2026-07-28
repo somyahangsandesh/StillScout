@@ -14,6 +14,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   clientIp,
+  isIpRateLimited,
   MAX_BATCH_IMAGES,
   MAX_IMAGE_BASE64_CHARS,
   noteIpRequest,
@@ -24,7 +25,11 @@ import {
   validateBatchImages,
 } from "./lib.ts";
 
-const DAILY_CAP = 200;
+// Raised from 200 → 400 so a paying AI Pro subscriber (20 picks/scout) gets
+// ~20 full scouts/device/day instead of ~10 before falling back to on-device
+// scoring. Still a fair-use cap, not "unlimited" — client copy must not
+// promise unbounded cloud AI. See docs/APP_STORE_LAUNCH.md security notes.
+const DAILY_CAP = 400;
 
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const GEMINI_MODEL = "gemini-3.1-flash-lite";
@@ -344,7 +349,18 @@ Deno.serve(async (req) => {
   }
 
   const deviceKey = resolveDeviceKey(body.device_id, req.headers);
-  noteIpRequest(clientIp(req.headers));
+  const ip = clientIp(req.headers);
+  noteIpRequest(ip);
+
+  // Soft-block: reject before any quota reservation or Gemini spend when a
+  // single IP is hammering the endpoint (abuse backstop on top of the
+  // per-device daily quota, which remains the primary control).
+  if (isIpRateLimited(ip)) {
+    return jsonResponse(
+      { error: "rate_limited", code: "IP_RATE_LIMITED" },
+      429,
+    );
+  }
 
   const context = typeof body.context === "string" ? body.context : "auto";
 
