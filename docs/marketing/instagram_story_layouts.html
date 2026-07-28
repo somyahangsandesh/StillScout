@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StillScout — Instagram Story Layout Deck</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap");
+
+    :root {
+      --void: #050505;
+      --film: #121212;
+      --slate: #1c1c1e;
+      --chalk: #f2f2f7;
+      --silver: #8e8e93;
+      --gold: #e8c97a;
+      --gold-bright: #ffd60a;
+      --sand: #c9b896;
+      --line: rgba(232, 201, 122, 0.22);
+      --danger: #ff453a;
+      --ok: #30d158;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--chalk);
+      font-family: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+      background:
+        radial-gradient(1100px 520px at 8% -8%, rgba(232, 201, 122, 0.12), transparent 55%),
+        radial-gradient(800px 480px at 100% 10%, rgba(201, 184, 150, 0.07), transparent 50%),
+        linear-gradient(180deg, #0a0a0a 0%, var(--void) 45%, #000 100%);
+      line-height: 1.5;
+    }
+
+    .deck {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2.25rem 0 4.5rem;
+    }
+
+    .masthead {
+      display: grid;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.75rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Newsreader, Georgia, serif;
+      font-weight: 600;
+      font-size: clamp(1.85rem, 4vw, 2.65rem);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      max-width: 18ch;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: 42rem;
+      color: var(--silver);
+      font-size: 1.02rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      margin-top: 0.35rem;
+      font-size: 0.82rem;
+      color: var(--sand);
+    }
+
+    .meta span {
+      padding: 0.28rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(18, 18, 18, 0.7);
+    }
+
+    section {
+      margin: 2.75rem 0;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .section-label h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .section-label p {
+      margin: 0;
+      color: var(--silver);
+      font-size: 0.9rem;
+    }
+
+    /* ── Layout system grid ───────────────────────────────────────────── */
+    .system-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .phone {
+      --phone-w: 220px;
+      width: var(--phone-w);
+      aspect-ratio: 9 / 16;
+      margin: 0 auto;
+      border-radius: 28px;
+      border: 1px solid rgba(232, 201, 122, 0.35);
+      background: #000;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.6),
+        0 24px 48px rgba(0, 0, 0, 0.55);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phone.lg { --phone-w: 240px; }
+
+    .safe-top,
+    .safe-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .safe-top {
+      top: 0;
+      height: 13%; /* ~250/1920 */
+      background: linear-gradient(180deg, rgba(255, 69, 58, 0.28), transparent);
+      border-bottom: 1px dashed rgba(255, 69, 58, 0.55);
+    }
+
+    .safe-bottom {
+      bottom: 0;
+      height: 15.6%; /* ~300/1920 */
+      background: linear-gradient(0deg, rgba(255, 69, 58, 0.28), transparent);
+      border-top: 1px dashed rgba(255, 69, 58, 0.55);
+    }
+
+    .safe-label {
+      position: absolute;
+      left: 8px;
+      font-size: 0.58rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ffb4ae;
+      font-weight: 600;
+    }
+
+    .safe-top .safe-label { top: 8px; }
+    .safe-bottom .safe-label { bottom: 8px; }
+
+    .live-band {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 13%;
+      bottom: 15.6%;
+      border-left: 1px solid rgba(232, 201, 122, 0.25);
+      border-right: 1px solid rgba(232, 201, 122, 0.25);
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(232, 201, 122, 0.04) 35%,
+        rgba(232, 201, 122, 0.08) 50%,
+        rgba(232, 201, 122, 0.04) 65%,
+        transparent 100%
+      );
+      z-index: 2;
+    }
+
+    .mid-60 {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: 28%;
+      height: 36%;
+      border: 1px dashed rgba(255, 214, 10, 0.55);
+      border-radius: 8px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 214, 10, 0.04);
+    }
+
+    .mid-60 span {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      font-weight: 600;
+      text-align: center;
+      padding: 0 0.5rem;
+    }
+
+    .phone-chrome {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .story-progress {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      gap: 3px;
+    }
+
+    .story-progress i {
+      flex: 1;
+      height: 2px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    .story-progress i.on { background: rgba(255, 255, 255, 0.9); }
+
+    .user-row {
+      position: absolute;
+      top: 20px;
+      left: 12px;
+      right: 40px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.55;
+    }
+
+    .avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--sand));
+    }
+
+    .user-row small {
+      font-size: 0.55rem;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .rules {
+      background: rgba(18, 18, 18, 0.75);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.15rem 1.2rem 1.2rem;
+    }
+
+    .rules h3 {
+      margin: 0 0 0.65rem;
+      font-size: 0.92rem;
+      color: var(--gold);
+    }
+
+    .rules ol {
+      margin: 0;
+      padding-left: 1.15rem;
+      color: var(--silver);
+      font-size: 0.88rem;
+    }
+
+    .rules li { margin: 0.35rem 0; }
+    .rules strong { color: var(--chalk); font-weight: 600; }
+
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .swatch {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      color: var(--silver);
+    }
+
+    .swatch i {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    /* ── Storyboard rows ──────────────────────────────────────────────── */
+    .board {
+      margin-top: 1rem;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(232, 201, 122, 0.06), transparent 42%),
+        rgba(12, 12, 12, 0.9);
+    }
+
+    .board-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem 1rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .board-head h3 {
+      margin: 0;
+      font-family: Newsreader, Georgia, serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+
+    .board-head .angle {
+      color: var(--silver);
+      font-size: 0.88rem;
+    }
+
+    .frames {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .frame-card {
+      display: grid;
+      gap: 0.55rem;
+      justify-items: center;
+    }
+
+    .frame-meta {
+      width: 100%;
+      max-width: 180px;
+      font-size: 0.72rem;
+      color: var(--silver);
+    }
+
+    .frame-meta strong {
+      display: block;
+      color: var(--gold);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+    }
+
+    .frame-scene {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* Concept backgrounds — CSS-only “ad stills” */
+    .scene-scrub {
+      background:
+        radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.08), transparent 40%),
+        linear-gradient(160deg, #1a1a1c 0%, #0a0a0a 60%, #15120e 100%);
+    }
+
+    .scene-scrub::after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      top: 32%;
+      bottom: 28%;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: linear-gradient(180deg, #2a2a2e, #141416);
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .scene-lost {
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.65)),
+        linear-gradient(125deg, #2c2418, #0d0d0d 55%, #1a1510);
+    }
+
+    .scene-found {
+      background:
+        radial-gradient(ellipse at 50% 45%, rgba(232, 201, 122, 0.25), transparent 55%),
+        linear-gradient(160deg, #1c1810, #050505 70%);
+    }
+
+    .scene-brand {
+      background:
+        radial-gradient(600px 280px at 50% 35%, rgba(232, 201, 122, 0.16), transparent 60%),
+        #050505;
+    }
+
+    .scene-outdoor {
+      background:
+        linear-gradient(180deg, rgba(5, 5, 5, 0.15) 0%, rgba(5, 5, 5, 0.55) 70%, #050505 100%),
+        linear-gradient(160deg, #3a4a3c 0%, #1a221c 40%, #0c1010 100%);
+    }
+
+    .scene-outdoor::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 70%, rgba(232, 201, 122, 0.18), transparent 45%),
+        radial-gradient(ellipse at 70% 30%, rgba(120, 160, 180, 0.12), transparent 40%);
+    }
+
+    .scene-freeze {
+      background:
+        linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.75)),
+        linear-gradient(145deg, #4a3a28, #1a120c 50%, #0a0806);
+    }
+
+    .scene-app {
+      background: linear-gradient(180deg, #121212, #050505);
+    }
+
+    .scene-app::after {
+      content: "";
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      top: 30%;
+      height: 38%;
+      border-radius: 10px;
+      border: 1px solid rgba(232, 201, 122, 0.28);
+      background:
+        linear-gradient(180deg, rgba(232, 201, 122, 0.08), transparent),
+        #1c1c1e;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    .scene-beat {
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255, 214, 10, 0.2), transparent 42%),
+        linear-gradient(180deg, #1a1020 0%, #0a0a0a 70%);
+    }
+
+    .label-box {
+      position: absolute;
+      z-index: 6;
+      left: 10%;
+      right: 10%;
+      padding: 0.45rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid rgba(232, 201, 122, 0.45);
+      background: rgba(5, 5, 5, 0.72);
+      backdrop-filter: blur(4px);
+      text-align: center;
+    }
+
+    .label-box .role {
+      display: block;
+      font-size: 0.52rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .label-box .copy {
+      display: block;
+      font-family: Newsreader, Georgia, serif;
+      font-size: 0.78rem;
+      line-height: 1.2;
+      color: var(--chalk);
+      font-weight: 500;
+    }
+
+    .label-hook { top: 34%; }
+    .label-product { top: 42%; }
+    .label-cta {
+      bottom: 22%;
+      border-color: rgba(255, 214, 10, 0.5);
+    }
+
+    .label-cta .role { color: var(--gold-bright); }
+
+    .brand-mark {
+      position: absolute;
+      z-index: 6;
+      left: 0;
+      right: 0;
+      top: 18%;
+      text-align: center;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .end-tagline {
+      position: absolute;
+      z-index: 6;
+      left: 8%;
+      right: 8%;
+      top: 42%;
+      text-align: center;
+      font-family: Newsreader, Georgia, serif;
+      font-size: 0.95rem;
+      line-height: 1.25;
+      color: var(--chalk);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.78rem;
+      color: var(--silver);
+    }
+
+    .legend b { color: var(--chalk); font-weight: 600; }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      margin-right: 0.35rem;
+      vertical-align: middle;
+    }
+
+    .dot.hook { background: var(--gold); }
+    .dot.product { background: var(--sand); }
+    .dot.cta { background: var(--gold-bright); }
+    .dot.safe { background: var(--danger); }
+
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--line);
+      color: var(--silver);
+      font-size: 0.82rem;
+    }
+
+    footer a { color: var(--gold); }
+
+    @media (max-width: 640px) {
+      .phone { --phone-w: 180px; }
+      .phone.lg { --phone-w: 200px; }
+      .label-box .copy { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <header class="masthead">
+      <p class="brand">StillScout · Creative Deck</p>
+      <h1>Instagram Story layout system</h1>
+      <p class="lede">
+        9:16 frames built like outdoor ads — safe zones, middle copy, one idea per beat.
+        Open this file in a browser while writing or filming Stories / Story ads.
+      </p>
+      <div class="meta">
+        <span>1080 × 1920</span>
+        <span>Top ~250px clear</span>
+        <span>Bottom ~300px clear</span>
+        <span>8–12 words max</span>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-label">
+        <h2>Layout grid</h2>
+        <p>Red = Instagram chrome · Gold dashed = live copy band</p>
+      </div>
+
+      <div class="system-grid">
+        <div>
+          <div class="phone lg" aria-label="Story safe-zone diagram">
+            <div class="phone-chrome">
+              <div class="story-progress">
+                <i class="on"></i><i></i><i></i><i></i>
+              </div>
+              <div class="user-row">
+                <div class="avatar"></div>
+                <small>stillscout</small>
+              </div>
+            </div>
+            <div class="safe-top"><span class="safe-label">Top safe ~250px</span></div>
+            <div class="live-band"></div>
+            <div class="mid-60"><span>Middle ~60%<br />primary text</span></div>
+            <div class="safe-bottom"><span class="safe-label">Bottom safe ~300px</span></div>
+          </div>
+        </div>
+
+        <div class="rules">
+          <h3>Placement rules</h3>
+          <ol>
+            <li><strong>One idea per frame</strong> — hook, then product, then CTA.</li>
+            <li><strong>Text in the middle band</strong> — never under swipe-up chrome.</li>
+            <li><strong>Brand</strong> just below the top safe zone, or in the lower live third.</li>
+            <li><strong>Max 8–12 words</strong> on screen; VO can carry the rest.</li>
+            <li><strong>Soft CTAs</strong> until store is public: Link in bio · Coming soon · Try StillScout.</li>
+          </ol>
+          <div class="swatches" aria-label="Brand colors">
+            <div class="swatch"><i style="background:#050505"></i> Void</div>
+            <div class="swatch"><i style="background:#121212"></i> Film</div>
+            <div class="swatch"><i style="background:#e8c97a"></i> Gold</div>
+            <div class="swatch"><i style="background:#ffd60a"></i> Scout</div>
+            <div class="swatch"><i style="background:#c9b896"></i> Sand</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-label">
+        <h2>Example storyboards</h2>
+        <p>Static mocks — Hook / Product / CTA boxes show where type lives</p>
+      </div>
+
+      <!-- Concept 1 -->
+      <article class="board">
+        <div class="board-head">
+          <h3>1. Scroll Trap</h3>
+          <p class="angle">Problem / agitation · ~15s</p>
+        </div>
+        <div class="frames">
+          <div class="frame-card">
+            <div class="phone" aria-label="Frame 1 Hook">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i></i><i></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-scrub"></div>
+              <div class="safe-top" style="opacity:0.35"></div>
+              <div class="safe-bottom" style="opacity:0.35"></div>
+              <div class="label-box label-hook">
+                <span class="role">Hook</span>
+                <span class="copy">You filmed it.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 1 · 0–3s</strong> Thumb scrubbing a vertical clip</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone" aria-label="Frame 2 Agitation">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-lost"></div>
+              <div class="safe-top" style="opacity:0.35"></div>
+              <div class="safe-bottom" style="opacity:0.35"></div>
+              <div class="label-box label-hook">
+                <span class="role">Hook</span>
+                <span class="copy">Then you lost it in the scrub.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 2 · 3–7s</strong> Wrong frame held — frustration</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone" aria-label="Frame 3 Product">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-app"></div>
+              <div class="safe-top" style="opacity:0.35"></div>
+              <div class="safe-bottom" style="opacity:0.35"></div>
+              <div class="label-box label-product">
+                <span class="role">Product</span>
+                <span class="copy">StillScout finds the still.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 3 · 7–11s</strong> Screen recording: top picks</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone" aria-label="Frame 4 CTA">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+              </div>
+              <div class="frame-scene scene-brand"></div>
+              <div class="safe-top" style="opacity:0.35"></div>
+              <div class="safe-bottom" style="opacity:0.35"></div>
+              <div class="brand-mark">StillScout</div>
+              <div class="end-tagline">Scout. Polish. Post.</div>
+              <div class="label-box label-cta">
+                <span class="role">CTA</span>
+                <span class="copy">Link in bio</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 4 · 11–15s</strong> End card + soft CTA</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Concept 3 -->
+      <article class="board" style="margin-top:1.25rem">
+        <div class="board-head">
+          <h3>3. Same Clip, Different Still</h3>
+          <p class="angle">Before / after · ~15s</p>
+        </div>
+        <div class="frames">
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i></i><i></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-lost"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="label-box label-hook">
+                <span class="role">Hook</span>
+                <span class="copy">The frame you grabbed.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 1</strong> Soft / mid-blink still</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-found"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="label-box label-product">
+                <span class="role">Product</span>
+                <span class="copy">The frame you’d post.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 2</strong> Peak expression, same clip</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-freeze"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="label-box label-product">
+                <span class="role">Product</span>
+                <span class="copy">Same clip. Better still.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 3</strong> Wipe / split reveal</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+              </div>
+              <div class="frame-scene scene-brand"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="brand-mark">StillScout</div>
+              <div class="label-box label-cta">
+                <span class="role">CTA</span>
+                <span class="copy">Try StillScout</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 4</strong> Brand + soft CTA</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Concept 7 -->
+      <article class="board" style="margin-top:1.25rem">
+        <div class="board-head">
+          <h3>7. Shot Outside</h3>
+          <p class="angle">Lifestyle outdoor ad · ~15s</p>
+        </div>
+        <div class="frames">
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i></i><i></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-outdoor"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="brand-mark">StillScout</div>
+            </div>
+            <div class="frame-meta"><strong>Frame 1</strong> Wide outdoor — brand only</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-outdoor"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="label-box label-hook">
+                <span class="role">Hook</span>
+                <span class="copy">The moment was a clip.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 2</strong> People moving through scene</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              </div>
+              <div class="frame-scene scene-freeze"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="label-box label-product">
+                <span class="role">Product</span>
+                <span class="copy">The post is a still.</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 3</strong> Freeze on keeper still</div>
+          </div>
+
+          <div class="frame-card">
+            <div class="phone">
+              <div class="phone-chrome">
+                <div class="story-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+              </div>
+              <div class="frame-scene scene-brand"></div>
+              <div class="safe-top" style="opacity:0.3"></div>
+              <div class="safe-bottom" style="opacity:0.3"></div>
+              <div class="end-tagline">Scout the perfect still.</div>
+              <div class="label-box label-cta">
+                <span class="role">CTA</span>
+                <span class="copy">Coming soon</span>
+              </div>
+            </div>
+            <div class="frame-meta"><strong>Frame 4</strong> End card</div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span><i class="dot hook"></i><b>Hook</b> — open with tension or lifestyle</span>
+          <span><i class="dot product"></i><b>Product</b> — StillScout / still reveal</span>
+          <span><i class="dot cta"></i><b>CTA</b> — above bottom safe zone</span>
+          <span><i class="dot safe"></i><b>Safe</b> — leave clear for IG chrome</span>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      Full scripts, VO, and iPhone shot list:
+      <a href="./instagram_story_ads.md">docs/marketing/instagram_story_ads.md</a>
+      · StillScout · Scout. Polish. Post.
+    </footer>
+  </div>
+</body>
+</html>
