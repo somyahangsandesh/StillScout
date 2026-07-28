@@ -51,3 +51,7 @@ jobs:
         working-directory: supabase/functions/vision-score
         # --allow-read: lib_test asserts quota-before-Gemini order in index.ts
         run: deno test --allow-read lib_test.ts
+
+      - name: Test usage-alert helpers
+        working-directory: supabase/functions/usage-alert
+        run: deno test lib_test.ts

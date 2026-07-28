@@ -90,6 +90,11 @@ Watch function logs for `GLOBAL_CAP_REACHED` after launch — if it ever trips
 during normal usage, raise the ceiling; if you never see it, it's doing its
 job as a silent backstop.
 
+For a proactive heads-up **before** that ceiling trips, see
+`docs/USAGE_ALERTS_SETUP.md` — a scheduled `usage-alert` function that
+posts a Slack/Discord message once daily spend crosses 70% (configurable)
+of `GLOBAL_DAILY_PICK_CEILING`.
+
 ## Required secrets — summary
 
 Set via `supabase secrets set`, never hardcoded, never committed:
