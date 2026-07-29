@@ -1,7 +1,7 @@
 # Pre–Aug 1 launch checklist (user actions only)
 
 **Target:** Manual App Store release **Aug 1, 2026**  
-**Binary:** `1.0.0+25` (StillScout AI branding)  
+**Binary:** `1.0.0+26` (StillScout AI branding — RC polish)  
 **Do not** click Submit for Review or Release until each item below is done.
 
 This list is **only** what you must do in App Store Connect, on a real device, or for Shipaton. Code/CI work is tracked in `docs/RATING_UPGRADE_PLAN.md`.
@@ -13,8 +13,8 @@ This list is **only** what you must do in App Store Connect, on a real device, o
 | Date | Item | Status |
 |------|------|--------|
 | 2026-07-29 | `dart run tool/check_release_secrets.dart` | **OK** — Supabase + `appl_` RevenueCat, no client Gemini key |
-| 2026-07-29 | TestFlight build **25** processing | **VALID** (uploaded 2026-07-28) |
-| 2026-07-29 | Version **1.0** build attachment | **Build 25 attached** (replaced build 24) via ASC API |
+| 2026-07-29 | TestFlight build **26** processing | **VALID** (uploaded 2026-07-29, commit ce1747d) |
+| 2026-07-29 | Version **1.0** build attachment | **Build 26 attached** (replaced build 25) via ASC API |
 | 2026-07-29 | Subtitle (en-GB + en-US) | **Set** — “Best stills from any video” |
 | 2026-07-29 | Release type | **MANUAL** (was `AFTER_APPROVAL`; set via API) |
 | 2026-07-29 | IAP API state | `stillscout_pro_monthly` / `stillscout_pro_yearly` → API `CREATED` — **confirm UI shows Ready to Submit** |
@@ -48,10 +48,10 @@ Replace the placeholder (`+977 980-000-0000`):
 
 Use a **real, reachable** number you will answer during review. Do not invent a number.
 
-### 3. TestFlight build 25 (required)
+### 3. TestFlight build 26 (required)
 
-- [x] **2026-07-29** — TestFlight build **25** is **VALID** (ASC API)
-- [x] **2026-07-29** — Version **1.0** has build **25** attached (build 24 detached)
+- [x] **2026-07-29** — TestFlight build **26** is **VALID** (ASC API)
+- [x] **2026-07-29** — Version **1.0** has build **26** attached (build 25 detached)
 - [ ] On a **real iPhone**, verify paywall/completion hero say **StillScout AI** (not Gemini Flash)
 
 ### 4. RevenueCat + secrets (required)
@@ -125,7 +125,7 @@ Only after **Approved** status.
 |------|--------|--------|
 | Privacy labels | ASC → App Privacy | **TODO** |
 | Phone | ASC → 1.0 → App Review Information | **TODO** (placeholder) |
-| Build 25 | TestFlight → attach to 1.0 | **Done** 2026-07-29 |
+| Build 26 | TestFlight → attach to 1.0 | **Done** 2026-07-29 |
 | Secrets preflight | `check_release_secrets.dart` | **OK** 2026-07-29 |
 | Release type | Version 1.0 | **MANUAL** 2026-07-29 |
 | Submit | ASC → 1.0 → Add for Review | **Not yet** |
