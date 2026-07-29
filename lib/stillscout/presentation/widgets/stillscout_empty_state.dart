@@ -185,7 +185,10 @@ class _StillScoutEmptyStateState extends State<StillScoutEmptyState>
     required bool isChecking,
   }) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: StillScoutSpacing.l,
+        vertical: StillScoutSpacing.s,
+      ),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: constraints.maxHeight - 16),
         child: Column(

@@ -90,6 +90,7 @@ class _LiveStripThumbnailState extends State<_LiveStripThumbnail>
               width: 36,
               height: 56,
               fit: BoxFit.cover,
+              cacheWidth: 72,
               errorBuilder: (_, __, ___) => Container(
                 width: 36,
                 height: 56,

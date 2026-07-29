@@ -30,7 +30,7 @@ class StillScoutFrameTile extends StatefulWidget {
   final ScoredFrame scoredFrame;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  /// Called when the user taps the "Unlock with Pro" button in the locked overlay.
+  /// Called when the user taps the "Unlock with AI Pro" button in the locked overlay.
   final VoidCallback? onLockedTap;
   final bool isSelecting;
   final bool isSelected;
@@ -357,7 +357,7 @@ class _StillScoutFrameTileState extends State<StillScoutFrameTile>
 }
 
 /// Aspirational lock overlay: shows the score prominently, a Gemini summary
-/// snippet if available, and a gold "Unlock with Pro" CTA — turning a
+/// snippet if available, and a gold "Unlock with AI Pro" CTA — turning a
 /// frustrating wall into a desire-building moment.
 class _LockedOverlay extends StatelessWidget {
   const _LockedOverlay({
@@ -457,7 +457,7 @@ class _LockedOverlay extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Unlock with Pro',
+                    'Unlock with AI Pro',
                     style: StillScoutTextStyles.caption.copyWith(
                       color: StillScoutColors.scoutGold,
                       fontWeight: FontWeight.w600,

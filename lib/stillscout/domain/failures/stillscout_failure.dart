@@ -111,7 +111,7 @@ final class ScoutQuotaExhaustedFailure extends StillScoutFailure {
   @override
   String get displayMessage =>
       'You\'ve used all ${StillScoutConstants.freeScoutsPerDay} free scouts for today. '
-      'Upgrade to Pro for unlimited scouting, or try again tomorrow.';
+      'Upgrade to StillScout AI Pro for unlimited scouting, or try again tomorrow.';
 
   @override
   String get debugTag => 'scout_quota_exhausted';

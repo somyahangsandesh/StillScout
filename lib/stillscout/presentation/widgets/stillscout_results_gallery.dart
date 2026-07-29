@@ -438,6 +438,8 @@ class StillScoutFramePreview extends StatelessWidget {
         File(framePath),
         fit: BoxFit.cover,
         width: double.infinity,
+        cacheWidth: StillScoutConstants.maxFrameWidth,
+        gaplessPlayback: true,
       ),
     );
   }

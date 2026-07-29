@@ -172,14 +172,14 @@ class _StillScoutPaywallSheetState extends ConsumerState<StillScoutPaywallSheet>
                 ] else if (exportsLeft > 0)
                   Text(
                     'You have $exportsLeft save${exportsLeft != 1 ? 's' : ''} left this scout. '
-                    'Go Pro for unlimited scouts, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
+                    'Get StillScout AI Pro for unlimited scouts, ${StillScoutConstants.proKeeperLimit} keepers, and native 4K.',
                     style: StillScoutTextStyles.body,
                     textAlign: TextAlign.center,
                   )
                 else
                   Text(
                     'You\'ve used all ${StillScoutConstants.freeExportsPerScout} saves for this scout. '
-                    'Upgrade for unlimited scouts and native 4K exports.',
+                    'Get StillScout AI Pro for unlimited scouts and native 4K exports.',
                     style: StillScoutTextStyles.body,
                     textAlign: TextAlign.center,
                   ),

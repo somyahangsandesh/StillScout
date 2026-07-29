@@ -270,7 +270,7 @@ class _QuotaExceededBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final message = isPro
         ? 'Daily AI quota reached — showing on-device picks. Try again tomorrow.'
-        : 'Daily AI quota reached — showing on-device picks. Upgrade for priority access.';
+        : 'Daily AI quota reached — showing on-device picks. Get StillScout AI Pro for priority access.';
     return _OutcomeBanner(
       icon: Icons.hourglass_top_rounded,
       accent: StillScoutColors.scoutGold,

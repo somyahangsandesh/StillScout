@@ -640,7 +640,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         rank: rank, isPro: isPro, isFirstScout: isFirstScout)) {
       await _showPaywall(
         reason:
-            'See full detail on all ${StillScoutAccessPolicy.keeperLimit(isPro: isPro, isFirstScout: isFirstScout)}+ ranked picks with Pro.',
+            'See full detail on all ${StillScoutAccessPolicy.keeperLimit(isPro: isPro, isFirstScout: isFirstScout)}+ ranked picks with StillScout AI Pro.',
       );
       return;
     }
@@ -721,9 +721,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
             shareOrigin: shareOrigin,
           );
 
-    if (result.isSuccess) {
-      HapticFeedback.mediumImpact();
-    } else {
+    if (!result.isSuccess) {
       // Keep reservation on success; refund cancelled / denied / failed I/O.
       await notifier.releaseSessionExports(1);
     }
@@ -759,7 +757,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
     if (!await notifier.tryReserveSessionExports(reserved)) {
       if (!mounted) return;
       await _showPaywall(
-        reason: 'Batch export needs Pro or fewer frames selected.',
+        reason: 'Batch export needs StillScout AI Pro or fewer frames selected.',
       );
       return;
     }
@@ -805,9 +803,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
         faceDetector: faceDetector,
         shareOrigin: shareOrigin,
       );
-      if (result.isSuccess) {
-        HapticFeedback.mediumImpact();
-      } else {
+      if (!result.isSuccess) {
         await notifier.releaseSessionExports(reserved);
       }
       if (!mounted) return;
@@ -854,7 +850,7 @@ class _StillScoutScreenState extends ConsumerState<StillScoutScreen>
             exportsUsedThisSession: nowUsed,
           );
           successMsg = left <= 0
-              ? 'Saved! No more free saves this scout — upgrade for unlimited.'
+              ? 'Saved! No more free saves this scout — upgrade to StillScout AI Pro for unlimited.'
               : 'Saved to your camera roll!';
         }
         _showSnack(successMsg);

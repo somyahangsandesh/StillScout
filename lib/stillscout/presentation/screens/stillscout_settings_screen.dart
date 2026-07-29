@@ -104,7 +104,7 @@ class _StillScoutSettingsScreenState
                   subtitle: isPro
                       ? 'Unlimited scouts · ${StillScoutConfig.geminiModelDisplayName} · Auto Polish'
                       : storeUnavailable
-                          ? 'Store unavailable — Pro benefits paused until verified'
+                          ? 'Store unavailable — AI Pro benefits paused until verified'
                       : StillScoutAccessPolicy.freePlanLimitsSummary,
                 ),
                 _SettingsTile(

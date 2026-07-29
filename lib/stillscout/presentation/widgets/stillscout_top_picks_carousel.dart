@@ -134,6 +134,8 @@ class _PodiumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final rankColor = _rankColors[rank] ?? StillScoutColors.silver;
     final width = isHero ? 192.0 : 140.0;
+    final cacheWidth =
+        (width * MediaQuery.devicePixelRatioOf(context)).round().clamp(140, 512);
     final footer = StillScoutAccessPolicy.frameFooterLabel(
       rank: displayRank,
       isPro: isPro,
@@ -183,6 +185,7 @@ class _PodiumCard extends StatelessWidget {
                           key: ValueKey(frame.frame.filePath),
                           fit: BoxFit.cover,
                           gaplessPlayback: true,
+                          cacheWidth: cacheWidth,
                         ),
                         Positioned(
                           left: 0,

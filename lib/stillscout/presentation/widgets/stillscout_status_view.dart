@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/stillscout_theme.dart';
+import 'stillscout_buttons.dart';
 
 /// Circular icon badge with a soft tinted glow — the same "hero" treatment
 /// used for premium moments elsewhere in the app (paywall badge, completion
@@ -124,23 +125,11 @@ class _StillScoutStatusViewState extends State<StillScoutStatusView>
                   Semantics(
                     label: widget.primaryLabel,
                     button: true,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: widget.onPrimary,
-                        icon: widget.primaryIcon == null
-                            ? const SizedBox.shrink()
-                            : Icon(widget.primaryIcon, size: 18),
-                        label: Text(widget.primaryLabel!),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: StillScoutColors.accent,
-                          foregroundColor: StillScoutColors.voidBlack,
-                          minimumSize: const Size(0, 52),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: StillScoutRadius.card,
-                          ),
-                        ),
-                      ),
+                    child: StillScoutPrimaryButton(
+                      label: widget.primaryLabel!,
+                      icon: widget.primaryIcon,
+                      expand: true,
+                      onPressed: widget.onPrimary,
                     ),
                   ),
                 ],
@@ -149,14 +138,9 @@ class _StillScoutStatusViewState extends State<StillScoutStatusView>
                   Semantics(
                     label: widget.secondaryLabel,
                     button: true,
-                    child: TextButton(
+                    child: StillScoutSecondaryButton(
+                      label: widget.secondaryLabel!,
                       onPressed: widget.onSecondary,
-                      style: TextButton.styleFrom(
-                        foregroundColor:
-                            StillScoutColors.silver.withValues(alpha: 0.85),
-                        minimumSize: const Size(44, 44),
-                      ),
-                      child: Text(widget.secondaryLabel!),
                     ),
                   ),
                 ],

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
+import '../../domain/stillscout_constants.dart';
 import '../../services/stillscout_compare_export.dart';
 import '../theme/stillscout_theme.dart';
 import 'stillscout_buttons.dart';
@@ -222,6 +223,11 @@ class _FramePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compareCacheWidth = (MediaQuery.sizeOf(context).width *
+            MediaQuery.devicePixelRatioOf(context) /
+            2)
+        .round()
+        .clamp(256, StillScoutConstants.maxFrameWidth);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -233,6 +239,7 @@ class _FramePanel extends StatelessWidget {
               File(frame.frame.filePath),
               fit: BoxFit.cover,
               gaplessPlayback: true,
+              cacheWidth: compareCacheWidth,
             ),
           ),
         ),

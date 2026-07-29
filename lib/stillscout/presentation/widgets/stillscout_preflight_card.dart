@@ -90,7 +90,7 @@ class _StillScoutPreFlightCardState extends State<StillScoutPreFlightCard> {
           ? 'Loading allowance…'
           : (quotaOk
               ? (trialAvailable ? 'Start free AI Trial' : 'Start Scout')
-              : 'Upgrade for more scouts'),
+              : 'Get StillScout AI Pro'),
     };
 
     // When trim is open, collapse supporting copy so the stack stays short.

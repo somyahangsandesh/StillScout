@@ -55,7 +55,7 @@ class StillScoutViewToggle extends StatelessWidget {
                 icon: timelineLocked
                     ? Icons.lock_outline
                     : Icons.view_timeline_outlined,
-                label: timelineLocked ? 'Timeline · Pro' : 'Timeline',
+                label: timelineLocked ? 'Timeline · AI Pro' : 'Timeline',
                 selected: current == StillScoutGalleryView.timeline,
                 onTap: () {
                   HapticFeedback.selectionClick();

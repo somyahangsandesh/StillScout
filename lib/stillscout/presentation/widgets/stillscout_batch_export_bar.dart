@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/stillscout_theme.dart';
 
@@ -27,12 +28,22 @@ class StillScoutBatchExportBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(
+          StillScoutSpacing.m,
+          0,
+          StillScoutSpacing.m,
+          StillScoutSpacing.s + 4,
+        ),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(
+            StillScoutSpacing.m,
+            StillScoutSpacing.s + 4,
+            StillScoutSpacing.s + 4,
+            StillScoutSpacing.s + 4,
+          ),
           decoration: BoxDecoration(
             color: StillScoutColors.filmGray,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(StillScoutRadius.l),
             border: Border.all(color: StillScoutColors.accent.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
@@ -67,16 +78,26 @@ class StillScoutBatchExportBar extends StatelessWidget {
                 )
               else ...[
                 IconButton(
-                  onPressed: onShare,
+                  onPressed: isBusy
+                      ? null
+                      : () {
+                          HapticFeedback.lightImpact();
+                          onShare();
+                        },
                   icon: const Icon(Icons.ios_share_rounded, color: StillScoutColors.chalk),
                   tooltip: 'Share selected',
                 ),
                 FilledButton.icon(
-                  onPressed: onSaveToGallery,
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    onSaveToGallery();
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: StillScoutColors.accent,
                     foregroundColor: StillScoutColors.voidBlack,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: StillScoutRadius.chip,
+                    ),
                   ),
                   icon: const Icon(Icons.download_rounded, size: 18),
                   label: const Text('Save'),
