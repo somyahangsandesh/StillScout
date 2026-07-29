@@ -34,6 +34,7 @@ class FrameScoreMetadata {
     required this.compositionScore,
     this.summary,
     this.source = ScoreSource.heuristic,
+    this.onTheBeat = false,
   });
 
   final int blurScore;
@@ -46,6 +47,10 @@ class FrameScoreMetadata {
   final String? summary;
 
   final ScoreSource source;
+
+  /// True when this frame's timestamp aligns with an audio energy peak
+  /// (music beat / speech onset) within ±400 ms.
+  final bool onTheBeat;
 
   /// Weighted aggregate used for ranking — returns a 0.0–10.0 score with
   /// 1-decimal-place precision (e.g. 8.5, 6.3, 9.0).
@@ -77,6 +82,7 @@ class FrameScoreMetadata {
     int? compositionScore,
     String? summary,
     ScoreSource? source,
+    bool? onTheBeat,
   }) {
     return FrameScoreMetadata(
       blurScore: blurScore ?? this.blurScore,
@@ -85,6 +91,7 @@ class FrameScoreMetadata {
       compositionScore: compositionScore ?? this.compositionScore,
       summary: summary ?? this.summary,
       source: source ?? this.source,
+      onTheBeat: onTheBeat ?? this.onTheBeat,
     );
   }
 
@@ -96,6 +103,7 @@ class FrameScoreMetadata {
         'totalScore': totalScore(),
         'summary': summary,
         'source': source.name,
+        'onTheBeat': onTheBeat,
       };
 
   factory FrameScoreMetadata.fromJson(Map<String, dynamic> json) {
@@ -106,6 +114,7 @@ class FrameScoreMetadata {
       compositionScore: _clampedInt(json['compositionScore']),
       summary: json['summary'] as String?,
       source: ScoreSource.fromName(json['source'] as String?),
+      onTheBeat: json['onTheBeat'] as bool? ?? false,
     );
   }
 

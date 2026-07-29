@@ -76,11 +76,13 @@ RevenueCat entitlement: `pro` · Products: `stillscout_pro_monthly`, `stillscout
 
 ## Security notes (server-side entitlement)
 
-`vision-score` is a shared-key proxy, not a fully authenticated backend:
+`vision-score` is a shared-key proxy, not a fully authenticated backend on every call:
 
-- **No RevenueCat receipt verification server-side.** The edge function trusts the client's `device_id` and does not check whether the caller actually holds a `pro` entitlement — a modified client could call the proxy directly. Full server-side App Store receipt verification was judged too heavy for shipathon scope; the accepted mitigations are the per-device daily quota (`try_reserve_vision_quota` RPC, atomic, fails closed) and a per-IP soft rate limit (`isIpRateLimited` in `lib.ts`, 429 above 90 req/min/IP).
-- **Residual risk:** a sophisticated attacker with valid UUID device_ids distributed across IPs could still exceed intended free-tier usage. This is bounded by the daily cap (worst case: `DAILY_CAP` Gemini calls/device/day) and does not expose the Gemini key itself.
-- **Next step if abuse is observed:** add RevenueCat webhook-backed entitlement caching (Supabase table keyed by `app_user_id`, refreshed on `INITIAL_PURCHASE`/`RENEWAL`/`EXPIRATION` events) and require a signed device attestation header instead of a bare UUID.
+- **RevenueCat webhook + `pro_entitlements` (shipped).** `revenuecat-webhook` Edge Function verifies bearer auth, upserts `pro_entitlements` on purchase/renewal/expiration, and `vision-score` checks `isVerifiedProEntitlement(app_user_id)` before applying the Pro daily cap (5000 vs 400 picks/device/day UTC). See `docs/REVENUECAT_WEBHOOK_SETUP.md` and `supabase/migrations/20260728000001_pro_entitlements_and_global_cap.sql`.
+- **Global spend ceiling (shipped).** `usage-alert` tracks daily Gemini pick volume; `vision-score` returns `GLOBAL_CAP_REACHED` (429) when the project ceiling is hit. See `docs/USAGE_ALERTS_SETUP.md`.
+- **Per-device + per-IP limits.** Atomic `try_reserve_vision_quota` RPC (fails closed) plus soft IP throttle (`isIpRateLimited`, 429 above 90 req/min/IP) in `vision-score/lib.ts`.
+- **Residual risk:** callers still use the shipped Supabase anon key; spend is bounded by device caps, global ceiling, and IP throttle — not by Apple receipt verification on every `vision-score` request. A modified client could call the proxy until caps apply.
+- **If abuse grows:** add signed device attestation on `vision-score` and/or App Store Server API receipt checks (heavier than Shipaton scope).
 
 ## Supabase proxy
 

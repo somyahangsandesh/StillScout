@@ -4,14 +4,16 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
+import '../../services/stillscout_compare_export.dart';
 import '../theme/stillscout_theme.dart';
+import 'stillscout_buttons.dart';
 import 'stillscout_score_breakdown.dart';
 
 /// Side-by-side frame comparison sheet.
 ///
 /// Select exactly 2 frames in the gallery, then call [show] — it presents
 /// a full-screen 2-up view with the same compact score grid as frame detail.
-class StillScoutCompareSheet extends StatelessWidget {
+class StillScoutCompareSheet extends StatefulWidget {
   const StillScoutCompareSheet({
     super.key,
     required this.frameA,
@@ -52,6 +54,37 @@ class StillScoutCompareSheet extends StatelessWidget {
   }
 
   @override
+  State<StillScoutCompareSheet> createState() => _StillScoutCompareSheetState();
+}
+
+class _StillScoutCompareSheetState extends State<StillScoutCompareSheet> {
+  bool _sharing = false;
+
+  Future<void> _shareCompare() async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    final ok = await StillScoutCompareExport.shareSideBySide(
+      frameA: widget.frameA,
+      frameB: widget.frameB,
+    );
+    if (!mounted) return;
+    setState(() => _sharing = false);
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not share compare image.',
+            style: StillScoutTextStyles.caption.copyWith(
+              color: StillScoutColors.chalk,
+            ),
+          ),
+          backgroundColor: StillScoutColors.slate,
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
       expand: false,
@@ -66,6 +99,24 @@ class StillScoutCompareSheet extends StatelessWidget {
             SliverToBoxAdapter(child: _buildHeader()),
             SliverToBoxAdapter(child: _buildImages()),
             SliverToBoxAdapter(child: _buildScoreRows()),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  StillScoutSpacing.m,
+                  0,
+                  StillScoutSpacing.m,
+                  StillScoutSpacing.m,
+                ),
+                child: StillScoutPrimaryButton(
+                  label: 'Share compare image',
+                  icon: Icons.ios_share_rounded,
+                  isLoading: _sharing,
+                  height: 52,
+                  expand: true,
+                  onPressed: _sharing ? null : _shareCompare,
+                ),
+              ),
+            ),
             const SliverToBoxAdapter(child: SizedBox(height: StillScoutSpacing.xxl)),
           ],
         );
@@ -102,8 +153,8 @@ class StillScoutCompareSheet extends StatelessWidget {
           Text('Compare Frames', style: StillScoutTextStyles.subtitle),
           const Spacer(),
           _WinnerBadge(
-            frameA: frameA,
-            frameB: frameB,
+            frameA: widget.frameA,
+            frameB: widget.frameB,
           ),
         ],
       ),
@@ -115,9 +166,23 @@ class StillScoutCompareSheet extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: StillScoutSpacing.m),
       child: Row(
         children: [
-          Expanded(child: _FramePanel(frame: frameA, label: 'A', rank: rankA, isPro: isPro)),
+          Expanded(
+            child: _FramePanel(
+              frame: widget.frameA,
+              label: 'A',
+              rank: widget.rankA,
+              isPro: widget.isPro,
+            ),
+          ),
           const SizedBox(width: StillScoutSpacing.s),
-          Expanded(child: _FramePanel(frame: frameB, label: 'B', rank: rankB, isPro: isPro)),
+          Expanded(
+            child: _FramePanel(
+              frame: widget.frameB,
+              label: 'B',
+              rank: widget.rankB,
+              isPro: widget.isPro,
+            ),
+          ),
         ],
       ),
     );
@@ -127,16 +192,16 @@ class StillScoutCompareSheet extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(StillScoutSpacing.m),
       child: StillScoutCompareScoreGrid(
-        sharpnessA: frameA.metadata.blurScore,
-        sharpnessB: frameB.metadata.blurScore,
-        lightingA: frameA.metadata.lightingScore,
-        lightingB: frameB.metadata.lightingScore,
-        openEyesA: frameA.metadata.openEyesScore,
-        openEyesB: frameB.metadata.openEyesScore,
-        compositionA: frameA.metadata.compositionScore,
-        compositionB: frameB.metadata.compositionScore,
-        overallA: frameA.score,
-        overallB: frameB.score,
+        sharpnessA: widget.frameA.metadata.blurScore,
+        sharpnessB: widget.frameB.metadata.blurScore,
+        lightingA: widget.frameA.metadata.lightingScore,
+        lightingB: widget.frameB.metadata.lightingScore,
+        openEyesA: widget.frameA.metadata.openEyesScore,
+        openEyesB: widget.frameB.metadata.openEyesScore,
+        compositionA: widget.frameA.metadata.compositionScore,
+        compositionB: widget.frameB.metadata.compositionScore,
+        overallA: widget.frameA.score,
+        overallB: widget.frameB.score,
       ),
     );
   }

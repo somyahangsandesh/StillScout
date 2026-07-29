@@ -55,3 +55,7 @@ jobs:
       - name: Test usage-alert helpers
         working-directory: supabase/functions/usage-alert
         run: deno test lib_test.ts
+
+      - name: Test revenuecat-webhook helpers
+        working-directory: supabase/functions/revenuecat-webhook
+        run: deno test lib_test.ts

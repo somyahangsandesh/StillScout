@@ -14,6 +14,7 @@ import '../theme/stillscout_theme.dart';
 import 'stillscout_buttons.dart';
 import 'stillscout_crop_picker.dart';
 import 'stillscout_glass_surface.dart';
+import 'stillscout_on_the_beat_badge.dart';
 import 'stillscout_polish_compare.dart';
 import 'stillscout_score_breakdown.dart';
 
@@ -398,6 +399,13 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
       controller: widget.scrollController,
       padding: EdgeInsets.fromLTRB(20, 16, 20, 28 + bottomSafe),
       children: [
+        _ScoreHero(
+          frame: widget.frame,
+          rank: widget.rank,
+          isPro: widget.isPro,
+          summary: summary,
+        ),
+        const SizedBox(height: 16),
         StillScoutPolishStage(
           imagePath: widget.frame.frame.filePath,
           isLoading: applyPolish && _polishLoading,
@@ -432,77 +440,6 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
           ),
         ],
         const SizedBox(height: 16),
-        Row(
-          children: [
-            if (widget.frame.isTopScout)
-              Container(
-                margin: const EdgeInsets.only(right: 10),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: StillScoutColors.scoutGold,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text('TOP SCOUT', style: StillScoutTextStyles.badge),
-              ),
-            Text(
-              'Score ${widget.frame.score >= 10.0 ? '10' : widget.frame.score.toStringAsFixed(1)}',
-              style: StillScoutTextStyles.title,
-            ),
-            const Spacer(),
-            if (StillScoutAccessPolicy.showTimestamp(isPro: widget.isPro))
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.frame.frame.formattedTimestamp,
-                    style: StillScoutTextStyles.caption,
-                  ),
-                  IconButton(
-                    tooltip: 'Copy timecode',
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 32, minHeight: 32),
-                    onPressed: () {
-                      Clipboard.setData(
-                        ClipboardData(
-                            text: widget.frame.frame.formattedTimestamp),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          behavior: SnackBarBehavior.floating,
-                          content: Text('Timecode copied'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.copy_rounded,
-                        size: 16, color: StillScoutColors.silver),
-                  ),
-                ],
-              )
-            else
-              Text(
-                StillScoutAccessPolicy.rankLabel(widget.rank),
-                style: StillScoutTextStyles.caption.copyWith(
-                  color: StillScoutColors.accent,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        _ScoreSourceBadge(source: widget.frame.metadata.source),
-        const SizedBox(height: 10),
-        _AiSummaryCard(summary: summary),
-        const SizedBox(height: 12),
-        StillScoutCompactScoreGrid(
-          sharpness: widget.frame.metadata.blurScore,
-          lighting: widget.frame.metadata.lightingScore,
-          openEyes: widget.frame.metadata.openEyesScore,
-          composition: widget.frame.metadata.compositionScore,
-        ),
-        const SizedBox(height: 10),
         Row(
           children: [
             Text(widget.tierLabel, style: StillScoutTextStyles.caption),
@@ -563,6 +500,160 @@ class _FrameDetailPageState extends ConsumerState<_FrameDetailPage> {
   }
 }
 
+class _ScoreHero extends StatelessWidget {
+  const _ScoreHero({
+    required this.frame,
+    required this.rank,
+    required this.isPro,
+    required this.summary,
+  });
+
+  final ScoredFrame frame;
+  final int rank;
+  final bool isPro;
+  final String summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final scoreLabel =
+        frame.score >= 10.0 ? '10' : frame.score.toStringAsFixed(1);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            StillScoutColors.scoutGold.withValues(alpha: 0.12),
+            StillScoutColors.accent.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(StillScoutRadius.l),
+        border: Border.all(
+          color: StillScoutColors.scoutGold.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: StillScoutColors.scoutGold.withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: StillScoutColors.scoutGold.withValues(alpha: 0.65),
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  scoreLabel,
+                  style: StillScoutTextStyles.numeric.copyWith(fontSize: 28),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (frame.isTopScout)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: StillScoutColors.scoutGold,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'TOP SCOUT',
+                              style: StillScoutTextStyles.badge,
+                            ),
+                          ),
+                        if (frame.metadata.onTheBeat)
+                          const StillScoutOnTheBeatBadge(),
+                        _ScoreSourceBadge(source: frame.metadata.source),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      summary,
+                      style: StillScoutTextStyles.subtitle.copyWith(
+                        color: StillScoutColors.chalk,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          StillScoutCompactScoreGrid(
+            sharpness: frame.metadata.blurScore,
+            lighting: frame.metadata.lightingScore,
+            openEyes: frame.metadata.openEyesScore,
+            composition: frame.metadata.compositionScore,
+          ),
+          const SizedBox(height: 10),
+          if (StillScoutAccessPolicy.showTimestamp(isPro: isPro))
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  frame.frame.formattedTimestamp,
+                  style: StillScoutTextStyles.caption,
+                ),
+                IconButton(
+                  tooltip: 'Copy timecode',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: frame.frame.formattedTimestamp),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        content: Text('Timecode copied'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_rounded,
+                      size: 16, color: StillScoutColors.silver),
+                ),
+              ],
+            )
+          else
+            Text(
+              StillScoutAccessPolicy.rankLabel(rank),
+              style: StillScoutTextStyles.caption.copyWith(
+                color: StillScoutColors.accent,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PolishToggleRow extends StatelessWidget {
   const _PolishToggleRow({
     required this.enabled,
@@ -594,7 +685,7 @@ class _PolishToggleRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  locked ? 'AI Auto Polish · AI Pro' : 'AI Auto Polish',
+                  locked ? 'AI Auto Polish · StillScout AI Pro' : 'AI Auto Polish',
                   style: StillScoutTextStyles.caption.copyWith(
                     color: StillScoutColors.chalk,
                     fontWeight: FontWeight.w700,
@@ -602,7 +693,7 @@ class _PolishToggleRow extends StatelessWidget {
                 ),
                 Text(
                   locked
-                      ? '${StillScoutConfig.geminiModelDisplayName}-ready polish with before/after — unlock AI Pro'
+                      ? '${StillScoutConfig.geminiModelDisplayName}-ready polish with before/after — unlock StillScout AI Pro'
                       : 'Lighting, color, sharpness & face-aware exposure',
                   style: StillScoutTextStyles.caption.copyWith(
                     color: StillScoutColors.silver,
@@ -663,46 +754,6 @@ class _ScoreSourceBadge extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AiSummaryCard extends StatelessWidget {
-  const _AiSummaryCard({required this.summary});
-
-  final String summary;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: StillScoutColors.accent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border:
-            Border.all(color: StillScoutColors.accent.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.format_quote_rounded,
-            size: 18,
-            color: StillScoutColors.accent,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              summary,
-              style: StillScoutTextStyles.subtitle.copyWith(
-                color: StillScoutColors.chalk,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

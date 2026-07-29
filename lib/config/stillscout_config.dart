@@ -156,7 +156,7 @@ class StillScoutConfig {
   static const String rcEntitlementAiPro = rcEntitlementPro;
 
   /// User-facing product name for the Pro entitlement.
-  static const String aiProDisplayName = 'AI Pro';
+  static const String aiProDisplayName = 'StillScout AI Pro';
 
   /// User-facing cloud AI brand name — shown in UI instead of vendor model IDs.
   static const String geminiModelDisplayName = 'StillScout AI';

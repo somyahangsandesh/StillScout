@@ -205,12 +205,12 @@ class _StillScoutPaywallSheetState extends ConsumerState<StillScoutPaywallSheet>
                 const SizedBox(height: StillScoutSpacing.m),
                 Semantics(
                   label: storeReady
-                      ? 'Start Pro for $price'
-                      : 'Pro prices unavailable',
+                      ? 'Start StillScout AI Pro for $price'
+                      : 'StillScout AI Pro prices unavailable',
                   button: true,
                   child: StillScoutPrimaryButton(
                     label: storeReady
-                        ? 'Start Pro · $price'
+                        ? 'Start StillScout AI Pro · $price'
                         : 'Prices unavailable',
                     icon: Icons.bolt_rounded,
                     height: 56,
@@ -276,8 +276,8 @@ class _StillScoutPaywallSheetState extends ConsumerState<StillScoutPaywallSheet>
                 Text(
                   storeReady
                       ? (_yearlySelected
-                          ? 'StillScout Pro Yearly · $price · auto-renews until canceled in Settings → Apple ID → Subscriptions.'
-                          : 'StillScout Pro Monthly · $price · auto-renews until canceled in Settings → Apple ID → Subscriptions.')
+                          ? 'StillScout AI Pro Yearly · $price · auto-renews until canceled in Settings → Apple ID → Subscriptions.'
+                          : 'StillScout AI Pro Monthly · $price · auto-renews until canceled in Settings → Apple ID → Subscriptions.')
                       : 'Subscription prices load from the App Store. Check your connection and try again.',
                   style: StillScoutTextStyles.caption.copyWith(
                     color: StillScoutColors.silver.withValues(alpha: 0.7),

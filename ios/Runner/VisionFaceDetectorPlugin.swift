@@ -16,7 +16,7 @@ import AVFoundation
 ///   faceSharpnessScore  0–1   Face-crop Laplacian sharpness;  -1 = no face
 ///   saliencyScore       0–1   Attention-saliency concentration score
 ///   faceAreaNorm        0–1   Normalised face bbox area (w×h);  0 = no face
-///   aestheticsScore     -1    Forward-compat placeholder
+///   aestheticsScore     0–1   VNGenerateImageAestheticsScores (iOS 17+, else -1)
 ///   yaw                 rad   Head turn (±); 0 = no face
 ///   roll                rad   Head tilt (±); 0 = no face
 ///   left/top/right/bottom     UIKit-origin face bbox; absent = no face
@@ -86,6 +86,9 @@ import AVFoundation
     // ── 2. Attention saliency (iOS 13+, safe at our 15.5 minimum) ───────────
     let saliency = attentionSaliencyScore(cgImage)
 
+    // ── 2b. Neural aesthetics (iOS 17+) ─────────────────────────────────────
+    let aesthetics = imageAestheticsScore(cgImage)
+
     // ── 3. Face landmarks + faceCaptureQuality ───────────────────────────────
     let request = VNDetectFaceLandmarksRequest()
     request.revision = VNDetectFaceLandmarksRequestRevision3
@@ -100,7 +103,7 @@ import AVFoundation
         "saliencyScore":      saliency,
         "faceAreaNorm":       0.0,
         "ruleOfThirdsScore":  0.5,
-        "aestheticsScore":    -1.0,
+        "aestheticsScore":    aesthetics,
         "faceCaptureQuality": -1.0,
         "eyeScore":           0.68,
         "yaw":                0.0,
@@ -116,7 +119,7 @@ import AVFoundation
         "saliencyScore":      saliency,
         "faceAreaNorm":       0.0,
         "ruleOfThirdsScore":  0.5,
-        "aestheticsScore":    -1.0,
+        "aestheticsScore":    aesthetics,
         "faceCaptureQuality": -1.0,
         "eyeScore":           0.68,
         "yaw":                0.0,
@@ -203,7 +206,7 @@ import AVFoundation
       "saliencyScore":         saliency,
       "faceAreaNorm":          faceArea.clamped(to: 0.0...1.0),
       "ruleOfThirdsScore":     rotScore,
-      "aestheticsScore":       -1.0,
+      "aestheticsScore":       aesthetics,
       "yaw":                   yaw,
       "roll":                  roll,
       "left":                  uiLeft,
@@ -254,6 +257,28 @@ import AVFoundation
     else { return 0.5 }
 
     return laplacianSharpness(cropped)
+  }
+
+  // MARK: – Image aesthetics (iOS 17+) ─────────────────────────────────────
+
+  /// Returns 0–1 overall aesthetics from Apple's neural scorer (iOS 18+),
+  /// or -1 when unavailable (older OS or request failure).
+  private func imageAestheticsScore(_ cgImage: CGImage) -> Double {
+    if #available(iOS 18.0, *) {
+      let request = VNCalculateImageAestheticsScoresRequest()
+      let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+      do {
+        try handler.perform([request])
+        if let obs = request.results?.first as? VNImageAestheticsScoresObservation {
+          // overallScore is roughly -1…1; map to 0…1 for downstream blending.
+          let raw = Double(obs.overallScore)
+          return ((raw + 1.0) / 2.0).clamped(to: 0.0...1.0)
+        }
+      } catch {
+        return -1.0
+      }
+    }
+    return -1.0
   }
 
   // MARK: – Attention saliency ──────────────────────────────────────────────

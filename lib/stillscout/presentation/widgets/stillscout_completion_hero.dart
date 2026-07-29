@@ -84,7 +84,7 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
   @override
   Widget build(BuildContext context) {
     final polishLabel = widget.isPro
-        ? 'AI Pro · Deep analysis · Unlimited saves · 4K'
+        ? 'StillScout AI Pro · Deep analysis · Unlimited saves · 4K'
         : widget.isAiProTrial
             ? 'Free AI Trial complete · Upgrade to keep ${StillScoutConfig.geminiModelDisplayName} quality'
             : widget.exportsRemaining > 0
@@ -97,7 +97,7 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
             outcome == CloudScoringOutcome.quotaExceeded);
 
     final title = widget.isPro
-        ? 'AI Pro scout complete'
+        ? 'StillScout AI Pro scout complete'
         : widget.isAiProTrial
             ? 'AI Trial scout complete'
             : 'Scout complete';
@@ -221,7 +221,7 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
                               widget.isPro ? null : widget.onUpgradeAiPro,
                         )
                       else
-                        _DegradedGeminiBanner(onRetry: widget.onRetryCloudAi),
+                        _DegradedCloudAiBanner(onRetry: widget.onRetryCloudAi),
                     ],
                   ],
                 ),
@@ -234,9 +234,9 @@ class _StillScoutCompletionHeroState extends State<StillScoutCompletionHero>
   }
 }
 
-/// Soft-degrade: Gemini failed but quota remains — Retry is appropriate.
-class _DegradedGeminiBanner extends StatelessWidget {
-  const _DegradedGeminiBanner({this.onRetry});
+/// Soft-degrade: cloud AI failed but quota remains — Retry is appropriate.
+class _DegradedCloudAiBanner extends StatelessWidget {
+  const _DegradedCloudAiBanner({this.onRetry});
 
   final VoidCallback? onRetry;
 

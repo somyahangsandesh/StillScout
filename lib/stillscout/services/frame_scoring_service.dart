@@ -121,17 +121,29 @@ class FrameScoringService {
             ? ((faceBlur * 0.70) + (globalBlur * 0.30)).round().clamp(1, 100)
             : globalBlur;
 
-        // Composition: blend saliency + rule-of-thirds scores.
+        // Composition: blend saliency + rule-of-thirds + aesthetics (iOS 17+).
         // Saliency = subject isolation; rule-of-thirds = placement quality.
         int compositionScore = base.compositionScore;
         final salInt = (analysis.saliencyScore * 100).round().clamp(1, 100);
         final rotInt = (analysis.ruleOfThirdsScore * 100).round().clamp(1, 100);
-        // 55% heuristic + 25% saliency + 20% rule-of-thirds.
-        compositionScore = ((compositionScore * 0.55) +
-                (salInt * 0.25) +
-                (rotInt * 0.20))
-            .round()
-            .clamp(1, 100);
+        final aes = analysis.aestheticsScore;
+        if (aes >= 0) {
+          final aesInt = (aes * 100).round().clamp(1, 100);
+          // 45% heuristic + 20% saliency + 15% rule-of-thirds + 20% aesthetics.
+          compositionScore = ((compositionScore * 0.45) +
+                  (salInt * 0.20) +
+                  (rotInt * 0.15) +
+                  (aesInt * 0.20))
+              .round()
+              .clamp(1, 100);
+        } else {
+          // 55% heuristic + 25% saliency + 20% rule-of-thirds.
+          compositionScore = ((compositionScore * 0.55) +
+                  (salInt * 0.25) +
+                  (rotInt * 0.20))
+              .round()
+              .clamp(1, 100);
+        }
 
         preliminary[frame.id] = base.copyWith(
           openEyesScore: analysis.eyeScore,
@@ -451,6 +463,7 @@ class FrameScoringService {
               metadata = metadata.copyWith(
                 compositionScore:
                     (metadata.compositionScore + boost).clamp(1, 100),
+                onTheBeat: true,
               );
             }
           }

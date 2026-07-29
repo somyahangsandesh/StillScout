@@ -367,7 +367,7 @@ class _UnlockBanner extends StatelessWidget {
       if (!isPro && exportsLeft == 0) {
         return 'Free exports used this scout — upgrade for unlimited scouts & 4K';
       }
-      return 'Unlock more picks and exports with StillScout Pro';
+      return 'Unlock more picks and exports with StillScout AI Pro';
     }();
 
     return Padding(

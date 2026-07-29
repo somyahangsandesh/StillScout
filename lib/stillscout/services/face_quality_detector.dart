@@ -112,7 +112,7 @@ class VisionFrameAnalysis {
   /// 0.5 = neutral (centroid in centre or no face).
   final double ruleOfThirdsScore;
 
-  /// Always -1.0 (forward-compatibility placeholder for aesthetics API).
+  /// Always -1.0 on iOS < 18; 0–1 from VNCalculateImageAestheticsScoresRequest on iOS 18+.
   final double aestheticsScore;
 
   /// Head yaw in radians. Positive = face turned right.
@@ -134,7 +134,7 @@ class VisionFrameAnalysis {
 ///   - `eyeScore`           : blended EAR + faceCaptureQuality + pose penalty
 ///   - `faceCaptureQuality` : Apple neural face-quality (0–1)
 ///   - `nativeBlurScore`    : Laplacian sharpness (0–1)
-///   - `aestheticsScore`    : VNGenerateImageAestheticsScores (iOS 17+, else -1)
+///   - `aestheticsScore`    : VNCalculateImageAestheticsScores (iOS 18+, else -1)
 ///   - `yaw`, `roll`        : head pose in radians
 ///   - `left/top/right/bottom`: face bounds, UIKit coords
 ///

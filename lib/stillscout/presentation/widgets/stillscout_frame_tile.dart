@@ -9,6 +9,7 @@ import '../../data/models/scored_frame.dart';
 import '../../domain/stillscout_access_policy.dart';
 import '../../domain/stillscout_constants.dart';
 import '../theme/stillscout_theme.dart';
+import 'stillscout_on_the_beat_badge.dart';
 import 'stillscout_score_badge.dart';
 
 class StillScoutFrameTile extends StatefulWidget {
@@ -288,6 +289,12 @@ class _StillScoutFrameTileState extends State<StillScoutFrameTile>
                   ),
                   child: Text('TOP SCOUT', style: StillScoutTextStyles.badge),
                 ),
+              ),
+            if (!widget.isLocked && frame.metadata.onTheBeat)
+              const Positioned(
+                left: 10,
+                bottom: 52,
+                child: StillScoutOnTheBeatBadge(compact: true),
               ),
             if (!widget.isLocked)
               Positioned(
