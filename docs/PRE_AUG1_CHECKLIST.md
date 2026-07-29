@@ -8,9 +8,27 @@ This list is **only** what you must do in App Store Connect, on a real device, o
 
 ---
 
+## Ops log (automated / agent)
+
+| Date | Item | Status |
+|------|------|--------|
+| 2026-07-29 | `dart run tool/check_release_secrets.dart` | **OK** — Supabase + `appl_` RevenueCat, no client Gemini key |
+| 2026-07-29 | TestFlight build **25** processing | **VALID** (uploaded 2026-07-28) |
+| 2026-07-29 | Version **1.0** build attachment | **Build 25 attached** (replaced build 24) via ASC API |
+| 2026-07-29 | Subtitle (en-GB + en-US) | **Set** — “Best stills from any video” |
+| 2026-07-29 | Release type | **MANUAL** (was `AFTER_APPROVAL`; set via API) |
+| 2026-07-29 | IAP API state | `stillscout_pro_monthly` / `stillscout_pro_yearly` → API `CREATED` — **confirm UI shows Ready to Submit** |
+| — | Review phone | **Placeholder** `+977 980-000-0000` — user must replace |
+| — | App Privacy labels | **Not done** — user manual in ASC |
+| — | Submit for Review | **Not done** — waiting on privacy + phone + optional sandbox smoke |
+
+**ASC ops tool:** `deno run --allow-read --allow-net --allow-env tool/asc_ops.ts` (read-only) · `--attach` to swap build on version 1.0.
+
+---
+
 ## Before Submit for Review
 
-### 1. App Privacy nutrition labels (required)
+### 1. App Privacy nutrition labels (required) — **YOU**
 
 **App Store Connect → StillScout → App Privacy**
 
@@ -22,7 +40,7 @@ Declare data collected for **App Functionality** (not tracking), aligned with `i
 
 Confirm **not used for tracking**.
 
-### 2. Review contact phone (required)
+### 2. Review contact phone (required) — **YOU**
 
 Replace the placeholder (`+977 980-000-0000`):
 
@@ -32,13 +50,13 @@ Use a **real, reachable** number you will answer during review. Do not invent a 
 
 ### 3. TestFlight build 25 (required)
 
-After `tool/upload_testflight.sh` completes and ASC finishes processing:
-
-1. **TestFlight** — confirm build **25** is valid  
-2. **Version 1.0** — attach build **25** (detach build 24)  
-3. On a **real iPhone**, verify paywall/completion hero say **StillScout AI** (not Gemini Flash)
+- [x] **2026-07-29** — TestFlight build **25** is **VALID** (ASC API)
+- [x] **2026-07-29** — Version **1.0** has build **25** attached (build 24 detached)
+- [ ] On a **real iPhone**, verify paywall/completion hero say **StillScout AI** (not Gemini Flash)
 
 ### 4. RevenueCat + secrets (required)
+
+- [x] **2026-07-29** — `dart run tool/check_release_secrets.dart` → **OK**
 
 ```bash
 dart run tool/check_release_secrets.dart
@@ -46,7 +64,7 @@ dart run tool/check_release_secrets.dart
 
 Must show **OK** (Supabase + `appl_` RevenueCat key, no client Gemini key).
 
-### 5. Sandbox purchase smoke (strongly recommended)
+### 5. Sandbox purchase smoke (strongly recommended) — **YOU**
 
 On a real device with a Sandbox Apple ID:
 
@@ -55,13 +73,13 @@ On a real device with a Sandbox Apple ID:
 3. Confirm **StillScout AI Pro** active in app  
 4. In RevenueCat / Supabase, confirm webhook fired and `pro_entitlements` has a row  
 
-### 6. Submit for Review (required — allow approval time)
+### 6. Submit for Review (required — allow approval time) — **YOU, when 1–5 done**
 
 When 1–5 are done:
 
-1. IAPs `stillscout_pro_monthly` / `stillscout_pro_yearly` still **Ready to Submit**  
+1. IAPs `stillscout_pro_monthly` / `stillscout_pro_yearly` still **Ready to Submit** (confirm in ASC UI)  
 2. **Submit for Review** — app **and** subscriptions together  
-3. Keep release type **manual** (`After approval, manually release this version`)
+3. Keep release type **manual** (`After approval, manually release this version`) — already **MANUAL** via API
 
 **Do not** use “Release automatically.” Plan for Apple review lag before Aug 1.
 
@@ -69,7 +87,7 @@ When 1–5 are done:
 
 ## Shipaton / marketing
 
-### 7. Demo video (contest-facing)
+### 7. Demo video (contest-facing) — **YOU**
 
 Film a **15–30 s vertical** cut using scripts in `docs/marketing/instagram_story_ads.md`:
 
@@ -86,7 +104,7 @@ Film a **15–30 s vertical** cut using scripts in `docs/marketing/instagram_sto
 
 ## On approval day (≤ Aug 1)
 
-### 9. Manual release
+### 9. Manual release — **YOU**
 
 **App Store Connect → StillScout → version 1.0 → Release This Version**
 
@@ -103,13 +121,15 @@ Only after **Approved** status.
 
 ## Quick reference
 
-| Item | Where |
-|------|--------|
-| Privacy labels | ASC → App Privacy |
-| Phone | ASC → 1.0 → App Review Information |
-| Build 25 | TestFlight → attach to 1.0 |
-| Submit | ASC → 1.0 → Add for Review |
-| Manual release | ASC after approval |
-| Shipaton video | Film from `docs/marketing/` |
+| Item | Where | Status |
+|------|--------|--------|
+| Privacy labels | ASC → App Privacy | **TODO** |
+| Phone | ASC → 1.0 → App Review Information | **TODO** (placeholder) |
+| Build 25 | TestFlight → attach to 1.0 | **Done** 2026-07-29 |
+| Secrets preflight | `check_release_secrets.dart` | **OK** 2026-07-29 |
+| Release type | Version 1.0 | **MANUAL** 2026-07-29 |
+| Submit | ASC → 1.0 → Add for Review | **Not yet** |
+| Manual release | ASC after approval | After approval |
+| Shipaton video | Film from `docs/marketing/` | **TODO** |
 
 **Not in this checklist (already in repo):** legal URLs, Privacy manifest, webhook code, CI tests, `docs/RATING_UPGRADE_PLAN.md`.
