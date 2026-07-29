@@ -30,13 +30,20 @@ Much of the listing metadata was applied via the App Store Connect API (2026-07-
 | Age rating questionnaire | Set → **4+** |
 | Content rights | `DOES_NOT_USE_THIRD_PARTY_CONTENT` |
 | App Review contact + notes (Restore on paywall/Settings) | Set (phone is placeholder — update) |
-| Version 1.0 build | Attached **build 24** (`VALID`) |
-| iPhone 6.7" screenshots (4×, en-GB + en-US) | `COMPLETE` |
+| Version 1.0 build | Attached **build 26** (`VALID`) |
+| iPhone 6.7" screenshots (5×, en-GB + en-US) | `COMPLETE` — premium redesign in `docs/asc_assets/screenshots_67/` |
 | IAP `stillscout_pro_monthly` | **READY_TO_SUBMIT** (review screenshot `COMPLETE`) |
 | IAP `stillscout_pro_yearly` | **READY_TO_SUBMIT** (review screenshot `COMPLETE`) |
 | Paid Apps Agreement / bank / W-8BEN | **Active** (UI) |
 
-Generated assets (safe to keep in repo): `docs/asc_assets/`.
+Generated assets (safe to keep in repo): `docs/asc_assets/`. Regenerate 6.7" screenshots:
+
+```bash
+deno run --allow-read --allow-write --allow-run --allow-env --allow-ffi --allow-net tool/render_asc_screenshots.ts
+deno run --allow-read --allow-write --allow-net --allow-env tool/upload_asc_screenshots.ts
+```
+
+Source artboard: `docs/asc_assets/screenshot_studio.html`.
 
 ## You must finish (manual clicks / account work)
 
@@ -80,7 +87,7 @@ When privacy labels + phone + RevenueCat key are done:
 1. Confirm IAPs still show **Ready to Submit**
 2. **Submit for Review** on version 1.0 (subscriptions submit with the app)
 
-Optional: replace marketing screenshots with real device captures later — current set is API-accepted generated 6.7" art under `docs/asc_assets/screenshots/`.
+Optional: replace marketing screenshots with real device captures later — current set is premium generated 6.7" art under `docs/asc_assets/screenshots_67/`.
 
 ### 5. Supabase
 

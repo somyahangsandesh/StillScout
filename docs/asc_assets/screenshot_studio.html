@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>StillScout — App Store Screenshot Studio (6.7")</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --void: #050505;
+      --film: #121212;
+      --slate: #1c1c1e;
+      --slate-light: #2c2c2e;
+      --chalk: #f2f2f7;
+      --silver: #8e8e93;
+      --gold: #e8c97a;
+      --gold-bright: #ffd60a;
+      --sand: #c9b896;
+      --line: rgba(232, 201, 122, 0.22);
+      --success: #30d158;
+      --w: 1290px;
+      --h: 2796px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      font-family: "Instrument Sans", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .studio {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+      padding: 48px;
+    }
+
+    /* ── Artboard shell ─────────────────────────────────────────────── */
+    .artboard {
+      width: var(--w);
+      height: var(--h);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      background:
+        radial-gradient(ellipse 900px 700px at 15% 8%, rgba(232, 201, 122, 0.14), transparent 60%),
+        radial-gradient(ellipse 700px 500px at 95% 12%, rgba(201, 184, 150, 0.08), transparent 55%),
+        radial-gradient(ellipse 600px 400px at 50% 100%, rgba(232, 201, 122, 0.06), transparent 50%),
+        linear-gradient(175deg, #0c0c0c 0%, var(--void) 38%, #000 100%);
+    }
+
+    .artboard::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 120px 64px 80px;
+    }
+
+    .eyebrow {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 28px;
+    }
+
+    .headline {
+      font-family: Newsreader, Georgia, serif;
+      font-weight: 600;
+      font-size: 88px;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: var(--chalk);
+      text-align: center;
+      max-width: 14ch;
+      margin-bottom: 20px;
+    }
+
+    .subline {
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--silver);
+      text-align: center;
+      max-width: 28ch;
+      line-height: 1.45;
+      margin-bottom: 56px;
+    }
+
+    .phone-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .device {
+      width: 920px;
+      height: 1990px;
+      border-radius: 72px;
+      background: #000;
+      border: 2.5px solid rgba(232, 201, 122, 0.32);
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.8),
+        0 2px 0 rgba(255, 255, 255, 0.04) inset,
+        0 48px 120px rgba(0, 0, 0, 0.65),
+        0 0 80px rgba(232, 201, 122, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .device::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 72px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .island {
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 230px;
+      height: 46px;
+      background: #000;
+      border-radius: 28px;
+      z-index: 15;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 12px;
+      border-radius: 62px;
+      overflow: hidden;
+      background: var(--film);
+    }
+
+    .status-bar {
+      height: 62px;
+      padding: 18px 36px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--chalk);
+      position: relative;
+      z-index: 5;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .status-icons span {
+      width: 22px;
+      height: 14px;
+      border: 2px solid var(--chalk);
+      border-radius: 3px;
+      position: relative;
+    }
+
+    .status-icons span::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      top: 3px;
+      width: 3px;
+      height: 6px;
+      background: var(--chalk);
+      border-radius: 1px;
+    }
+
+    .app-nav {
+      padding: 8px 32px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-nav .logo {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .app-nav .badge {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(255, 214, 10, 0.12);
+      border: 1px solid rgba(255, 214, 10, 0.35);
+      color: var(--gold-bright);
+    }
+
+    /* ── Shared UI components ─────────────────────────────────────── */
+    .frame-thumb {
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      background: var(--slate);
+    }
+
+    .frame-thumb .img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .frame-thumb .rank {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--gold-bright);
+      color: var(--void);
+      box-shadow: 0 4px 16px rgba(255, 214, 10, 0.4);
+    }
+
+    .frame-thumb .score {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(5, 5, 5, 0.72);
+      padding: 6px 12px;
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+    }
+
+    .frame-thumb.gold-ring {
+      box-shadow:
+        0 0 0 3px var(--gold),
+        0 0 32px rgba(232, 201, 122, 0.35);
+    }
+
+    .frame-thumb.dim {
+      opacity: 0.55;
+    }
+
+    /* Photo gradients — cinematic placeholders */
+    .p1 { background: linear-gradient(160deg, #4a5568 0%, #2d3748 35%, #1a202c 70%, #0d1117 100%); }
+    .p2 { background: linear-gradient(145deg, #5c4a3a 0%, #3d3228 40%, #2a2218 100%); }
+    .p3 { background: linear-gradient(170deg, #3d5a6c 0%, #2c4251 45%, #1a2a35 100%); }
+    .p4 { background: linear-gradient(155deg, #6b5b4f 0%, #4a3f38 50%, #2e2620 100%); }
+    .p5 { background: linear-gradient(165deg, #4a5d4a 0%, #2d3b2d 50%, #1a241a 100%); }
+    .p6 { background: linear-gradient(150deg, #5a4a62 0%, #3d3345 50%, #252030 100%); }
+
+  </style>
+</head>
+<body>
+  <div class="studio">
+
+    <!-- 01 HERO ──────────────────────────────────────────────────── -->
+    <section class="artboard" id="shot-01" data-filename="01_hero.png">
+      <div class="content">
+        <p class="eyebrow">StillScout</p>
+        <h1 class="headline">Find the Perfect Frame Instantly</h1>
+        <p class="subline">AI-ranked stills from any video — your best shots, surfaced in seconds.</p>
+        <div class="phone-wrap">
+          <div class="device">
+            <div class="island"></div>
+            <div class="screen">
+              <div class="status-bar"><span>9:41</span><div class="status-icons"><span></span></div></div>
+              <div class="app-nav">
+                <span class="logo">StillScout</span>
+                <span class="badge">AI Pro</span>
+              </div>
+              <div style="padding:0 28px 16px;">
+                <div style="font-size:34px;font-weight:600;color:var(--chalk);margin-bottom:6px;">Top Picks</div>
+                <div style="font-size:22px;color:var(--silver);margin-bottom:24px;">12 frames · ranked by AI</div>
+                <div style="display:flex;gap:16px;margin-bottom:28px;overflow:hidden;">
+                  <div class="frame-thumb gold-ring" style="width:280px;height:380px;flex-shrink:0;">
+                    <div class="img p1"></div>
+                    <span class="rank">#1</span>
+                    <span class="score">9.4</span>
+                  </div>
+                  <div class="frame-thumb" style="width:240px;height:320px;flex-shrink:0;margin-top:30px;">
+                    <div class="img p2"></div>
+                    <span class="rank" style="background:#d9d9df;">#2</span>
+                    <span class="score">8.7</span>
+                  </div>
+                  <div class="frame-thumb" style="width:220px;height:300px;flex-shrink:0;margin-top:40px;">
+                    <div class="img p3"></div>
+                    <span class="rank" style="background:#cd8e5a;">#3</span>
+                    <span class="score">8.2</span>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <div class="frame-thumb" style="height:200px;"><div class="img p4"></div><span class="score">7.9</span></div>
+                  <div class="frame-thumb" style="height:200px;"><div class="img p5"></div><span class="score">7.6</span></div>
+                  <div class="frame-thumb" style="height:200px;"><div class="img p6"></div><span class="score">7.4</span></div>
+                  <div class="frame-thumb dim" style="height:200px;"><div class="img p2" style="filter:blur(2px);"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 AI SCOUTING ───────────────────────────────────────────── -->
+    <section class="artboard" id="shot-02" data-filename="02_ai_scouting.png">
+      <div class="content">
+        <p class="eyebrow">AI Scouting</p>
+        <h1 class="headline">AI Finds Your Best Moments</h1>
+        <p class="subline">Smart analysis of sharpness, framing, and expression — while you wait.</p>
+        <div class="phone-wrap">
+          <div class="device">
+            <div class="island"></div>
+            <div class="screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 48px;">
+              <div class="status-bar" style="position:absolute;top:0;left:0;right:0;"><span>9:41</span><div class="status-icons"><span></span></div></div>
+              <div style="width:280px;height:280px;border-radius:50%;position:relative;margin-bottom:48px;">
+                <svg width="280" height="280" viewBox="0 0 280 280" style="transform:rotate(-90deg);">
+                  <circle cx="140" cy="140" r="120" fill="none" stroke="rgba(142,142,147,0.2)" stroke-width="14"/>
+                  <circle cx="140" cy="140" r="120" fill="none" stroke="url(#grad)" stroke-width="14" stroke-linecap="round"
+                    stroke-dasharray="754" stroke-dashoffset="204"/>
+                  <defs>
+                    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#e8c97a"/>
+                      <stop offset="100%" stop-color="#ffd60a"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:700;color:var(--gold);">73%</div>
+              </div>
+              <div style="font-size:32px;font-weight:600;color:var(--chalk);text-align:center;margin-bottom:12px;line-height:1.35;">Analyzing each frame for<br/>sharpness &amp; framing…</div>
+              <div style="font-size:22px;color:var(--silver);margin-bottom:40px;">84 of 120 frames</div>
+              <div style="display:flex;gap:12px;margin-bottom:48px;width:100%;max-width:520px;">
+                <div style="flex:1;text-align:center;padding:16px 8px;border-radius:14px;background:rgba(48,209,88,0.12);border:1px solid rgba(48,209,88,0.3);">
+                  <div style="font-size:18px;color:var(--success);font-weight:600;">Extract</div>
+                </div>
+                <div style="flex:1;text-align:center;padding:16px 8px;border-radius:14px;background:rgba(232,201,122,0.15);border:1px solid rgba(232,201,122,0.45);">
+                  <div style="font-size:18px;color:var(--gold);font-weight:600;">Analyze</div>
+                </div>
+                <div style="flex:1;text-align:center;padding:16px 8px;border-radius:14px;background:rgba(142,142,147,0.1);border:1px solid rgba(142,142,147,0.2);">
+                  <div style="font-size:18px;color:var(--silver);font-weight:500;">Score</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;width:100%;overflow:hidden;">
+                <div class="frame-thumb" style="width:100px;height:130px;flex-shrink:0;"><div class="img p1"></div></div>
+                <div class="frame-thumb" style="width:100px;height:130px;flex-shrink:0;"><div class="img p3"></div></div>
+                <div class="frame-thumb" style="width:100px;height:130px;flex-shrink:0;"><div class="img p5"></div></div>
+                <div class="frame-thumb" style="width:100px;height:130px;flex-shrink:0;"><div class="img p2"></div></div>
+                <div class="frame-thumb" style="width:100px;height:130px;flex-shrink:0;"><div class="img p4"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 SMART SELECTION ───────────────────────────────────────── -->
+    <section class="artboard" id="shot-03" data-filename="03_smart_selection.png">
+      <div class="content">
+        <p class="eyebrow">Smart Selection</p>
+        <h1 class="headline">No More Scrubbing Through Videos</h1>
+        <p class="subline">Every candidate scored and ranked — skip the timeline hunt.</p>
+        <div class="phone-wrap">
+          <div class="device">
+            <div class="island"></div>
+            <div class="screen">
+              <div class="status-bar"><span>9:41</span><div class="status-icons"><span></span></div></div>
+              <div class="app-nav">
+                <span class="logo">StillScout</span>
+                <span style="font-size:22px;color:var(--silver);">Ranked</span>
+              </div>
+              <div style="padding:0 28px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <div class="frame-thumb gold-ring" style="height:260px;grid-row:span 2;">
+                    <div class="img p1"></div>
+                    <span class="rank">#1</span>
+                    <span class="score">9.4</span>
+                    <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,0.85));">
+                      <div style="font-size:18px;color:var(--gold);font-weight:600;">Best frame</div>
+                      <div style="font-size:16px;color:var(--silver);">0:42 · sharp focus</div>
+                    </div>
+                  </div>
+                  <div class="frame-thumb dim" style="height:122px;"><div class="img p2"></div><span class="score">6.1</span></div>
+                  <div class="frame-thumb dim" style="height:122px;"><div class="img p3"></div><span class="score">5.8</span></div>
+                  <div class="frame-thumb" style="height:180px;"><div class="img p4"></div><span class="score">8.1</span></div>
+                  <div class="frame-thumb dim" style="height:180px;"><div class="img p5"></div><span class="score">5.2</span></div>
+                  <div class="frame-thumb" style="height:180px;"><div class="img p6"></div><span class="score">7.8</span></div>
+                  <div class="frame-thumb dim" style="height:180px;"><div class="img p2"></div><span class="score">4.9</span></div>
+                </div>
+                <div style="margin-top:20px;padding:18px 22px;border-radius:18px;background:rgba(232,201,122,0.08);border:1px solid rgba(232,201,122,0.25);display:flex;align-items:center;gap:14px;">
+                  <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,214,10,0.15);display:flex;align-items:center;justify-content:center;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd60a" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  </div>
+                  <div>
+                    <div style="font-size:22px;font-weight:600;color:var(--chalk);">AI picked your sharpest moment</div>
+                    <div style="font-size:18px;color:var(--silver);">No manual scrubbing needed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 STUNNING RESULTS ──────────────────────────────────────── -->
+    <section class="artboard" id="shot-04" data-filename="04_stunning_results.png">
+      <div class="content">
+        <p class="eyebrow">Stunning Results</p>
+        <h1 class="headline">Sharp. Natural. Ready to Share.</h1>
+        <p class="subline">Gallery-quality stills with natural color and crisp detail.</p>
+        <div class="phone-wrap">
+          <div class="device">
+            <div class="island"></div>
+            <div class="screen">
+              <div class="status-bar"><span>9:41</span><div class="status-icons"><span></span></div></div>
+              <div style="padding:16px 28px 0;">
+                <div class="frame-thumb gold-ring" style="height:680px;margin-bottom:20px;">
+                  <div class="img p1" style="background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,0.6)),linear-gradient(160deg,#5a6a7a 0%,#3d4a58 40%,#2a3540 100%);"></div>
+                  <span class="rank">#1</span>
+                  <div style="position:absolute;bottom:0;left:0;right:0;padding:28px;background:linear-gradient(transparent,rgba(0,0,0,0.9));">
+                    <div style="font-size:28px;font-weight:600;color:var(--chalk);margin-bottom:6px;">Portrait · 0:42</div>
+                    <div style="font-size:20px;color:var(--gold);">Score 9.4 · AI sharpened</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div class="frame-thumb" style="width:33%;height:140px;"><div class="img p2"></div></div>
+                  <div class="frame-thumb" style="width:33%;height:140px;"><div class="img p3"></div></div>
+                  <div class="frame-thumb" style="width:33%;height:140px;"><div class="img p4"></div></div>
+                </div>
+              </div>
+              <div style="position:absolute;bottom:0;left:0;right:0;padding:24px 28px 40px;background:linear-gradient(transparent,var(--film));">
+                <div style="display:flex;gap:12px;">
+                  <div style="flex:1;padding:20px;border-radius:16px;background:var(--gold);text-align:center;font-size:22px;font-weight:700;color:var(--void);">Export</div>
+                  <div style="flex:1;padding:20px;border-radius:16px;background:var(--slate);border:1px solid rgba(232,201,122,0.25);text-align:center;font-size:22px;font-weight:600;color:var(--chalk);">Compare</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 EXPORT ────────────────────────────────────────────────── -->
+    <section class="artboard" id="shot-05" data-filename="05_export.png">
+      <div class="content">
+        <p class="eyebrow">Export</p>
+        <h1 class="headline">Export in Seconds</h1>
+        <p class="subline">Save to Photos or share directly — full resolution, no watermarks.</p>
+        <div class="phone-wrap">
+          <div class="device">
+            <div class="island"></div>
+            <div class="screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 48px;">
+              <div class="status-bar" style="position:absolute;top:0;left:0;right:0;"><span>9:41</span><div class="status-icons"><span></span></div></div>
+              <div style="width:140px;height:140px;border-radius:50%;background:rgba(48,209,88,0.15);border:2px solid rgba(48,209,88,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:36px;box-shadow:0 0 60px rgba(48,209,88,0.2);">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <div style="font-size:40px;font-weight:600;color:var(--chalk);margin-bottom:12px;text-align:center;">12 frames exported</div>
+              <div style="font-size:24px;color:var(--silver);margin-bottom:48px;text-align:center;">Saved to your photo library</div>
+              <div style="width:100%;max-width:520px;border-radius:24px;background:var(--slate);border:1px solid rgba(232,201,122,0.2);overflow:hidden;margin-bottom:32px;">
+                <div style="padding:28px 32px 20px;font-size:26px;font-weight:600;color:var(--chalk);text-align:center;">Share</div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 24px 28px;">
+                  <div style="text-align:center;">
+                    <div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#5ac8fa,#007aff);margin:0 auto 10px;"></div>
+                    <div style="font-size:16px;color:var(--silver);">AirDrop</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#34c759,#248a3d);margin:0 auto 10px;"></div>
+                    <div style="font-size:16px;color:var(--silver);">Messages</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#ff9500,#ff6b00);margin:0 auto 10px;"></div>
+                    <div style="font-size:16px;color:var(--silver);">Mail</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="width:72px;height:72px;border-radius:18px;background:var(--slate-light);border:1px solid rgba(142,142,147,0.3);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--silver)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    </div>
+                    <div style="font-size:16px;color:var(--silver);">More</div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;width:100%;max-width:520px;">
+                <div class="frame-thumb" style="flex:1;height:100px;"><div class="img p1"></div></div>
+                <div class="frame-thumb" style="flex:1;height:100px;"><div class="img p2"></div></div>
+                <div class="frame-thumb" style="flex:1;height:100px;"><div class="img p3"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

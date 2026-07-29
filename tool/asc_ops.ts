@@ -9,7 +9,7 @@ const ROOT = new URL("../", import.meta.url).pathname;
 const ENV_FILE = Deno.env.get("ASC_ENV_FILE") ?? `${ROOT}secrets.asc.env`;
 const BUNDLE_ID = "com.stillscout.stillscout";
 const TARGET_VERSION = "1.0";
-const TARGET_BUILD = 25;
+const TARGET_BUILD = 26;
 
 type Env = Record<string, string>;
 
@@ -190,7 +190,7 @@ async function main() {
   const version = await getVersion1(token, appId);
   const versionId = version.id;
   const builds = await listBuilds(token, appId);
-  const build25 = builds.find((b) => b.attributes.version === String(TARGET_BUILD));
+  const targetBuild = builds.find((b) => b.attributes.version === String(TARGET_BUILD));
   const attached = await getAttachedBuild(token, versionId);
   const subtitles = await getSubtitles(token, appId);
   const iaps = await getIapStates(token, appId);
@@ -204,12 +204,12 @@ async function main() {
       appStoreState: version.attributes.appStoreState,
       releaseType: version.attributes.releaseType,
     },
-    build25: build25
+    targetBuild: targetBuild
       ? {
-          id: build25.id,
-          version: build25.attributes.version,
-          processingState: build25.attributes.processingState,
-          uploadedDate: build25.attributes.uploadedDate,
+          id: targetBuild.id,
+          version: targetBuild.attributes.version,
+          processingState: targetBuild.attributes.processingState,
+          uploadedDate: targetBuild.attributes.uploadedDate,
         }
       : null,
     attachedBuild: attached
@@ -227,12 +227,12 @@ async function main() {
     releaseTypeAfter: version.attributes.releaseType,
   };
 
-  if (attach && build25?.attributes.processingState === "VALID") {
-    if (attached?.id !== build25.id) {
+  if (attach && targetBuild?.attributes.processingState === "VALID") {
+    if (attached?.id !== targetBuild.id) {
       try {
-        await attachBuild(token, versionId, build25.id);
+        await attachBuild(token, versionId, targetBuild.id);
         report.attachAttempted = true;
-        report.attachResult = "OK — build 25 attached";
+        report.attachResult = `OK — build ${TARGET_BUILD} attached`;
         const newAttached = await getAttachedBuild(token, versionId);
         report.attachedBuild = newAttached
           ? {
