@@ -19,9 +19,11 @@ This list is **only** what you must do in App Store Connect, on a real device, o
 | 2026-07-29 | Release type | **MANUAL** (was `AFTER_APPROVAL`; set via API) |
 | 2026-07-29 | IAP API state | `stillscout_pro_monthly` / `stillscout_pro_yearly` → API `CREATED` — **confirm UI shows Ready to Submit** |
 | 2026-07-29 | iPhone 6.7" screenshots (5×, en-US + en-GB) | **COMPLETE** — premium redesign in `docs/asc_assets/screenshots_67/` |
-| — | Review phone | **Placeholder** `+977 980-000-0000` — user must replace |
-| — | App Privacy labels | **Not done** — user manual in ASC |
-| — | Submit for Review | **Not done** — waiting on privacy + phone + optional sandbox smoke |
+| 2026-08-01 | ASC inspect (Aug 1 launch run) | **PREPARE_FOR_SUBMISSION** — build **26** attached, **MANUAL** release; see `docs/AUG1_LAUNCH.md` |
+| 2026-08-01 | `check_release_secrets.dart` | **OK** |
+| 2026-08-01 | Submit for Review | **Skipped (blocked)** — placeholder phone + App Privacy not verified |
+| — | Review phone | **Placeholder** `+977 980-000-0000` — **BLOCKER** — user must replace |
+| — | App Privacy labels | **Not verified** (API unsupported) — **BLOCKER** until confirmed in ASC UI |
 
 **ASC ops tool:** `deno run --allow-read --allow-net --allow-env tool/asc_ops.ts` (read-only) · `--attach` to swap build on version 1.0.
 
