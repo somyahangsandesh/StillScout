@@ -17,7 +17,8 @@ This list is **only** what you must do in App Store Connect, on a real device, o
 | 2026-07-29 | Version **1.0** build attachment | **Build 26 attached** (replaced build 25) via ASC API |
 | 2026-07-29 | Subtitle (en-GB + en-US) | **Set** — “Best stills from any video” |
 | 2026-07-29 | Release type | **MANUAL** (was `AFTER_APPROVAL`; set via API) |
-| 2026-07-29 | IAP API state | `stillscout_pro_monthly` / `stillscout_pro_yearly` → API `CREATED` — **confirm UI shows Ready to Submit** |
+| 2026-07-29 | IAP API state (legacy) | `inAppPurchases` API → `CREATED` |
+| 2026-08-01 | Subscriptions API state | `stillscout_pro_monthly` / `stillscout_pro_yearly` → **READY_TO_SUBMIT** |
 | 2026-07-29 | iPhone 6.7" screenshots (5×, en-US + en-GB) | **COMPLETE** — premium redesign in `docs/asc_assets/screenshots_67/` |
 | 2026-08-01 | ASC inspect (Aug 1 launch run) | **PREPARE_FOR_SUBMISSION** — build **26** attached, **MANUAL** release; see `docs/AUG1_LAUNCH.md` |
 | 2026-08-01 | `check_release_secrets.dart` | **OK** |
