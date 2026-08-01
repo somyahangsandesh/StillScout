@@ -1,12 +1,53 @@
 # Aug 1, 2026 launch run
 
-**Status: BLOCKED — not submitted**
+**Status: FAILED — not submitted**
 
-Manual release was the plan. Full ASC API inspection on **2026-08-01 (launch day)** shows version **1.0** is still **PREPARE_FOR_SUBMISSION**. Submit was **not** triggered because required blockers remain (placeholder review phone + App Privacy not set via API or browser).
+Authorized submit was attempted on **2026-08-01**. ASC API fixed several metadata gaps (pricing, category, iPad screenshots) but **Submit for Review still blocked** by **App Privacy** (`STATE_ERROR.APP_DATA_USAGES_REQUIRED`). Version **1.0** remains **PREPARE_FOR_SUBMISSION**. Manual release unchanged.
 
 ---
 
-## ASC snapshot (2026-08-01 launch run)
+## Result
+
+| Outcome | Detail |
+|---------|--------|
+| **SUBMITTED** | No |
+| **RELEASED** | No (not approved) |
+| **FAILED** | Yes — App Privacy questionnaire not published |
+
+### Exact ASC errors (final submit attempt)
+
+**Adding app version to review submission (`POST /v1/reviewSubmissionItems`):**
+
+```
+409 STATE_ERROR.ENTITY_STATE_INVALID
+appStoreVersions '0676e217-a370-4728-ab95-39a65ce42515' is not in valid state.
+
+associatedErrors:
+  /v1/appDataUsages/
+    409 STATE_ERROR.APP_DATA_USAGES_REQUIRED
+    "You must have published answers to your app's data usages."
+```
+
+**Final commit (`PATCH /v1/reviewSubmissions/{id}` `submitted: true`):**
+
+```
+409 ENTITY_ERROR.RELATIONSHIP.REQUIRED
+App 6790234719 must have an approved appStoreVersions for platform IOS,
+or an appStoreVersions must be included in this review submission.
+```
+
+**IAP items (`inAppPurchases` / `subscription` relationship on `reviewSubmissionItems`):**
+
+```
+409 ENTITY_ERROR.RELATIONSHIP.UNKNOWN
+'inAppPurchases' / 'subscription' is not a relationship on reviewSubmissionItems
+```
+
+Subscriptions are **READY_TO_SUBMIT** via `/v1/subscriptions/{id}` but must be included at submit time (UI or correct API relationship once app version is attachable).
+
+---
+
+## ASC snapshot (post-fix run, 2026-08-01)
 
 | Check | Result |
 |-------|--------|
@@ -14,116 +55,86 @@ Manual release was the plan. Full ASC API inspection on **2026-08-01 (launch day
 | App Store state | **PREPARE_FOR_SUBMISSION** |
 | Attached build | **26** (`VALID`, uploaded 2026-07-28) |
 | Release type | **MANUAL** |
-| Review phone | **Placeholder** `+977 980-000-0000` |
+| Review phone | **Placeholder** `+977 980-000-0000` (unchanged; no real number in repo or ASC account API) |
 | Review email | `stillscout.support@gmail.com` |
-| App Privacy labels | **Not settable via API** (all `appDataUsage*` / `dataUsages` endpoints → 404); **ASC browser login wall** (`authResult=FAILED`) |
+| Primary category | **PHOTO_AND_VIDEO** (set via API this run) |
+| App pricing | **Free ($0.00)** — `POST /v1/appPriceSchedules` succeeded |
+| iPad 12.9" screenshots | **Uploaded** — 5× en-US + 5× en-GB (`APP_IPAD_PRO_3GEN_129`) |
+| iPhone 6.7" screenshots | **Present** (prior run) |
+| App Privacy labels | **BLOCKER** — all read/write API paths → 404; browser → **login required** (`authResult=FAILED`) |
 | Subscriptions API | `stillscout_pro_monthly` / `stillscout_pro_yearly` → **READY_TO_SUBMIT** |
-| Legacy IAP API | same products → `CREATED` (stale surface; use subscriptions API) |
-| Subtitles (en-US / en-GB) | “Best stills from any video” |
-| `check_release_secrets.dart` | **OK** (2026-08-01) |
-| `reviewSubmissions` | **0** existing (never submitted) |
+| Legacy IAP API | same products → `CREATED` |
+| `reviewSubmissions` | Draft `dd9233a1-c0af-47df-81c6-644f53948647` — **READY_FOR_REVIEW**, `submittedDate: null` (0 items attached) |
 
-**Commands:** `deno run --allow-read --allow-net --allow-env tool/asc_ops.ts` · `dart run tool/check_release_secrets.dart`
+**Commands:**
 
-**IDs (for API submit when unblocked):**
+- `deno run --allow-read --allow-net --allow-env tool/asc_ops.ts`
+- `deno run --allow-read --allow-net --allow-env tool/asc_submit.ts` (inspect)
+- `deno run --allow-read --allow-net --allow-env tool/asc_submit.ts --submit`
+
+**IDs:**
 
 | Resource | ID |
 |----------|-----|
 | App | `6790234719` |
 | Version 1.0 | `0676e217-a370-4728-ab95-39a65ce42515` |
+| App info | `29c5b16f-aa14-4ab4-90b9-1d77be68a237` |
 | Review detail | `c4685cc0-a698-42ab-a5a6-9fc042ae0e2d` |
-| Sub monthly | `6792454070` |
-| Sub yearly | `6792454034` |
+| Review submission (draft) | `dd9233a1-c0af-47df-81c6-644f53948647` |
+| Sub monthly (subscriptions API) | `6792454070` |
+| Sub yearly (subscriptions API) | `6792454034` |
+| IAP monthly (legacy) | `ebfcdd34-137b-4f9e-8b74-2c3cbeb17083` |
+| IAP yearly (legacy) | `f1941616-140b-46d0-8580-6d3bf6d8b839` |
 
 ---
 
-## What we completed today
+## What we completed this run (authorized)
 
-1. **ASC inspect** — build 26 attached, MANUAL release confirmed, subscriptions READY_TO_SUBMIT.
-2. **App Privacy research** — official ASC API has **no** nutrition-label endpoints (`/appDataUsages`, `/apps/{id}/dataUsages`, `/appDataUsageCategories`, etc. all **404**). Fastlane’s `AppDataUsage` uses an undocumented path not available with API-key JWT auth.
-3. **Browser ASC** — navigated to App Privacy; **login required** (not logged in). Stopped per policy.
-4. **Review phone search** — repo, secrets, and agent history contain **no real number**; ASC still shows placeholder. Did **not** invent a number.
-5. **Submit for Review** — **intentionally skipped** (placeholder phone + privacy incomplete).
-6. **Release** — not applicable (`PREPARE_FOR_SUBMISSION`, not approved).
-
----
-
-## Why Submit was skipped
-
-Per launch policy: do not submit with a placeholder review phone or incomplete App Privacy.
-
-1. **Review phone** — still `+977 980-000-0000`. No real number found anywhere in workspace.
-2. **App Privacy** — cannot be automated via API; browser blocked by login.
-
-Everything else for binary/metadata looks ready: build 26 attached, MANUAL release type, subscriptions ready, secrets preflight green.
+1. **ASC inspect** — build 26 attached, MANUAL release, subscriptions READY_TO_SUBMIT.
+2. **Fixed via API** — free app pricing; primary category PHOTO_AND_VIDEO; iPad Pro 12.9" screenshots (10 total).
+3. **App Privacy** — all probed API paths 404; ASC browser session not logged in → skipped.
+4. **Phone search** — ASC users/review detail/workspace: only placeholder `+977 980-000-0000`; did not invent a number.
+5. **Submit for Review** — attempted; blocked by App Privacy (see errors above).
+6. **Release** — N/A (`PREPARE_FOR_SUBMISSION`).
 
 ---
 
-## Unblock and ship (≈15 minutes)
+## What you must click (≈10 min)
 
-### Step 1 — App Privacy (required) — **YOU in ASC UI**
+### 1. App Privacy — **required** (blocks submit)
 
-**App Store Connect → Apps → StillScout → App Privacy → Get Started / Edit**
+Log in at [App Store Connect](https://appstoreconnect.apple.com/) → **StillScout** → **App Privacy** → **Get Started / Edit**.
 
-Declare data for **App Functionality** (not tracking), aligned with `ios/Runner/PrivacyInfo.xcprivacy` and [privacy.html](https://somyahangsandesh.github.io/StillScout/legal/privacy.html):
+Declare for **App Functionality** (not tracking), aligned with `ios/Runner/PrivacyInfo.xcprivacy`:
 
 - Photos / Videos  
-- Purchase History (subscriptions)  
-- Device ID (if shown in questionnaire)  
+- Purchase History  
+- Device ID (if prompted)  
 
-Publish / Save. Confirm **not used for tracking**.
+**Save / Publish.**
 
-### Step 2 — Review phone (required)
+### 2. Review phone — **recommended**
 
-**Option A — paste your number in chat** so the agent can set it via API (`PATCH /appStoreReviewDetails/{id}`) and submit immediately.
+**StillScout → iOS App → 1.0 → App Review Information → Phone**
 
-**Option B — ASC UI:** **StillScout → iOS App → 1.0 → App Review Information → Phone**
+Replace `+977 980-000-0000` with a number you will answer during review.  
+Or paste your number in chat for API `PATCH /appStoreReviewDetails/c4685cc0-a698-42ab-a5a6-9fc042ae0e2d`.
 
-Replace `+977 980-000-0000` with a **real number you will answer** during review (Aug 1–3).
-
-### Step 3 — Submit for Review
+### 3. Submit for Review
 
 **ASC UI:** **StillScout → 1.0 → Add for Review → Submit for Review** (include both subscriptions). Keep **“Manually release this version”**.
 
-**Or API (3-step, when phone + privacy done):**
+**Or re-run API after privacy is published:**
 
-1. `POST /v1/reviewSubmissions` — `platform: IOS`, app `6790234719`
-2. `POST /v1/reviewSubmissionItems` — version `0676e217-a370-4728-ab95-39a65ce42515` + subscriptions `6792454070`, `6792454034`
-3. `PATCH /v1/reviewSubmissions/{id}` — `submitted: true`
+```bash
+deno run --allow-read --allow-net --allow-env tool/asc_submit.ts --submit
+```
 
-Apple review typically **24–48 hours** (sometimes same day). Aug 1 **store** release only happens if already approved **or** you get fast review today.
+### 4. After approval (manual release only)
 
-### Step 4 — After approval (manual release)
+**Release This Version** when state is **PENDING_DEVELOPER_RELEASE**. Do not auto-release.
 
-**App Store Connect → StillScout → 1.0 → Release This Version**
-
-Do **not** use “Release automatically.” Only when state is **PENDING_DEVELOPER_RELEASE** / approved.
-
-**App Store link (after live):** https://apps.apple.com/app/id6790234719  
-Bundle: `com.stillscout.stillscout`
-
----
-
-## Post-release smoke (5 min)
-
-On a real iPhone with production build:
-
-1. Free scout offline (on-device Vision path).  
-2. One cloud AI scout online (trial or Pro).  
-3. Subscribe or **Restore Purchases** → confirm **StillScout AI Pro** in Settings.  
-4. Pro gallery, Auto Polish, 4K export.  
-5. Gallery → select 2 frames → Compare → Share.
-
----
-
-## Shipaton (Next Gen) — does not block store
-
-| Item | Status |
-|------|--------|
-| Demo video (15–30 s vertical) | **Still missing** — scripts in `docs/marketing/instagram_story_ads.md` |
-| GitHub repo | Public — [StillScout](https://github.com/somyahangsandesh/StillScout) |
-
-Film and upload for contest separately; App Store release does not depend on the video.
+**App Store link (after live):** https://apps.apple.com/app/id6790234719
 
 ---
 
@@ -131,8 +142,8 @@ Film and upload for contest separately; App Store release does not depend on the
 
 | Date | Action |
 |------|--------|
-| 2026-08-01 | ASC inspect: `PREPARE_FOR_SUBMISSION`, build 26, MANUAL, placeholder phone |
-| 2026-08-01 | `check_release_secrets.dart` → OK |
-| 2026-08-01 | App Privacy API probe → all endpoints 404; browser → login wall |
-| 2026-08-01 | Subscriptions API → monthly + yearly **READY_TO_SUBMIT** |
-| 2026-08-01 | **Submit skipped** — phone + App Privacy blockers |
+| 2026-08-01 | ASC inspect: PREPARE_FOR_SUBMISSION, build 26, MANUAL, placeholder phone |
+| 2026-08-01 | App Privacy API → 404; browser → login wall |
+| 2026-08-01 | **Authorized submit** — fixed pricing, category, iPad screenshots via API |
+| 2026-08-01 | **Submit FAILED** — `APP_DATA_USAGES_REQUIRED` (App Privacy) |
+| 2026-08-01 | Draft review submission created (`dd9233a1…`) — not committed |
