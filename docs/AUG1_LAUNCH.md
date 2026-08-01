@@ -1,8 +1,8 @@
 # Aug 1, 2026 launch run
 
-**Status: FAILED — not submitted**
+**Status: SUBMITTED — waiting for review**
 
-Authorized submit was attempted on **2026-08-01**. ASC API fixed several metadata gaps (pricing, category, iPad screenshots) but **Submit for Review still blocked** by **App Privacy** (`STATE_ERROR.APP_DATA_USAGES_REQUIRED`). Version **1.0** remains **PREPARE_FOR_SUBMISSION**. Manual release unchanged.
+Version **1.0** submitted for App Store review on **2026-08-01** after App Privacy was published in ASC UI. State is **WAITING_FOR_REVIEW**. Release type **MANUAL** — do not release until **PENDING_DEVELOPER_RELEASE**.
 
 ---
 
@@ -10,65 +10,60 @@ Authorized submit was attempted on **2026-08-01**. ASC API fixed several metadat
 
 | Outcome | Detail |
 |---------|--------|
-| **SUBMITTED** | No |
-| **RELEASED** | No (not approved) |
-| **FAILED** | Yes — App Privacy questionnaire not published |
+| **SUBMITTED** | Yes — `2026-08-01` via ASC API |
+| **RELEASED** | No (not approved yet) |
+| **FAILED** | No |
 
-### Exact ASC errors (final submit attempt)
+### Final state
 
-**Adding app version to review submission (`POST /v1/reviewSubmissionItems`):**
+| Field | Value |
+|-------|-------|
+| App Store state | **WAITING_FOR_REVIEW** |
+| Review submission | `4e8ec146-4676-44e7-be7a-a821c5bda25c` → **WAITING_FOR_REVIEW** |
+| Version item | `NGU4ZWMxNDYtNDY3Ni00NGU3LWJlN2EtYTgyMWM1YmRhMjVjfDZ8ODg4MjA0NzI0` |
+| Build | **26** (attached) |
+| Release type | **MANUAL** |
+| Review phone | Placeholder `+977 980-000-0000` (did not block submit) |
+| Review email | `stillscout.support@gmail.com` |
 
-```
-409 STATE_ERROR.ENTITY_STATE_INVALID
-appStoreVersions '0676e217-a370-4728-ab95-39a65ce42515' is not in valid state.
+### Privacy blocker — resolved
 
-associatedErrors:
-  /v1/appDataUsages/
-    409 STATE_ERROR.APP_DATA_USAGES_REQUIRED
-    "You must have published answers to your app's data usages."
-```
+`POST /v1/reviewSubmissionItems` (app version) succeeded — **no** `APP_DATA_USAGES_REQUIRED`. App Privacy published in ASC UI.
 
-**Final commit (`PATCH /v1/reviewSubmissions/{id}` `submitted: true`):**
+### Subscription IAPs — API limitation
 
-```
-409 ENTITY_ERROR.RELATIONSHIP.REQUIRED
-App 6790234719 must have an approved appStoreVersions for platform IOS,
-or an appStoreVersions must be included in this review submission.
-```
-
-**IAP items (`inAppPurchases` / `subscription` relationship on `reviewSubmissionItems`):**
+Both subscriptions remain **READY_TO_SUBMIT** but could not be attached via API:
 
 ```
 409 ENTITY_ERROR.RELATIONSHIP.UNKNOWN
-'inAppPurchases' / 'subscription' is not a relationship on reviewSubmissionItems
+'subscription' is not a relationship on the resource 'reviewSubmissionItems'
 ```
 
-Subscriptions are **READY_TO_SUBMIT** via `/v1/subscriptions/{id}` but must be included at submit time (UI or correct API relationship once app version is attachable).
+App version was submitted anyway. **If subscriptions are not in the review queue**, add them in ASC UI:
+
+**StillScout → Subscriptions → AI Pro Monthly / Yearly → Submit for Review** (or include when editing the in-review submission if ASC allows).
 
 ---
 
-## ASC snapshot (post-fix run, 2026-08-01)
+## ASC snapshot (submit run, 2026-08-01)
 
 | Check | Result |
 |-------|--------|
 | Version | **1.0** |
-| App Store state | **PREPARE_FOR_SUBMISSION** |
+| App Store state | **WAITING_FOR_REVIEW** |
 | Attached build | **26** (`VALID`, uploaded 2026-07-28) |
 | Release type | **MANUAL** |
-| Review phone | **Placeholder** `+977 980-000-0000` (unchanged; no real number in repo or ASC account API) |
+| Review phone | **Placeholder** `+977 980-000-0000` |
 | Review email | `stillscout.support@gmail.com` |
-| Primary category | **PHOTO_AND_VIDEO** (set via API this run) |
-| App pricing | **Free ($0.00)** — `POST /v1/appPriceSchedules` succeeded |
-| iPad 12.9" screenshots | **Uploaded** — 5× en-US + 5× en-GB (`APP_IPAD_PRO_3GEN_129`) |
-| iPhone 6.7" screenshots | **Present** (prior run) |
-| App Privacy labels | **BLOCKER** — all read/write API paths → 404; browser → **login required** (`authResult=FAILED`) |
-| Subscriptions API | `stillscout_pro_monthly` / `stillscout_pro_yearly` → **READY_TO_SUBMIT** |
-| Legacy IAP API | same products → `CREATED` |
-| `reviewSubmissions` | Draft `dd9233a1-c0af-47df-81c6-644f53948647` — **READY_FOR_REVIEW**, `submittedDate: null` (0 items attached) |
+| Primary category | **PHOTO_AND_VIDEO** |
+| App pricing | **Free ($0.00)** |
+| iPad 12.9" screenshots | **Uploaded** (10 total) |
+| iPhone 6.7" screenshots | **Present** |
+| App Privacy | **Published** (UI) |
+| Subscriptions API | `stillscout_pro_monthly` / `stillscout_pro_yearly` → **READY_TO_SUBMIT** (not attached via API) |
 
 **Commands:**
 
-- `deno run --allow-read --allow-net --allow-env tool/asc_ops.ts`
 - `deno run --allow-read --allow-net --allow-env tool/asc_submit.ts` (inspect)
 - `deno run --allow-read --allow-net --allow-env tool/asc_submit.ts --submit`
 
@@ -80,7 +75,7 @@ Subscriptions are **READY_TO_SUBMIT** via `/v1/subscriptions/{id}` but must be i
 | Version 1.0 | `0676e217-a370-4728-ab95-39a65ce42515` |
 | App info | `29c5b16f-aa14-4ab4-90b9-1d77be68a237` |
 | Review detail | `c4685cc0-a698-42ab-a5a6-9fc042ae0e2d` |
-| Review submission (draft) | `dd9233a1-c0af-47df-81c6-644f53948647` |
+| Review submission (active) | `4e8ec146-4676-44e7-be7a-a821c5bda25c` |
 | Sub monthly (subscriptions API) | `6792454070` |
 | Sub yearly (subscriptions API) | `6792454034` |
 | IAP monthly (legacy) | `ebfcdd34-137b-4f9e-8b74-2c3cbeb17083` |
@@ -88,51 +83,36 @@ Subscriptions are **READY_TO_SUBMIT** via `/v1/subscriptions/{id}` but must be i
 
 ---
 
-## What we completed this run (authorized)
+## What we completed this run
 
-1. **ASC inspect** — build 26 attached, MANUAL release, subscriptions READY_TO_SUBMIT.
-2. **Fixed via API** — free app pricing; primary category PHOTO_AND_VIDEO; iPad Pro 12.9" screenshots (10 total).
-3. **App Privacy** — all probed API paths 404; ASC browser session not logged in → skipped.
-4. **Phone search** — ASC users/review detail/workspace: only placeholder `+977 980-000-0000`; did not invent a number.
-5. **Submit for Review** — attempted; blocked by App Privacy (see errors above).
-6. **Release** — N/A (`PREPARE_FOR_SUBMISSION`).
+1. **App Privacy** — user confirmed published in ASC UI.
+2. **Privacy probe** — `addVersion` to review submission succeeded (no `APP_DATA_USAGES_REQUIRED`).
+3. **Submit for Review** — created submission `4e8ec146…`, attached version 1.0, `PATCH submitted: true` → **WAITING_FOR_REVIEW**.
+4. **Subscriptions** — API attach failed (`subscription` relationship unknown); app submitted without them.
+5. **Phone** — placeholder unchanged; did not block submission.
+6. **Release** — N/A until approval (`MANUAL` release after **PENDING_DEVELOPER_RELEASE**).
 
 ---
 
-## What you must click (≈10 min)
+## Next steps
 
-### 1. App Privacy — **required** (blocks submit)
+### 1. Verify subscriptions in review (optional, ~2 min)
 
-Log in at [App Store Connect](https://appstoreconnect.apple.com/) → **StillScout** → **App Privacy** → **Get Started / Edit**.
+In [App Store Connect](https://appstoreconnect.apple.com/) check whether **AI Pro Monthly** and **AI Pro Yearly** are included in the current review. If not:
 
-Declare for **App Functionality** (not tracking), aligned with `ios/Runner/PrivacyInfo.xcprivacy`:
+**StillScout → Subscriptions → [product] → Submit for Review**
 
-- Photos / Videos  
-- Purchase History  
-- Device ID (if prompted)  
+### 2. Review phone — recommended
 
-**Save / Publish.**
-
-### 2. Review phone — **recommended**
+Replace `+977 980-000-0000` if Apple contacts you during review:
 
 **StillScout → iOS App → 1.0 → App Review Information → Phone**
 
-Replace `+977 980-000-0000` with a number you will answer during review.  
-Or paste your number in chat for API `PATCH /appStoreReviewDetails/c4685cc0-a698-42ab-a5a6-9fc042ae0e2d`.
+Or API: `PATCH /appStoreReviewDetails/c4685cc0-a698-42ab-a5a6-9fc042ae0e2d`
 
-### 3. Submit for Review
+### 3. After approval (manual release only)
 
-**ASC UI:** **StillScout → 1.0 → Add for Review → Submit for Review** (include both subscriptions). Keep **“Manually release this version”**.
-
-**Or re-run API after privacy is published:**
-
-```bash
-deno run --allow-read --allow-net --allow-env tool/asc_submit.ts --submit
-```
-
-### 4. After approval (manual release only)
-
-**Release This Version** when state is **PENDING_DEVELOPER_RELEASE**. Do not auto-release.
+When state is **PENDING_DEVELOPER_RELEASE**, click **Release This Version**. Do not auto-release.
 
 **App Store link (after live):** https://apps.apple.com/app/id6790234719
 
@@ -147,3 +127,5 @@ deno run --allow-read --allow-net --allow-env tool/asc_submit.ts --submit
 | 2026-08-01 | **Authorized submit** — fixed pricing, category, iPad screenshots via API |
 | 2026-08-01 | **Submit FAILED** — `APP_DATA_USAGES_REQUIRED` (App Privacy) |
 | 2026-08-01 | Draft review submission created (`dd9233a1…`) — not committed |
+| 2026-08-01 | User published App Privacy in ASC UI |
+| 2026-08-01 | **SUBMITTED** — version 1.0 → **WAITING_FOR_REVIEW** (`4e8ec146…`) |
