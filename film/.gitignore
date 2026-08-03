@@ -1,0 +1,11 @@
+# Film build artifacts — keep sources, skip heavy media
+bin/
+audio/
+work/
+work_v*/
+analysis/
+export/*.mp4
+export/archive/
+export/review/
+export/review_v*/
+.DS_Store

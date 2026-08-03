@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.10">
+  <resources>
+    <format id="r1" name="FFVideoFormat2160x3840p24" frameDuration="1/24s" width="2160" height="3840"/>
+    <asset id="r1" name="MVI_0387.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0387.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r2" name="MVI_0356.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0356.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r3" name="MVI_0358.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0358.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r4" name="MVI_0353.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0353.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r5" name="MVI_0343.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0343.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r6" name="MVI_0365.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0365.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r7" name="MVI_0363.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0363.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r8" name="MVI_0378.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0378.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+    <asset id="r9" name="MVI_0359.MP4" src="file:///Users/sandeshsomyahang/Downloads/New%20Folder%20With%20Items/MVI_0359.MP4" start="0s" duration="3600s" hasVideo="1" format="r1"/>
+  </resources>
+  <library>
+    <event name="StillScout">
+      <project name="Before the Capture">
+        <sequence format="r1" duration="1080/24s" tcStart="0s" tcFormat="NDF">
+          <spine>
+      <asset-clip name="MVI_0387.MP4" ref="r1" offset="0/24s" start="0.8s" duration="3.2s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0356.MP4" ref="r2" offset="77/24s" start="6.0s" duration="4.0s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0358.MP4" ref="r3" offset="173/24s" start="3.5s" duration="5.0s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0353.MP4" ref="r4" offset="293/24s" start="18.0s" duration="4.5s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0343.MP4" ref="r5" offset="401/24s" start="1.2s" duration="4.8s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0365.MP4" ref="r6" offset="516/24s" start="10.0s" duration="5.0s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0363.MP4" ref="r7" offset="636/24s" start="10.0s" duration="5.0s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0378.MP4" ref="r8" offset="756/24s" start="4.0s" duration="4.0s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0359.MP4" ref="r9" offset="852/24s" start="6.0s" duration="4.0s" tcFormat="NDF"/>
+      <asset-clip name="MVI_0387.MP4" ref="r1" offset="948/24s" start="3.0s" duration="5.5s" tcFormat="NDF"/>
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>
