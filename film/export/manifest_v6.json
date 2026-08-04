@@ -1,0 +1,18 @@
+{
+  "title": "StillScout \u2014 Before the Capture (v6)",
+  "based_on": "v4 liked ~41s cut",
+  "duration_sec": 41.5,
+  "creative": [
+    "Ken Burns micro-motion",
+    "soft light-leak into harbor",
+    "perfect-still freeze on phone screen",
+    "animated StillScout mark + wordmark end",
+    "VO pocket for: StillScout, scout the perfect still"
+  ],
+  "voiceover_window_sec": [
+    34.3,
+    40.7
+  ],
+  "master": "/Users/sandeshsomyahang/stillscout/film/export/StillScout_BeforeTheCapture_4K_9x16.mp4",
+  "social": "/Users/sandeshsomyahang/stillscout/film/export/StillScout_BeforeTheCapture_1080x1920.mp4"
+}
