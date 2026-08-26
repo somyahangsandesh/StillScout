@@ -1164,32 +1164,41 @@ class _LastMatchCard extends StatelessWidget {
 class _CommunityTeaser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    const items = [
+      ('⚡', '3 matches in progress across Japan right now'),
+      ('🏆', 'Amit KC (Osaka) just crossed 500 career runs'),
+      ('🔥', 'Bikash Rai is on a 6-match hot streak'),
+    ];
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '3 matches in progress across Japan',
-            style: GoogleFonts.inter(
-              color: CR.text1,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+        children: items.map((entry) {
+          final (emoji, text) = entry;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: GoogleFonts.inter(
+                      color: CR.text2,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Amit KC (Osaka) just hit his first century',
-            style: GoogleFonts.inter(
-              color: CR.text2,
-              fontSize: 13,
-            ),
-          ),
-        ],
+          );
+        }).toList(),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/verdict_generator.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/cr_widgets.dart';
 import '../../player/providers/player_provider.dart';
 import '../providers/scorer_provider.dart';
 
@@ -210,7 +211,16 @@ class PostMatchScreen extends ConsumerWidget {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: () => context.go('/match/mvp'),
+                      onPressed: () {
+                        // Demo: show milestone toast before navigating to MVP
+                        showMilestoneToast(
+                          context,
+                          '🏏',
+                          '500 Career Runs!',
+                          'Roshan KC has crossed 500 runs this season',
+                        );
+                        context.go('/match/mvp');
+                      },
                       child: const Text('CONFIRM + UPDATE OVR'),
                     ),
                   ),

@@ -17,6 +17,7 @@ class PlayerCardScreen extends ConsumerStatefulWidget {
 
 class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
   bool _showPro = false;
+  double _shareScale = 1.0;
 
   @override
   Widget build(BuildContext context) {
@@ -83,11 +84,23 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
               ),
             const SizedBox(height: 20),
 
-            // Primary action
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.share, size: 18),
-              label: Text(_showPro ? 'SHARE PRO CARD' : 'SHARE CARD'),
+            // Primary action — brief pulse then share sheet
+            AnimatedScale(
+              scale: _shareScale,
+              duration: const Duration(milliseconds: 100),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  setState(() => _shareScale = 0.95);
+                  await Future.delayed(const Duration(milliseconds: 120));
+                  if (!mounted) return;
+                  setState(() => _shareScale = 1.0);
+                  await Future.delayed(const Duration(milliseconds: 80));
+                  if (!mounted) return;
+                  _showShareSheet();
+                },
+                icon: const Icon(Icons.share, size: 18),
+                label: Text(_showPro ? 'SHARE PRO CARD' : 'SHARE CARD'),
+              ),
             ),
             const SizedBox(height: 12),
             if (!_showPro) ...[
@@ -111,6 +124,52 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showShareSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: CR.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: CR.t3,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'SHARE YOUR CARD',
+              style: GoogleFonts.inter(
+                color: CR.t1,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _ShareTarget('📲', 'WhatsApp', CR.green),
+                _ShareTarget('📸', 'Instagram', Color(0xFFE1306C)),
+                _ShareTarget('🔗', 'Copy Link', CR.t2),
+              ],
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -533,6 +592,56 @@ class _ProStatCell extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── Share Target ─────────────────────────────────────────────────────────────
+
+class _ShareTarget extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final Color color;
+  const _ShareTarget(this.emoji, this.label, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Opening $label...',
+              style: GoogleFonts.inter(fontSize: 13),
+            ),
+            backgroundColor: CR.cardHigh,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop();
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.3)),
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 24)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.inter(color: CR.t2, fontSize: 12),
+          ),
+        ],
+      ),
     );
   }
 }

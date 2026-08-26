@@ -59,7 +59,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     // Brief overlay then Pro upsell
     showDialog<void>(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: Colors.black.withOpacity(0.92),
       builder: (_) => _OvrRevealOverlay(ovr: ovr),
     ).then((_) {
       if (mounted) {
@@ -1533,7 +1533,9 @@ class _OvrRevealOverlayState extends State<_OvrRevealOverlay>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _countAnim;
+  bool _showDots = true;
   bool _showUnlocked = false;
+  bool _showDomainPreview = false;
 
   @override
   void initState() {
@@ -1542,17 +1544,29 @@ class _OvrRevealOverlayState extends State<_OvrRevealOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
+    // easeIn = starts slow, ends fast — creates dramatic acceleration to the number
     _countAnim = Tween<double>(begin: 50, end: widget.ovr.toDouble()).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
     );
-    _ctrl.forward().then((_) {
-      if (mounted) {
-        setState(() => _showUnlocked = true);
-        // After showing "UNLOCKED", wait then pop and let the caller show Pro upsell
-        Future.delayed(const Duration(milliseconds: 1600), () {
+    // 300ms loading-dots pause, then start the count-up
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      setState(() => _showDots = false);
+      _ctrl.forward().then((_) {
+        if (!mounted) return;
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (!mounted) return;
+          setState(() => _showUnlocked = true);
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (!mounted) return;
+            setState(() => _showDomainPreview = true);
+          });
+        });
+        // Auto-dismiss: 300ms loading + 1500ms anim + 500ms pause + ~1800ms display
+        Future.delayed(const Duration(milliseconds: 2600), () {
           if (mounted) Navigator.of(context).pop();
         });
-      }
+      });
     });
   }
 
@@ -1568,20 +1582,31 @@ class _OvrRevealOverlayState extends State<_OvrRevealOverlay>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedBuilder(
-            animation: _countAnim,
-            builder: (_, __) {
-              return Text(
-                _countAnim.value.round().toString(),
-                style: GoogleFonts.spaceGrotesk(
-                  color: CR.gold,
-                  fontSize: 120,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
-                ),
-              );
-            },
-          ),
+          if (_showDots)
+            Text(
+              '• • •',
+              style: GoogleFonts.spaceGrotesk(
+                color: CR.gold.withOpacity(0.6),
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 8,
+              ),
+            ).animate().fadeIn(duration: 200.ms)
+          else
+            AnimatedBuilder(
+              animation: _countAnim,
+              builder: (_, __) {
+                return Text(
+                  _countAnim.value.round().toString(),
+                  style: GoogleFonts.spaceGrotesk(
+                    color: CR.gold,
+                    fontSize: 120,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                  ),
+                );
+              },
+            ),
           Text(
             'OVR',
             style: GoogleFonts.inter(
@@ -1604,9 +1629,90 @@ class _OvrRevealOverlayState extends State<_OvrRevealOverlay>
             )
                 .animate()
                 .fadeIn(duration: 400.ms)
-                .scale(begin: const Offset(0.8, 0.8)),
+                .scale(begin: const Offset(0.8, 0.8))
+                .shimmer(
+                    delay: 400.ms,
+                    duration: 1200.ms,
+                    color: Colors.white.withOpacity(0.6)),
+          if (_showDomainPreview)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 48),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  const _LockedDomainPreview(),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Go Pro to see your full breakdown',
+                    style: GoogleFonts.inter(color: CR.t3, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 400.ms),
         ],
       ),
+    );
+  }
+}
+
+// Teaser bars shown in the OVR reveal overlay to create desire for Pro breakdown
+class _LockedDomainPreview extends StatelessWidget {
+  const _LockedDomainPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      ('BAT', '89'),
+      ('BOWL', '78'),
+      ('FIELD', '84'),
+    ];
+    return Column(
+      children: items.map((item) {
+        final (label, value) = item;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 38,
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: CR.t3,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: CR.t3.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Opacity(
+                opacity: 0.35,
+                child: Text(
+                  value,
+                  style: GoogleFonts.spaceGrotesk(
+                    color: CR.t3,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.lock_rounded, color: CR.t3, size: 10),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
