@@ -150,7 +150,7 @@ class _LeagueView extends StatelessWidget {
             tabs: const [
               Tab(text: 'STANDINGS'),
               Tab(text: 'FIXTURES'),
-              Tab(text: 'RECORDS'),
+              Tab(text: 'SEASON STORY'),
             ],
           ),
         ),
@@ -162,7 +162,7 @@ class _LeagueView extends StatelessWidget {
             children: const [
               _StandingsTab(),
               _FixturesTab(),
-              _RecordsTab(),
+              _SeasonStoryTab(),
             ],
           ),
         ),
@@ -479,10 +479,10 @@ class _FixtureCard extends StatelessWidget {
   }
 }
 
-// ─── Records Tab ──────────────────────────────────────────────────────────────
+// ─── Season Story Tab ─────────────────────────────────────────────────────────
 
-class _RecordsTab extends StatelessWidget {
-  const _RecordsTab();
+class _SeasonStoryTab extends StatelessWidget {
+  const _SeasonStoryTab();
 
   @override
   Widget build(BuildContext context) {
@@ -490,216 +490,324 @@ class _RecordsTab extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
       children: [
         Text(
-          'OKINAWA LEAGUE RECORDS',
+          'OKINAWA LEAGUE 2026 — THE STORY SO FAR',
           style: GoogleFonts.inter(
             color: CR.text1,
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
           ),
         ).animate().fadeIn(duration: 300.ms),
         const SizedBox(height: 20),
 
-        // BATTING
-        const _RecordSection(
-          title: 'BATTING',
-          records: [
-            _RecordEntry(
-              type: 'Highest Score',
-              holder: '#7 Roshan',
-              value: '127*',
-              context: 'vs Tokyo · Aug 26',
-              isNew: true,
-            ),
-            _RecordEntry(
-              type: 'Most Runs (Season)',
-              holder: '#7 Roshan',
-              value: '487',
-              context: '2026 Season',
-              isNew: false,
-            ),
-            _RecordEntry(
-              type: 'Best SR (min 20b)',
-              holder: '#18 Bikash',
-              value: '183.3',
-              context: 'vs Fukuoka · Mar 15',
-              isNew: false,
-            ),
-          ],
+        // Narrative paragraphs
+        const _StoryParagraph(
+          heading: 'Weeks 1–3',
+          body:
+              'Warriors and Rhinos dominated early, with Roshan KC emerging as the season\'s standout batter. Back-to-back centuries set the tone.',
         ).animate().fadeIn(delay: 80.ms),
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
 
-        // BOWLING
-        const _RecordSection(
-          title: 'BOWLING',
-          records: [
-            _RecordEntry(
-              type: 'Best Figures',
-              holder: '#12 Arjun',
-              value: '5/18',
-              context: 'vs Osaka · Jul 4',
-              isNew: false,
-            ),
-            _RecordEntry(
-              type: 'Best Economy (min 3ov)',
-              holder: '#6 Pradeep',
-              value: '4.2/ov',
-              context: 'vs Kobe · Jun 12',
-              isNew: false,
-            ),
-          ],
-        ).animate().fadeIn(delay: 160.ms),
-        const SizedBox(height: 20),
+        const _StoryParagraph(
+          heading: 'Week 4',
+          body:
+              'Fukuoka Tigers upset the standings with back-to-back wins. Three teams within 2 points — the title race is wide open.',
+        ).animate().fadeIn(delay: 140.ms),
+        const SizedBox(height: 12),
 
-        // TEAM
-        const _RecordSection(
-          title: 'TEAM',
-          records: [
-            _RecordEntry(
-              type: 'Highest Total',
-              holder: 'Okinawa Warriors',
-              value: '218/3',
-              context: 'vs Tokyo · Aug 26',
-              isNew: true,
-            ),
-            _RecordEntry(
-              type: 'Biggest Win',
-              holder: 'Okinawa Warriors',
-              value: '+87 runs',
-              context: 'vs Fukuoka · Mar 15',
-              isNew: false,
-            ),
-          ],
-        ).animate().fadeIn(delay: 240.ms),
-      ],
-    );
-  }
-}
+        const _StoryParagraph(
+          heading: 'Week 7 (last week)',
+          highlight: true,
+          body:
+              'Roshan KC broke the league record for highest individual score — 127* vs Osaka Kings. Warriors are now 3 points clear at the top.',
+        ).animate().fadeIn(delay: 200.ms),
+        const SizedBox(height: 24),
 
-class _RecordSection extends StatelessWidget {
-  final String title;
-  final List<_RecordEntry> records;
-
-  const _RecordSection({
-    required this.title,
-    required this.records,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+        // Current Form table
         Text(
-          title,
+          'CURRENT FORM',
           style: GoogleFonts.inter(
             color: CR.text3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
-            letterSpacing: 2.0,
+            letterSpacing: 2,
           ),
-        ),
-        const SizedBox(height: 8),
-        Container(height: 1, color: CR.cardHigh),
-        ...records.map((r) => _RecordRow(entry: r)),
+        ).animate().fadeIn(delay: 240.ms),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: CR.card,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Column(
+            children: [
+              _FormRow('Okinawa Warriors', ['W', 'W', 'W', 'W', 'L'], 'HOT', isYou: true),
+              Divider(height: 1, color: CR.cardHigh),
+              _FormRow('Tokyo Rhinos', ['W', 'L', 'W', 'W', 'W'], 'STRONG'),
+              Divider(height: 1, color: CR.cardHigh),
+              _FormRow('Fukuoka Tigers', ['L', 'W', 'W', 'L', 'W'], 'INCONSISTENT'),
+            ],
+          ),
+        ).animate().fadeIn(delay: 280.ms),
+        const SizedBox(height: 24),
+
+        // Title race
+        Text(
+          'TITLE RACE',
+          style: GoogleFonts.inter(
+            color: CR.text3,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 2,
+          ),
+        ).animate().fadeIn(delay: 320.ms),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: CR.card,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TitleRaceRow('Okinawa Warriors', 'Win 2 of last 3'),
+              SizedBox(height: 8),
+              _TitleRaceRow(
+                  'Tokyo Rhinos', 'Win all 3 + Warriors drop points'),
+            ],
+          ),
+        ).animate().fadeIn(delay: 340.ms),
+        const SizedBox(height: 24),
+
+        // Records this season
+        Text(
+          'RECORDS THIS SEASON',
+          style: GoogleFonts.inter(
+            color: CR.text3,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 2,
+          ),
+        ).animate().fadeIn(delay: 380.ms),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: CR.card,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Column(
+            children: [
+              _SeasonRecordRow(label: 'Highest Score', value: '127*  Roshan', detail: 'Week 7'),
+              Divider(height: 1, color: CR.cardHigh),
+              _SeasonRecordRow(label: 'Best Bowling', value: '5/18  Bikash', detail: 'Week 4'),
+              Divider(height: 1, color: CR.cardHigh),
+              _SeasonRecordRow(label: 'Most MVPs', value: 'Roshan  ×3', detail: 'Season'),
+            ],
+          ),
+        ).animate().fadeIn(delay: 420.ms),
       ],
     );
   }
 }
 
-class _RecordEntry {
-  final String type;
-  final String holder;
-  final String value;
-  final String context;
-  final bool isNew;
+class _StoryParagraph extends StatelessWidget {
+  final String heading;
+  final String body;
+  final bool highlight;
 
-  const _RecordEntry({
-    required this.type,
-    required this.holder,
-    required this.value,
-    required this.context,
-    required this.isNew,
+  const _StoryParagraph({
+    required this.heading,
+    required this.body,
+    this.highlight = false,
   });
-}
-
-class _RecordRow extends StatelessWidget {
-  final _RecordEntry entry;
-
-  const _RecordRow({required this.entry});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: CR.cardHigh, width: 0.5)),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(12),
+        border: highlight
+            ? const Border(left: BorderSide(color: CR.green, width: 3))
+            : null,
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            heading.toUpperCase(),
+            style: GoogleFonts.inter(
+              color: highlight ? CR.green : CR.text3,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            body,
+            style: GoogleFonts.inter(
+              color: CR.text1,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FormRow extends StatelessWidget {
+  final String team;
+  final List<String> form;
+  final String label;
+  final bool isYou;
+
+  const _FormRow(this.team, this.form, this.label, {this.isYou = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: isYou ? CR.green.withOpacity(0.06) : Colors.transparent,
+      ),
+      child: Row(
+        children: [
+          if (isYou)
+            Container(
+              width: 3,
+              height: 20,
+              margin: const EdgeInsets.only(right: 10),
+              color: CR.green,
+            ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      entry.type.toUpperCase(),
-                      style: GoogleFonts.inter(
-                        color: CR.text3,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
+            child: Text(
+              team,
+              style: GoogleFonts.inter(
+                color: isYou ? CR.text1 : CR.text2,
+                fontSize: 13,
+                fontWeight: isYou ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+          Row(
+            children: form.map((f) {
+              final isW = f == 'W';
+              return Container(
+                width: 20,
+                height: 20,
+                margin: const EdgeInsets.only(left: 4),
+                decoration: BoxDecoration(
+                  color: isW
+                      ? CR.green.withOpacity(0.15)
+                      : CR.red.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    f,
+                    style: GoogleFonts.inter(
+                      color: isW ? CR.green : CR.red,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
                     ),
-                    if (entry.isNew) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: CR.green.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(
-                          'NEW',
-                          style: GoogleFonts.inter(
-                            color: CR.green,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  entry.holder,
-                  style: GoogleFonts.inter(
-                    color: CR.text1,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 1),
-                Text(
-                  entry.context,
-                  style: GoogleFonts.inter(
-                    color: CR.text2,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
+              );
+            }).toList(),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: isYou ? CR.gold : CR.text3,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TitleRaceRow extends StatelessWidget {
+  final String team;
+  final String needs;
+
+  const _TitleRaceRow(this.team, this.needs);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          team,
+          style: GoogleFonts.inter(
+            color: CR.text1,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'needs: $needs',
+            style: GoogleFonts.inter(
+              color: CR.text2,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SeasonRecordRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final String detail;
+
+  const _SeasonRecordRow({
+    required this.label,
+    required this.value,
+    required this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                color: CR.text3,
+                fontSize: 12,
+              ),
             ),
           ),
           Text(
-            entry.value,
-            style: GoogleFonts.spaceGrotesk(
+            value,
+            style: GoogleFonts.inter(
               color: CR.text1,
-              fontSize: 18,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            detail,
+            style: GoogleFonts.inter(
+              color: CR.text3,
+              fontSize: 11,
             ),
           ),
         ],

@@ -11,8 +11,9 @@ class MainShell extends StatelessWidget {
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/league')) return 1;
-    if (location.startsWith('/match/setup')) return 2;
-    if (location.startsWith('/me')) return 3;
+    if (location.startsWith('/play') || location.startsWith('/match/setup')) return 2;
+    if (location.startsWith('/community')) return 3;
+    if (location.startsWith('/me')) return 4;
     return 0; // /home
   }
 
@@ -37,7 +38,7 @@ class _CRBottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: CR.bg,
-        border: Border(top: BorderSide(color: CR.cardHigh, width: 1)),
+        border: Border(top: BorderSide(color: CR.card, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -47,29 +48,33 @@ class _CRBottomNav extends StatelessWidget {
             children: [
               _NavItem(
                 icon: Icons.home_rounded,
-                label: 'Home',
+                label: 'HOME',
                 selected: currentIndex == 0,
                 onTap: () => context.go('/home'),
               ),
               _NavItem(
                 icon: Icons.emoji_events_rounded,
-                label: 'League',
+                label: 'LEAGUE',
                 selected: currentIndex == 1,
                 onTap: () => context.go('/league'),
               ),
-              // Center Play button
+              // Center PLAY FAB
               _PlayButton(
                 selected: currentIndex == 2,
-                onTap: () => context.go('/match/setup'),
+                onTap: () => context.go('/play'),
+              ),
+              _NavItem(
+                icon: Icons.public_rounded,
+                label: 'COMMUNITY',
+                selected: currentIndex == 3,
+                onTap: () => context.go('/community'),
               ),
               _NavItem(
                 icon: Icons.person_rounded,
-                label: 'Me',
-                selected: currentIndex == 3,
+                label: 'ME',
+                selected: currentIndex == 4,
                 onTap: () => context.go('/me'),
               ),
-              // Empty slot to balance layout
-              const Expanded(child: SizedBox()),
             ],
           ),
         ),
@@ -101,14 +106,14 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 24),
+            Icon(icon, color: color, size: 22),
             const SizedBox(height: 3),
             Text(
               label,
               style: GoogleFonts.inter(
                 color: color,
                 fontSize: 10,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
               ),
             ),
           ],
@@ -146,7 +151,7 @@ class _PlayButton extends StatelessWidget {
             ),
             child: const Icon(
               Icons.sports_cricket,
-              color: CR.textInv,
+              color: CR.inv,
               size: 24,
             ),
           ),

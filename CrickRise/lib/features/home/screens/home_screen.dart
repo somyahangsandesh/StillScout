@@ -75,7 +75,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // START MATCH
-              _StartMatchButton(onTap: () => context.go('/match/scorer'))
+              _StartMatchButton(onTap: () => context.go('/play'))
                   .animate()
                   .fadeIn(delay: 320.ms),
               const SizedBox(height: 24),
@@ -94,6 +94,14 @@ class HomeScreen extends ConsumerWidget {
               _LastMatchCard()
                   .animate()
                   .fadeIn(delay: 420.ms),
+              const SizedBox(height: 24),
+
+              // IN THE COMMUNITY
+              const CRSectionLabel('In the Community'),
+              const SizedBox(height: 10),
+              _CommunityTeaser()
+                  .animate()
+                  .fadeIn(delay: 460.ms),
             ],
           ),
         ),
@@ -743,7 +751,7 @@ class _UpcomingMatchCard extends StatelessWidget {
           if (canScore) ...[
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () => context.go('/match/scorer'),
+              onTap: () => context.go('/play'),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -892,6 +900,42 @@ class _LastMatchCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Community Teaser ─────────────────────────────────────────────────────────
+
+class _CommunityTeaser extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '3 matches in progress across Japan',
+            style: GoogleFonts.inter(
+              color: CR.text1,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Amit KC (Osaka) just hit his first century',
+            style: GoogleFonts.inter(
+              color: CR.text2,
+              fontSize: 13,
+            ),
           ),
         ],
       ),

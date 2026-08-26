@@ -8,33 +8,47 @@ class CR {
   CR._();
 
   // Backgrounds
-  static const bg = Color(0xFF0D0D0D);
-  static const card = Color(0xFF161616);
-  static const cardHigh = Color(0xFF1E1E1E);
-  static const overlay = Color(0xFF252525);
+  static const bg       = Color(0xFF0A0A0A);
+  static const card     = Color(0xFF141414);
+  static const cardHigh = Color(0xFF1C1C1C);
+  static const overlay  = Color(0xFF222222);
 
   // Brand
-  static const green = Color(0xFF22C55E);
-  static const greenDim = Color(0xFF14532D);
-  static const gold = Color(0xFFF59E0B);
-  static const goldDim = Color(0xFF451A03);
-  static const red = Color(0xFFEF4444);
-  static const orange = Color(0xFFF97316);
+  static const green    = Color(0xFF22C55E);
+  static const greenDim = Color(0xFF052E16);
+  static const gold     = Color(0xFFF59E0B);
+  static const goldDim  = Color(0xFF2D1500);
+  static const red      = Color(0xFFEF4444);
+  static const orange   = Color(0xFFF97316);
 
-  // Text
-  static const white = Color(0xFFFFFFFF);
-  static const text1 = Color(0xFFF5F5F5);
-  static const text2 = Color(0xFF9B9B9B);
-  static const text3 = Color(0xFF4A4A4A);
-  static const textInv = Color(0xFF0D0D0D);
+  // Text (long names — keep for backward compatibility)
+  static const white   = Color(0xFFFFFFFF);
+  static const text1   = Color(0xFFF5F5F5);
+  static const text2   = Color(0xFF9B9B9B);
+  static const text3   = Color(0xFF4A4A4A);
+  static const textInv = Color(0xFF0A0A0A);
 
-  // Ball chips
-  static const dot = Color(0xFF1E1E1E);
-  static const runs = Color(0xFF252525);
-  static const four = Color(0xFF0B2218);
-  static const six = Color(0xFF1A1100);
+  // Text (short aliases)
+  static const t1  = text1;
+  static const t2  = text2;
+  static const t3  = text3;
+  static const inv = textInv;
+
+  // Ball chips (long names)
+  static const dot    = Color(0xFF1C1C1C);
+  static const runs   = Color(0xFF222222);
+  static const four   = Color(0xFF052E16);
+  static const six    = Color(0xFF2D1500);
   static const wicket = Color(0xFF2D0A0A);
-  static const extra = Color(0xFF1E1200);
+  static const extra  = Color(0xFF1E1200);
+
+  // Ball chips (short aliases)
+  static const bDot    = dot;
+  static const bRuns   = runs;
+  static const bFour   = four;
+  static const bSix    = six;
+  static const bWicket = wicket;
+  static const bExtra  = extra;
 }
 
 // Keep old name for backward compatibility during transition
@@ -42,7 +56,7 @@ class CrickRiseColors {
   CrickRiseColors._();
 
   static const Color background = CR.bg;
-  static const Color surface = Color(0xFF121212);
+  static const Color surface = CR.card;
   static const Color surfaceElevated = CR.cardHigh;
   static const Color surfaceCard = CR.card;
   static const Color overlay = CR.overlay;
