@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/models/player.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/cr_widgets.dart';
 import '../providers/player_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -198,7 +199,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
                 // MY POSITION
                 const CRSectionLabel('My Position'),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 _ProfilePositionWidget(
                   player: player,
                   rating: rating,
@@ -211,7 +212,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
                 // RECENT MATCHES
                 const CRSectionLabel('Recent Matches'),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const _RecentMatchesList(),
                 const SizedBox(height: 20),
 
@@ -226,13 +227,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
                 // BEST PERFORMANCES
                 const CRSectionLabel('Best Performances'),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const _BestPerformances(),
                 const SizedBox(height: 20),
 
                 // MILESTONES
                 const CRSectionLabel('Milestones'),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const _MilestoneChips(),
               ]),
             ),
@@ -338,7 +339,7 @@ class _ProfileOvrCard extends StatelessWidget {
                               ),
                             ),
                             if (rating.hasHotStreak || player.hasHeritage) ...[
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Wrap(
                                 spacing: 6,
                                 children: [
@@ -865,20 +866,20 @@ class _StatsGrid extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _StatCell('M', stats.matches.toString()),
+              CRStatCell(label: 'M', value: stats.matches.toString(), valueFontSize: 24),
               _VDivider(),
-              _StatCell('R', stats.runsScored.toString()),
+              CRStatCell(label: 'R', value: stats.runsScored.toString(), valueFontSize: 24),
               _VDivider(),
-              _StatCell('W', stats.wicketsTaken.toString()),
+              CRStatCell(label: 'W', value: stats.wicketsTaken.toString(), valueFontSize: 24),
               _VDivider(),
-              _StatCell('C', stats.catches.toString()),
+              CRStatCell(label: 'C', value: stats.catches.toString(), valueFontSize: 24),
               _VDivider(),
-              _StatCell('MVP', stats.mvpAwards.toString(), color: CR.gold),
+              CRStatCell(label: 'MVP', value: stats.mvpAwards.toString(), valueFontSize: 24, valueColor: CR.gold),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Container(height: 1, color: CR.cardHigh),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           // Secondary stats
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -890,40 +891,6 @@ class _StatsGrid extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StatCell extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color? color;
-  const _StatCell(this.label, this.value, {this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.spaceGrotesk(
-            color: color ?? CR.text1,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            height: 1,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            color: CR.text3,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1266,15 +1233,15 @@ class _CareerTab extends StatelessWidget {
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  const _CareerStatCell('3', 'Seasons'),
+                  const CRStatCell(label: 'Seasons', value: '3'),
                   _CareerVDivider(),
-                  const _CareerStatCell('87', 'Matches'),
+                  const CRStatCell(label: 'Matches', value: '87'),
                   _CareerVDivider(),
-                  const _CareerStatCell('2,418', 'Runs'),
+                  const CRStatCell(label: 'Runs', value: '2,418'),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1283,11 +1250,11 @@ class _CareerTab extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  const _CareerStatCell('96', 'Wickets'),
+                  const CRStatCell(label: 'Wickets', value: '96'),
                   _CareerVDivider(),
-                  const _CareerStatCell('61', 'Catches'),
+                  const CRStatCell(label: 'Catches', value: '61'),
                   _CareerVDivider(),
-                  const _CareerStatCell('14', 'MVPs', color: CR.gold),
+                  const CRStatCell(label: 'MVPs', value: '14', valueColor: CR.gold),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1322,7 +1289,7 @@ class _CareerTab extends StatelessWidget {
             letterSpacing: 2,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
             color: CR.card,
@@ -1339,40 +1306,6 @@ class _CareerTab extends StatelessWidget {
                 ],
               );
             }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CareerStatCell extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color? color;
-  const _CareerStatCell(this.value, this.label, {this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.spaceGrotesk(
-            color: color ?? CR.text1,
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            height: 1,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            color: CR.text3,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
           ),
         ),
       ],
@@ -1533,7 +1466,7 @@ class _FormSparkline extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         SizedBox(
           height: 40,
           child: LineChart(

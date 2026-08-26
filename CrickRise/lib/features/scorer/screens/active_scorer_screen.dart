@@ -9,6 +9,7 @@ import '../../../core/models/enums.dart';
 import '../../../core/models/match.dart';
 import '../../../core/models/player.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/cr_widgets.dart';
 import '../providers/scorer_provider.dart';
 
 class ActiveScorerScreen extends ConsumerStatefulWidget {
@@ -76,7 +77,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
           children: [
             _ConnectivityBanner(status: _connectivity),
             Expanded(
-              flex: 45,
+              flex: 47,
               child: _ZoneA(state: matchState, isDemoMatch: _isDemoMatch),
             ),
             const Divider(height: 1, color: CR.cardHigh),
@@ -91,7 +92,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
             ),
             const Divider(height: 1, color: CR.cardHigh),
             Expanded(
-              flex: 20,
+              flex: 18,
               child: _ZoneC(
                 state: matchState,
                 onUndo: () => _handleUndo(matchState),
@@ -819,27 +820,11 @@ class _RecentBalls extends StatelessWidget {
         const SizedBox(width: 10),
         ...deliveries.map((d) => Padding(
           padding: const EdgeInsets.only(right: 7),
-          child: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: _chipBg(d),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _chipText(d).withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                d.displayLabel,
-                style: GoogleFonts.spaceGrotesk(
-                  color: _chipText(d),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
+          child: CRBallChip(
+            label: d.displayLabel,
+            bgColor: _chipBg(d),
+            textColor: _chipText(d),
+            size: 34,
           ),
         )),
         if (deliveries.isEmpty)

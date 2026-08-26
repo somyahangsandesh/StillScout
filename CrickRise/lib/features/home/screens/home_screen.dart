@@ -83,7 +83,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ).animate().fadeIn(delay: 80.ms),
               if (player.roles.length > 1) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 _RoleBadgeRow(player: player)
                     .animate()
                     .fadeIn(delay: 120.ms),
@@ -106,7 +106,7 @@ class HomeScreen extends ConsumerWidget {
 
               // HUNTING LIST
               _HuntingListHeader(),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _PositionCard(
                 player: player,
                 rating: rating,
@@ -125,7 +125,7 @@ class HomeScreen extends ConsumerWidget {
 
               // UPCOMING
               const CRSectionLabel('Upcoming'),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _UpcomingMatchCard(canScore: player.canScore)
                   .animate()
                   .fadeIn(delay: 380.ms),
@@ -133,7 +133,7 @@ class HomeScreen extends ConsumerWidget {
 
               // LAST MATCH
               const CRSectionLabel('Last Match'),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _LastMatchCard()
                   .animate()
                   .fadeIn(delay: 420.ms),
@@ -141,7 +141,7 @@ class HomeScreen extends ConsumerWidget {
 
               // IN THE COMMUNITY
               const CRSectionLabel('In the Community'),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _CommunityTeaser()
                   .animate()
                   .fadeIn(delay: 460.ms),
@@ -236,7 +236,7 @@ class _OvrProgressCard extends StatelessWidget {
               minHeight: 6,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             '$matchesPlayed / 5 matches played',
             style: GoogleFonts.inter(
@@ -942,7 +942,7 @@ class _UpcomingMatchCard extends StatelessWidget {
 
           // Venue + format
           Container(height: 1, color: CR.cardHigh),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               const Icon(Icons.place_outlined, color: CR.text3, size: 14),
@@ -991,7 +991,7 @@ class _UpcomingMatchCard extends StatelessWidget {
                   icon: Icons.arrow_upward_rounded,
                   text: 'Win and you climb to #2 in batting',
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 const _StakeLine(
                   icon: Icons.flag_outlined,
                   text: '13 runs from your season 500',
@@ -1181,7 +1181,7 @@ class _CommunityTeaser extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             'Amit KC (Osaka) just hit his first century',
             style: GoogleFonts.inter(

@@ -185,7 +185,12 @@ class PostMatchScreen extends ConsumerWidget {
               // Awards section
               const _AwardsSection()
                   .animate().fadeIn(delay: 320.ms).slideY(begin: 0.06),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+
+              // Share result card
+              const _ShareResultCard()
+                  .animate().fadeIn(delay: 380.ms),
+              const SizedBox(height: 16),
 
               // Actions
               Row(
@@ -480,6 +485,78 @@ class _VerdictCard extends StatelessWidget {
     );
   }
 }
+
+// ─── Share Result Card ────────────────────────────────────────────────────────
+
+class _ShareResultCard extends StatelessWidget {
+  const _ShareResultCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'SHARE THE RESULT',
+            style: GoogleFonts.inter(
+              color: CR.text3,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Scorecard link copied'),
+                      backgroundColor: CR.cardHigh,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: CR.text2,
+                    side: const BorderSide(color: CR.cardHigh),
+                  ),
+                  child: const Text('COPY LINK'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Match card ready to share'),
+                      backgroundColor: CR.cardHigh,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: CR.green,
+                    foregroundColor: CR.textInv,
+                  ),
+                  icon: const Icon(Icons.share, size: 16),
+                  label: const Text('SHARE CARD'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Score Row ────────────────────────────────────────────────────────────────
 
 class _ScoreRow extends StatelessWidget {
   final String teamName;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../player/providers/player_provider.dart';
@@ -378,7 +379,7 @@ class _RecordsSection extends StatelessWidget {
               letterSpacing: 2,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           const _RecordLine(label: 'Most career runs', holder: 'Roshan KC', value: '2,418'),
           const _RecordLine(label: 'Highest score ever', holder: 'Anil Tamang', value: '147*'),
           const _RecordLine(label: 'Best bowling figures', holder: 'Bikash Rai', value: '6/14'),
@@ -444,6 +445,8 @@ class _RecordLine extends StatelessWidget {
 class _TheMovementSection extends StatelessWidget {
   const _TheMovementSection();
 
+  static final _nf = NumberFormat('#,###');
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -465,9 +468,9 @@ class _TheMovementSection extends StatelessWidget {
               letterSpacing: 2,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
-            '1,847 sessions recorded in Japan',
+            '${_nf.format(1847)} sessions recorded in Japan',
             style: GoogleFonts.inter(
               color: CR.t1,
               fontSize: 15,
@@ -476,7 +479,7 @@ class _TheMovementSection extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '312 players with Cricket Passports',
+            '${_nf.format(312)} players with Cricket Passports',
             style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
           ),
           const SizedBox(height: 2),

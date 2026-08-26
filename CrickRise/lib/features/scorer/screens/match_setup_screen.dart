@@ -1,3 +1,5 @@
+// Legacy match setup — superseded by open_session_screen.dart + team_assignment_screen.dart
+// Router redirects /match/setup → /play; this file is retained for reference.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
