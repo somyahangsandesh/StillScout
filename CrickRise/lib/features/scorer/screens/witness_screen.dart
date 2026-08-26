@@ -75,7 +75,7 @@ class _WitnessScreenState extends ConsumerState<WitnessScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: CR.text1),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/match/scorer'),
         ),
         title: Text(
           'Confirm Result',

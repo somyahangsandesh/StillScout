@@ -226,7 +226,7 @@ class _FreeCard extends StatelessWidget {
         children: [
           // Header strip
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
             margin: const EdgeInsets.only(bottom: 16),
             decoration: const BoxDecoration(
               color: Color(0xFF00B4CC),
@@ -234,13 +234,13 @@ class _FreeCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text('🏏', style: TextStyle(fontSize: 16)),
-                const SizedBox(width: 8),
+                const Text('🏏', style: TextStyle(fontSize: 13)),
+                const SizedBox(width: 6),
                 Text(
                   'CRICKRISE',
                   style: GoogleFonts.spaceGrotesk(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 2,
                   ),
@@ -248,21 +248,55 @@ class _FreeCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            '${player.jerseyDisplay}  ${player.displayName}',
-            style: GoogleFonts.inter(
-              color: Colors.black87,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            player.teamName ?? '',
-            style: GoogleFonts.inter(
-              color: Colors.black54,
-              fontSize: 13,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${player.jerseyDisplay}  ${player.displayName}',
+                      style: GoogleFonts.inter(
+                        color: Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      player.teamName ?? '',
+                      style: GoogleFonts.inter(
+                        color: Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Season 2026',
+                    style: GoogleFonts.inter(
+                      color: Colors.black38,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '#3 Okinawa League',
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF00B4CC),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Text(

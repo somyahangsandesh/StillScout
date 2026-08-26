@@ -159,16 +159,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
                 const SizedBox(height: 12),
 
-                // Format filter pills
-                _FormatFilter(
-                  selected: _formatFilter,
-                  onChanged: (f) => setState(() => _formatFilter = f),
-                ),
-                const SizedBox(height: 16),
+                // Career tab replaces format filter + stats grid
+                if (_tab == 1) ...[
+                  const _CareerTab(),
+                  const SizedBox(height: 20),
+                ] else ...[
+                  // Format filter pills
+                  _FormatFilter(
+                    selected: _formatFilter,
+                    onChanged: (f) => setState(() => _formatFilter = f),
+                  ),
+                  const SizedBox(height: 16),
 
-                // Stats grid
-                _StatsGrid(stats: stats),
-                const SizedBox(height: 20),
+                  // Stats grid
+                  _StatsGrid(stats: stats),
+                  const SizedBox(height: 20),
+                ],
 
                 // MY POSITION
                 const CRSectionLabel('My Position'),
@@ -196,6 +202,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   onToggle: () =>
                       setState(() => _insightsExpanded = !_insightsExpanded),
                 ),
+                const SizedBox(height: 20),
+
+                // BEST PERFORMANCES
+                const CRSectionLabel('Best Performances'),
+                const SizedBox(height: 10),
+                const _BestPerformances(),
                 const SizedBox(height: 20),
 
                 // MILESTONES
@@ -1095,6 +1107,62 @@ class _RecentMatchesList extends StatelessWidget {
   }
 }
 
+// ─── Best Performances ────────────────────────────────────────────────────────
+
+// TODO: Replace with real computed records from match history
+class _BestPerformances extends StatelessWidget {
+  const _BestPerformances();
+
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      ('🏏', 'Best innings', '127*', 'vs Tokyo Rhinos'),
+      ('🎳', 'Best bowling', '5/18', 'vs Osaka Kings'),
+      ('🤝', 'Most catches', '3', 'vs Fukuoka Tigers'),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: items.map((item) {
+          final (emoji, label, value, match) = item;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
+                  ),
+                ),
+                Text(
+                  value,
+                  style: GoogleFonts.spaceGrotesk(
+                    color: CR.t1,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  match,
+                  style: GoogleFonts.inter(color: CR.t3, fontSize: 11),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
 // ─── Milestones ───────────────────────────────────────────────────────────────
 
 class _MilestoneChips extends StatelessWidget {
@@ -1137,6 +1205,267 @@ class _MilestoneChips extends StatelessWidget {
           ]),
         );
       }).toList(),
+    );
+  }
+}
+
+// ─── Career Tab ───────────────────────────────────────────────────────────────
+
+class _CareerTab extends StatelessWidget {
+  const _CareerTab();
+
+  static const _seasons = [
+    _SeasonRow(year: '2026', club: 'Okinawa Warriors', ovrFrom: 72, ovrTo: 86, runs: 487, wickets: 21, champion: true),
+    _SeasonRow(year: '2025', club: 'Okinawa Warriors', ovrFrom: 63, ovrTo: 72, runs: 312, wickets: 14, champion: false),
+    _SeasonRow(year: '2024', club: 'Nepal Tokyo XI', ovrFrom: 55, ovrTo: 63, runs: 198, wickets: 18, champion: false),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Career summary card
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: CR.card,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CAREER SUMMARY',
+                style: GoogleFonts.inter(
+                  color: CR.text3,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const _CareerStatCell('3', 'Seasons'),
+                  _CareerVDivider(),
+                  const _CareerStatCell('87', 'Matches'),
+                  _CareerVDivider(),
+                  const _CareerStatCell('2,418', 'Runs'),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(height: 1, color: CR.cardHigh),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const _CareerStatCell('96', 'Wickets'),
+                  _CareerVDivider(),
+                  const _CareerStatCell('61', 'Catches'),
+                  _CareerVDivider(),
+                  const _CareerStatCell('14', 'MVPs', color: CR.gold),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(height: 1, color: CR.cardHigh),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text('🏆', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Text(
+                    '1 Championship',
+                    style: GoogleFonts.inter(
+                      color: CR.gold,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Per-season timeline
+        Text(
+          'CAREER BY SEASON',
+          style: GoogleFonts.inter(
+            color: CR.text3,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: CR.card,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: _seasons.asMap().entries.map((e) {
+              final i = e.key;
+              final s = e.value;
+              return Column(
+                children: [
+                  if (i > 0) Container(height: 1, color: CR.cardHigh),
+                  _SeasonRowWidget(data: s),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CareerStatCell extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color? color;
+  const _CareerStatCell(this.value, this.label, {this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.spaceGrotesk(
+            color: color ?? CR.text1,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            height: 1,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            color: CR.text3,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CareerVDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 36, color: CR.cardHigh);
+  }
+}
+
+class _SeasonRow {
+  final String year;
+  final String club;
+  final int ovrFrom;
+  final int ovrTo;
+  final int runs;
+  final int wickets;
+  final bool champion;
+
+  const _SeasonRow({
+    required this.year,
+    required this.club,
+    required this.ovrFrom,
+    required this.ovrTo,
+    required this.runs,
+    required this.wickets,
+    required this.champion,
+  });
+}
+
+class _SeasonRowWidget extends StatelessWidget {
+  final _SeasonRow data;
+  const _SeasonRowWidget({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final isCurrent = data.year == '2026';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          // Year
+          SizedBox(
+            width: 38,
+            child: Text(
+              data.year,
+              style: GoogleFonts.spaceGrotesk(
+                color: isCurrent ? CR.green : CR.text3,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          // Club
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        data.club,
+                        style: GoogleFonts.inter(
+                          color: isCurrent ? CR.text1 : CR.text2,
+                          fontSize: 13,
+                          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (data.champion)
+                      const Text('🏆', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${data.runs}R  ${data.wickets}W',
+                  style: GoogleFonts.inter(
+                    color: CR.text3,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // OVR progression
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'OVR ${data.ovrFrom}→${data.ovrTo}',
+                style: GoogleFonts.spaceGrotesk(
+                  color: isCurrent ? CR.gold : CR.text3,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '+${data.ovrTo - data.ovrFrom}',
+                style: GoogleFonts.inter(
+                  color: CR.green,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

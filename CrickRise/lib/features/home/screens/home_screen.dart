@@ -70,12 +70,18 @@ class HomeScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 24),
 
-              // OVR Card
-              _OvrCard(
-                rating: rating,
-                player: player,
-                onTap: () => context.push('/me'),
-              ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.05),
+              // OVR Card — show progress card for new players (<5 matches)
+              if (rating.matchesPlayed < 5)
+                _OvrProgressCard(matchesPlayed: rating.matchesPlayed)
+                    .animate()
+                    .fadeIn(delay: 150.ms)
+                    .slideY(begin: 0.05)
+              else
+                _OvrCard(
+                  rating: rating,
+                  player: player,
+                  onTap: () => context.push('/me'),
+                ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.05),
               const SizedBox(height: 20),
 
               // HUNTING LIST
@@ -158,6 +164,66 @@ class _RoleBadgeRow extends StatelessWidget {
           const CRRoleBadge('SCORER', CR.orange, active: false),
         ],
       ],
+    );
+  }
+}
+
+// ─── OVR Progress Card (new players, <5 matches) ──────────────────────────────
+
+class _OvrProgressCard extends StatelessWidget {
+  final int matchesPlayed;
+  const _OvrProgressCard({required this.matchesPlayed});
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = 5 - matchesPlayed;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'YOUR FIRST OVR',
+            style: GoogleFonts.inter(
+              color: CR.text3,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Play $remaining more ${remaining == 1 ? 'match' : 'matches'} to unlock',
+            style: GoogleFonts.inter(
+              color: CR.text1,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: matchesPlayed / 5,
+              backgroundColor: CR.cardHigh,
+              valueColor: const AlwaysStoppedAnimation<Color>(CR.green),
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '$matchesPlayed / 5 matches played',
+            style: GoogleFonts.inter(
+              color: CR.text2,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

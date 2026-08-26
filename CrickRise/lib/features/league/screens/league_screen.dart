@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -49,12 +50,12 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('🏆', style: TextStyle(fontSize: 56)),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               'No league yet',
               style: GoogleFonts.inter(
@@ -65,27 +66,54 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Ask your organizer to share the league link.',
-              style: GoogleFonts.inter(color: CR.text2, fontSize: 14),
+              'Ask your organiser for an invite code, or create your own league.',
+              style: GoogleFonts.inter(
+                color: CR.text2,
+                fontSize: 14,
+                height: 1.5,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: 54,
+              height: 50,
               child: ElevatedButton(
+                onPressed: () => context.go('/auth/invite'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CR.green,
+                  foregroundColor: CR.textInv,
+                ),
+                child: Text(
+                  'JOIN A LEAGUE',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: CR.textInv,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Create League — coming soon'),
                     behavior: SnackBarBehavior.floating,
                   ));
                 },
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: CR.cardHigh),
+                ),
                 child: Text(
                   '+ Create League',
                   style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: CR.textInv,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: CR.text2,
                   ),
                 ),
               ),
@@ -583,6 +611,37 @@ class _SeasonStoryTab extends StatelessWidget {
         ).animate().fadeIn(delay: 200.ms),
         const SizedBox(height: 24),
 
+        // Season records mini-section
+        Text(
+          'SEASON RECORDS',
+          style: GoogleFonts.inter(
+            color: CR.text3,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 2,
+          ),
+        ).animate().fadeIn(delay: 220.ms),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: CR.card,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Column(
+            children: [
+              _SeasonRecordMinRow('Highest score', 'Roshan KC', '127*', 'Week 7'),
+              SizedBox(height: 10),
+              _SeasonRecordMinRow('Best bowling', 'Bikash Rai', '5/18', 'Week 4'),
+              SizedBox(height: 10),
+              _SeasonRecordMinRow('Highest team', 'Warriors', '218/3', 'Week 9'),
+              SizedBox(height: 10),
+              _SeasonRecordMinRow('Most sixes', 'Roshan KC', '14', 'this season'),
+            ],
+          ),
+        ).animate().fadeIn(delay: 240.ms),
+        const SizedBox(height: 24),
+
         // Current Form table
         Text(
           'CURRENT FORM',
@@ -873,6 +932,65 @@ class _SeasonRecordRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Season Record Mini Row (with ⚡ prefix) ──────────────────────────────────
+
+class _SeasonRecordMinRow extends StatelessWidget {
+  final String label;
+  final String player;
+  final String value;
+  final String context;
+
+  const _SeasonRecordMinRow(
+      this.label, this.player, this.value, this.context);
+
+  @override
+  Widget build(BuildContext _) {
+    return Row(
+      children: [
+        Text(
+          '⚡',
+          style: GoogleFonts.inter(fontSize: 12),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              color: CR.text3,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Text(
+          player,
+          style: GoogleFonts.inter(
+            color: CR.text2,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          value,
+          style: GoogleFonts.spaceGrotesk(
+            color: CR.text1,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '($context)',
+          style: GoogleFonts.inter(
+            color: CR.text3,
+            fontSize: 10,
+          ),
+        ),
+      ],
     );
   }
 }

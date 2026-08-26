@@ -103,6 +103,11 @@ final appRouter = GoRouter(
       path: '/session/teams',
       builder: (context, state) => const TeamAssignmentScreen(),
     ),
+    // Redirect old match/setup deep-links to the session flow
+    GoRoute(
+      path: '/match/setup',
+      redirect: (context, state) => '/play',
+    ),
     GoRoute(
       path: '/match/scorer',
       builder: (context, state) => const ActiveScorerScreen(),

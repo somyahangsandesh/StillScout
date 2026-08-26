@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,7 @@ class ActiveScorerScreen extends ConsumerStatefulWidget {
 
 class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
   final ConnectivityStatus _connectivity = ConnectivityStatus.online;
+  bool _isDemoMatch = false;
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
   }
 
   void _initSampleMatch() {
+    setState(() => _isDemoMatch = true);
     ref.read(scorerProvider.notifier).initMatch(
       teamAName: 'Okinawa Warriors',
       teamBName: 'Tokyo Rhinos',
@@ -74,7 +77,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
             _ConnectivityBanner(status: _connectivity),
             Expanded(
               flex: 45,
-              child: _ZoneA(state: matchState),
+              child: _ZoneA(state: matchState, isDemoMatch: _isDemoMatch),
             ),
             const Divider(height: 1, color: CR.cardHigh),
             Expanded(
@@ -310,7 +313,8 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
 
 class _ZoneA extends StatelessWidget {
   final MatchState state;
-  const _ZoneA({required this.state});
+  final bool isDemoMatch;
+  const _ZoneA({required this.state, this.isDemoMatch = false});
 
   int get _partnershipRuns {
     if (state.striker == null || state.nonStriker == null) return 0;
@@ -411,6 +415,28 @@ class _ZoneA extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (isDemoMatch) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: CR.text3.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: CR.text3.withOpacity(0.2)),
+                            ),
+                            child: Text(
+                              'DEMO',
+                              style: GoogleFonts.inter(
+                                color: CR.text3,
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -454,19 +480,60 @@ class _ZoneA extends StatelessWidget {
           ),
           if (state.currentInnings == 2 && state.targetRuns > 0) ...[
             const SizedBox(height: 4),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: CR.gold.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: CR.gold.withOpacity(0.25)),
+                  ),
+                  child: Text(
+                    'Need $runsNeeded off $ballsLeft balls  •  RRR ${rrr.toStringAsFixed(1)}',
+                    style: GoogleFonts.inter(
+                      color: CR.gold,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (state.wickets == 9) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: CR.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'LAST PAIR',
+                      style: GoogleFonts.inter(
+                        color: CR.red,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ] else if (state.wickets == 9) ...[
+            const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: CR.gold.withOpacity(0.1),
+                color: CR.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: CR.gold.withOpacity(0.25)),
               ),
               child: Text(
-                'Need $runsNeeded off $ballsLeft balls',
+                'LAST PAIR',
                 style: GoogleFonts.inter(
-                  color: CR.gold,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  color: CR.red,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
                 ),
               ),
             ),
@@ -1590,6 +1657,26 @@ class _MoreMenuItem extends StatelessWidget {
   }
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+int _computeMaidens(List<DeliveryRecord> deliveries, String bowlerId) {
+  int maidens = 0;
+  final Map<int, List<DeliveryRecord>> overs = {};
+  for (final d in deliveries.where((d) => d.bowlerId == bowlerId)) {
+    overs.putIfAbsent(d.overNumber, () => []).add(d);
+  }
+  for (final over in overs.values) {
+    final legalBalls = over
+        .where((d) =>
+            d.extraType != ExtraType.wide && d.extraType != ExtraType.noBall)
+        .toList();
+    if (legalBalls.length >= 6 && legalBalls.every((d) => d.runsOffBat == 0)) {
+      maidens++;
+    }
+  }
+  return maidens;
+}
+
 // ─── Full Scorecard Bottom Sheet ──────────────────────────────────────────────
 
 class _FullScorecardSheet extends StatelessWidget {
@@ -1626,6 +1713,9 @@ class _FullScorecardSheet extends StatelessWidget {
         if (d.isLegalDelivery) b.balls++;
         if (d.isWicket) b.wickets++;
       }
+    }
+    for (final entry in bowlers.entries) {
+      entry.value.maidens = _computeMaidens(state.deliveryLog, entry.key);
     }
 
     final activeBatters = batters.values.where((b) => b.balls > 0 || b.runs > 0).toList();
@@ -1693,6 +1783,7 @@ class _FullScorecardSheet extends StatelessWidget {
                   const SizedBox(height: 4),
                   _ScorecardBowlingHeader(),
                   ...activeBowlers.map((b) => _ScorecardBowlingRow(entry: b)),
+                  _WormChart(deliveries: state.deliveryLog),
                   const SizedBox(height: 32),
                 ],
               ),
@@ -1721,6 +1812,7 @@ class _ScorecardBowlerEntry {
   int runs = 0;
   int balls = 0;
   int wickets = 0;
+  int maidens = 0;
   _ScorecardBowlerEntry({required this.name});
 
   String get oversDisplay => '${balls ~/ 6}.${balls % 6}';
@@ -1773,7 +1865,7 @@ class _ScorecardBowlingHeader extends StatelessWidget {
       child: const Row(
         children: [
           Expanded(child: SizedBox()),
-          _SCellH('O'), _SCellH('R'), _SCellH('W'), _SCellH('ECO'),
+          _SCellH('O'), _SCellH('M'), _SCellH('R'), _SCellH('W'), _SCellH('ECO'),
         ],
       ),
     );
@@ -1860,6 +1952,7 @@ class _ScorecardBowlingRow extends StatelessWidget {
             ),
           ),
           _SCell(entry.oversDisplay),
+          _SCell(entry.maidens.toString(), bold: entry.maidens > 0, color: entry.maidens > 0 ? CR.green : null),
           _SCell(entry.runs.toString()),
           _SCell(entry.wickets.toString(), bold: entry.wickets > 0, color: entry.wickets > 0 ? CR.red : null),
           _SCell(entry.econ.toStringAsFixed(1)),
@@ -1888,6 +1981,106 @@ class _SCell extends StatelessWidget {
           fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
         ),
       ),
+    );
+  }
+}
+
+// ─── Worm Chart ───────────────────────────────────────────────────────────────
+
+class _WormChart extends StatelessWidget {
+  final List<DeliveryRecord> deliveries;
+  const _WormChart({required this.deliveries});
+
+  @override
+  Widget build(BuildContext context) {
+    if (deliveries.length < 3) return const SizedBox.shrink();
+
+    final spots = <FlSpot>[];
+    int total = 0;
+    for (int i = 0; i < deliveries.length; i++) {
+      total += deliveries[i].runsOffBat + deliveries[i].extraRuns;
+      spots.add(FlSpot(i.toDouble(), total.toDouble()));
+    }
+
+    final maxY = (total + 10).toDouble();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        Text(
+          'INNINGS PROGRESSION',
+          style: GoogleFonts.inter(
+            color: CR.t3,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 80,
+          child: LineChart(
+            LineChartData(
+              minX: 0,
+              maxX: (deliveries.length - 1).toDouble(),
+              minY: 0,
+              maxY: maxY,
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: maxY > 40 ? 20 : 10,
+                getDrawingHorizontalLine: (_) => const FlLine(
+                  color: CR.cardHigh,
+                  strokeWidth: 1,
+                  dashArray: [4, 4],
+                ),
+              ),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    interval: maxY > 40 ? 20 : 10,
+                    getTitlesWidget: (v, _) => Text(
+                      '${v.toInt()}',
+                      style: GoogleFonts.spaceGrotesk(
+                        color: CR.t3,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                bottomTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              lineTouchData: const LineTouchData(enabled: false),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: CR.green,
+                  barWidth: 2,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: CR.green.withOpacity(0.06),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
