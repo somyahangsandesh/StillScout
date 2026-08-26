@@ -9,6 +9,10 @@ class Player {
   final String? teamId;
   final String? teamName;
   final DateTime createdAt;
+  // CR Number — permanent cricket identity (e.g. CR-1247)
+  final String? crNumber;
+  // Seasons played — used for Heritage badge
+  final int seasonsPlayed;
 
   const Player({
     required this.id,
@@ -19,17 +23,22 @@ class Player {
     this.teamId,
     this.teamName,
     required this.createdAt,
+    this.crNumber,
+    this.seasonsPlayed = 0,
   });
 
   String get displayName => name.toUpperCase();
-
   String get jerseyDisplay => jerseyNumber != null ? '#$jerseyNumber' : '';
+  String get crDisplay => crNumber ?? 'CR-????';
+
+  // Heritage badge: 3+ seasons
+  bool get hasHeritage => seasonsPlayed >= 3;
+  // Elder badge: 5+ seasons
+  bool get hasElder => seasonsPlayed >= 5;
 
   bool get isOrganizer => roles.contains(UserRole.organizer);
-
   bool get canScore =>
       roles.contains(UserRole.scorer) || roles.contains(UserRole.organizer);
-
   bool get isSpectator =>
       roles.length == 1 && roles.contains(UserRole.spectator);
 
@@ -42,6 +51,8 @@ class Player {
     String? teamId,
     String? teamName,
     DateTime? createdAt,
+    String? crNumber,
+    int? seasonsPlayed,
   }) {
     return Player(
       id: id ?? this.id,
@@ -52,6 +63,8 @@ class Player {
       teamId: teamId ?? this.teamId,
       teamName: teamName ?? this.teamName,
       createdAt: createdAt ?? this.createdAt,
+      crNumber: crNumber ?? this.crNumber,
+      seasonsPlayed: seasonsPlayed ?? this.seasonsPlayed,
     );
   }
 }
@@ -146,6 +159,8 @@ class SampleData {
     teamId: 'team-001',
     teamName: 'Okinawa Warriors',
     createdAt: DateTime(2024, 1, 15),
+    crNumber: 'CR-1247',
+    seasonsPlayed: 3,
   );
 
   static final Player rival = Player(

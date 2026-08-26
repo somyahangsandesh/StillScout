@@ -24,7 +24,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
     final rating = ref.watch(currentPlayerRatingProvider);
 
     return Scaffold(
-      backgroundColor: CrickRiseColors.background,
+      backgroundColor: CR.bg,
       appBar: AppBar(
         title: const Text('Share Card'),
         leading: IconButton(
@@ -68,7 +68,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
               Text(
                 'Free card — your OVR number only.',
                 style: GoogleFonts.inter(
-                  color: CrickRiseColors.textMuted,
+                  color: CR.text3,
                   fontSize: 12,
                 ),
               )
@@ -76,7 +76,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
               Text(
                 'Pro card — full breakdown + ranking badge.',
                 style: GoogleFonts.inter(
-                  color: CrickRiseColors.gold,
+                  color: CR.gold,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -93,20 +93,20 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             if (!_showPro) ...[
               OutlinedButton.icon(
                 onPressed: () => _showProUpsell(context),
-                icon: const Icon(Icons.star, color: CrickRiseColors.gold, size: 16),
+                icon: const Icon(Icons.star, color: CR.gold, size: 16),
                 label: const Text(
                   'SEE PRO CARD — ¥1,980/year',
-                  style: TextStyle(color: CrickRiseColors.gold),
+                  style: TextStyle(color: CR.gold),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: CrickRiseColors.gold),
+                  side: const BorderSide(color: CR.gold),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 '7-day free trial · No credit card needed',
                 style: GoogleFonts.inter(
-                  color: CrickRiseColors.textMuted,
+                  color: CR.text3,
                   fontSize: 12,
                 ),
               ),
@@ -120,7 +120,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
   void _showProUpsell(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: CrickRiseColors.surface,
+      backgroundColor: CR.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -132,7 +132,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             Text(
               'Go Pro',
               style: GoogleFonts.spaceGrotesk(
-                color: CrickRiseColors.textPrimary,
+                color: CR.text1,
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
               ),
@@ -141,7 +141,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             Text(
               'One price. One year. Everything.',
               style: GoogleFonts.inter(
-                color: CrickRiseColors.textSecondary,
+                color: CR.text2,
                 fontSize: 14,
               ),
             ),
@@ -159,7 +159,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
                       Text(
                         f,
                         style: GoogleFonts.inter(
-                          color: CrickRiseColors.textPrimary,
+                          color: CR.text1,
                           fontSize: 14,
                         ),
                       ),
@@ -170,7 +170,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
               style: ElevatedButton.styleFrom(
-                backgroundColor: CrickRiseColors.gold,
+                backgroundColor: CR.gold,
                 foregroundColor: Colors.black,
                 minimumSize: const Size(double.infinity, 52),
               ),
@@ -186,7 +186,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             Text(
               '¥1,980/year after trial · Cancel anytime',
               style: GoogleFonts.inter(
-                color: CrickRiseColors.textMuted,
+                color: CR.text3,
                 fontSize: 12,
               ),
             ),
@@ -327,12 +327,12 @@ class _ProCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: CrickRiseColors.gold.withOpacity(0.4),
+          color: CR.gold.withOpacity(0.4),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: CrickRiseColors.gold.withOpacity(0.2),
+            color: CR.gold.withOpacity(0.2),
             blurRadius: 24,
             spreadRadius: 2,
             offset: const Offset(0, 8),
@@ -353,7 +353,7 @@ class _ProCard extends StatelessWidget {
                   Text(
                     'CRICKRISE PRO',
                     style: GoogleFonts.spaceGrotesk(
-                      color: CrickRiseColors.gold,
+                      color: CR.gold,
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2,
@@ -365,7 +365,7 @@ class _ProCard extends StatelessWidget {
                 Text(
                   '🔥 ${rating.hotStreakCount} streak',
                   style: GoogleFonts.inter(
-                    color: CrickRiseColors.gold,
+                    color: CR.gold,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -376,7 +376,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '${player.jerseyDisplay}  ${player.displayName}',
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textPrimary,
+              color: CR.text1,
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -385,7 +385,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '${player.teamName ?? ''} · ${player.role.displayName}',
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textSecondary,
+              color: CR.text2,
               fontSize: 13,
             ),
           ),
@@ -398,7 +398,7 @@ class _ProCard extends StatelessWidget {
                 Text(
                   'OVR',
                   style: GoogleFonts.inter(
-                    color: CrickRiseColors.textMuted,
+                    color: CR.text3,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2,
@@ -407,7 +407,7 @@ class _ProCard extends StatelessWidget {
                 Text(
                   rating.ovr.round().toString(),
                   style: GoogleFonts.spaceGrotesk(
-                    color: CrickRiseColors.gold,
+                    color: CR.gold,
                     fontSize: 72,
                     fontWeight: FontWeight.w700,
                     height: 0.9,
@@ -433,7 +433,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '#3 Okinawa  ·  14 Matches  ·  Season 2026',
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textSecondary,
+              color: CR.text2,
               fontSize: 12,
               letterSpacing: 0.3,
             ),
@@ -444,7 +444,7 @@ class _ProCard extends StatelessWidget {
           Text(
             'vs Tokyo Rhinos · WON ✓',
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textPrimary,
+              color: CR.text1,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -453,7 +453,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '58*(39)  ·  3/24  ·  ★ MVP',
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textSecondary,
+              color: CR.text2,
               fontSize: 13,
             ),
           ),
@@ -492,7 +492,7 @@ class _ProStatCell extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CrickRiseColors.textMuted,
+            color: CR.text3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
@@ -516,7 +516,7 @@ class _FreeProToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: CrickRiseColors.surface,
+        color: CR.card,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -555,22 +555,22 @@ class _ToggleBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = accent ? CrickRiseColors.gold : CrickRiseColors.primary;
+    final activeColor = accent ? CR.gold : CR.green;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? activeColor.withOpacity(0.15) : CrickRiseColors.surface,
+          color: active ? activeColor.withOpacity(0.15) : CR.card,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: active ? activeColor : CrickRiseColors.surfaceElevated,
+            color: active ? activeColor : CR.cardHigh,
           ),
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
-            color: active ? activeColor : CrickRiseColors.textSecondary,
+            color: active ? activeColor : CR.text2,
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),

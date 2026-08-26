@@ -18,7 +18,7 @@ class InningsTransitionScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: CrickRiseColors.background,
+      backgroundColor: CR.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -29,12 +29,12 @@ class InningsTransitionScreen extends ConsumerWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: CrickRiseColors.primary.withOpacity(0.1),
+                  color: CR.green.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.check_circle_outline,
-                  color: CrickRiseColors.primary,
+                  color: CR.green,
                   size: 36,
                 ),
               ),
@@ -42,7 +42,7 @@ class InningsTransitionScreen extends ConsumerWidget {
               Text(
                 'INNINGS COMPLETE',
                 style: GoogleFonts.inter(
-                  color: CrickRiseColors.textSecondary,
+                  color: CR.text2,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
@@ -52,7 +52,7 @@ class InningsTransitionScreen extends ConsumerWidget {
               Text(
                 state.teamAName,
                 style: GoogleFonts.inter(
-                  color: CrickRiseColors.textPrimary,
+                  color: CR.text1,
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                 ),
@@ -61,30 +61,30 @@ class InningsTransitionScreen extends ConsumerWidget {
               Text(
                 '${state.runs}/${state.wickets}',
                 style: GoogleFonts.spaceGrotesk(
-                  color: CrickRiseColors.textPrimary,
+                  color: CR.text1,
                   fontSize: 48,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               Text(
                 '(${state.totalOvers} overs)',
-                style: const TextStyle(color: CrickRiseColors.textSecondary),
+                style: const TextStyle(color: CR.text2),
               ),
               const SizedBox(height: 32),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: CrickRiseColors.surface,
+                  color: CR.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: CrickRiseColors.gold.withOpacity(0.3)),
+                  border: Border.all(color: CR.gold.withOpacity(0.3)),
                 ),
                 child: Column(
                   children: [
                     Text(
                       'TARGET',
                       style: GoogleFonts.inter(
-                        color: CrickRiseColors.gold,
+                        color: CR.gold,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 2,
@@ -94,7 +94,7 @@ class InningsTransitionScreen extends ConsumerWidget {
                     Text(
                       '${state.runs + 1} runs off ${state.totalOvers} overs',
                       style: GoogleFonts.spaceGrotesk(
-                        color: CrickRiseColors.textPrimary,
+                        color: CR.text1,
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                       ),

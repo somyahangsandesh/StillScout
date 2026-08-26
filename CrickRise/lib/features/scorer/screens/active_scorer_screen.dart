@@ -67,7 +67,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
     }
 
     return Scaffold(
-      backgroundColor: CrickRiseColors.background,
+      backgroundColor: CR.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -76,7 +76,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
               flex: 45,
               child: _ZoneA(state: matchState),
             ),
-            const Divider(height: 1, color: CrickRiseColors.surfaceElevated),
+            const Divider(height: 1, color: CR.cardHigh),
             Expanded(
               flex: 35,
               child: _ZoneB(
@@ -86,7 +86,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
                 onWicket: () => _showWicketModal(matchState),
               ),
             ),
-            const Divider(height: 1, color: CrickRiseColors.surfaceElevated),
+            const Divider(height: 1, color: CR.cardHigh),
             Expanded(
               flex: 20,
               child: _ZoneC(
@@ -103,7 +103,11 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
   }
 
   void _handleRuns(int runs, MatchState state) {
-    HapticFeedback.lightImpact();
+    if (runs == 4 || runs == 6) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.lightImpact();
+    }
     ref.read(scorerProvider.notifier).recordRuns(runs);
     _checkInningsComplete();
   }
@@ -121,11 +125,11 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: CrickRiseColors.surface,
+        backgroundColor: CR.card,
         title: Text(
           'Undo last delivery?',
           style: GoogleFonts.inter(
-            color: CrickRiseColors.textPrimary,
+            color: CR.text1,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -134,12 +138,12 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
           '${last.displayLabel} · '
           '${state.striker?.player.jerseyDisplay} ${state.striker?.player.name} batting · '
           '${state.currentBowler?.player.jerseyDisplay} ${state.currentBowler?.player.name} bowling',
-          style: const TextStyle(color: CrickRiseColors.textSecondary),
+          style: const TextStyle(color: CR.text2),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('CANCEL', style: TextStyle(color: CrickRiseColors.textSecondary)),
+            child: const Text('CANCEL', style: TextStyle(color: CR.text2)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -147,7 +151,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
               ref.read(scorerProvider.notifier).undoLastDelivery();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: CrickRiseColors.warning,
+              backgroundColor: CR.orange,
             ),
             child: const Text('UNDO', style: TextStyle(color: Colors.black)),
           ),
@@ -168,7 +172,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
   }
 
   void _showWicketModal(MatchState state) {
-    HapticFeedback.mediumImpact();
+    HapticFeedback.heavyImpact();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -199,9 +203,10 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
   }
 
   void _showMoreMenu() {
+    final state = ref.read(scorerProvider);
     showModalBottomSheet(
       context: context,
-      backgroundColor: CrickRiseColors.surface,
+      backgroundColor: CR.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -211,38 +216,91 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _MoreMenuItem(
+              icon: Icons.table_chart_rounded,
+              label: 'View full scorecard',
+              onTap: () {
+                Navigator.pop(ctx);
+                if (state != null) _showFullScorecard(state);
+              },
+            ),
+            _MoreMenuItem(
               icon: Icons.swap_horiz,
               label: 'Fix batter — swap crease positions',
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Swap crease positions — coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              },
             ),
             _MoreMenuItem(
               icon: Icons.sports_cricket,
               label: 'Fix this over\'s bowler',
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Fix bowler — coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              },
             ),
             _MoreMenuItem(
               icon: Icons.accessible_forward,
               label: 'Retired hurt',
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Retired hurt — coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              },
             ),
             _MoreMenuItem(
               icon: Icons.electric_bolt,
               label: 'Powerplay',
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Powerplay toggle — coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              },
             ),
             _MoreMenuItem(
               icon: Icons.replay,
               label: 'Super over',
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Super over — coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              },
             ),
             _MoreMenuItem(
               icon: Icons.note_add,
               label: 'Add note',
-              onTap: () => Navigator.pop(ctx),
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Match notes — coming soon'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showFullScorecard(MatchState state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _FullScorecardSheet(state: state),
     );
   }
 }
@@ -254,10 +312,58 @@ class _ZoneA extends StatelessWidget {
   final MatchState state;
   const _ZoneA({required this.state});
 
+  int get _partnershipRuns {
+    if (state.striker == null || state.nonStriker == null) return 0;
+    // Sum runs from current delivery log since last wicket
+    int runs = 0;
+    for (final d in state.deliveryLog.reversed) {
+      if (d.isWicket) break;
+      runs += d.runsOffBat + d.extraRuns;
+    }
+    return runs;
+  }
+
+  int get _partnershipBalls {
+    if (state.striker == null || state.nonStriker == null) return 0;
+    int balls = 0;
+    for (final d in state.deliveryLog.reversed) {
+      if (d.isWicket) break;
+      if (d.isLegalDelivery) balls++;
+    }
+    return balls;
+  }
+
+  double get _currentRunRate {
+    final totalBalls = state.completedOvers * 6 + state.currentBall;
+    if (totalBalls == 0) return 0;
+    return (state.runs / totalBalls) * 6;
+  }
+
+  double get _requiredRunRate {
+    final ballsLeft = (state.totalOvers - state.completedOvers) * 6 - state.currentBall;
+    if (ballsLeft <= 0) return 0;
+    final runsNeeded = state.targetRuns - state.runs;
+    return (runsNeeded / ballsLeft) * 6;
+  }
+
+  int get _fours => state.deliveryLog.where((d) => d.runsOffBat == 4).length;
+  int get _sixes => state.deliveryLog.where((d) => d.runsOffBat == 6).length;
+
   @override
   Widget build(BuildContext context) {
+    final pBalls = _partnershipBalls;
+    final pOvers = '${pBalls ~/ 6}.${pBalls % 6}';
+    final crr = _currentRunRate;
+    final isChasing = state.currentInnings == 2 && state.targetRuns > 0;
+    final rrr = isChasing ? _requiredRunRate : 0.0;
+    final runsNeeded = isChasing ? state.targetRuns - state.runs : 0;
+    final ballsLeft = isChasing
+        ? (state.totalOvers - state.completedOvers) * 6 - state.currentBall
+        : 0;
+
     return Container(
       width: double.infinity,
+      // Slightly brighter than CR.bg for broadcast-panel contrast
       decoration: const BoxDecoration(
         color: Color(0xFF111111),
       ),
@@ -273,21 +379,46 @@ class _ZoneA extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      state.battingTeamName.toUpperCase(),
-                      style: GoogleFonts.inter(
-                        color: CrickRiseColors.textMuted,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          state.battingTeamName.toUpperCase(),
+                          style: GoogleFonts.inter(
+                            color: CR.text3,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Ball type badge (defaults to LEATHER for now)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: CR.red.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(4),
+                            border:
+                                Border.all(color: CR.red.withOpacity(0.25)),
+                          ),
+                          child: Text(
+                            '🔴 LEATHER',
+                            style: GoogleFonts.inter(
+                              color: CR.red,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     // Large score — broadcast-size
                     Text(
                       state.scoreDisplay,
                       style: GoogleFonts.spaceGrotesk(
-                        color: CrickRiseColors.textPrimary,
+                        color: CR.text1,
                         fontSize: 52,
                         fontWeight: FontWeight.w800,
                         height: 0.95,
@@ -303,7 +434,7 @@ class _ZoneA extends StatelessWidget {
                   Text(
                     state.oversDisplay,
                     style: GoogleFonts.spaceGrotesk(
-                      color: CrickRiseColors.textSecondary,
+                      color: CR.text2,
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
@@ -311,7 +442,7 @@ class _ZoneA extends StatelessWidget {
                   Text(
                     'OVERS',
                     style: GoogleFonts.inter(
-                      color: CrickRiseColors.textMuted,
+                      color: CR.text3,
                       fontSize: 9,
                       letterSpacing: 1.5,
                       fontWeight: FontWeight.w600,
@@ -326,15 +457,14 @@ class _ZoneA extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
-                color: CrickRiseColors.gold.withOpacity(0.1),
+                color: CR.gold.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: CrickRiseColors.gold.withOpacity(0.25)),
+                border: Border.all(color: CR.gold.withOpacity(0.25)),
               ),
               child: Text(
-                'Need ${state.targetRuns - state.runs} off '
-                '${(state.totalOvers - state.completedOvers) * 6 - state.currentBall} balls',
+                'Need $runsNeeded off $ballsLeft balls',
                 style: GoogleFonts.inter(
-                  color: CrickRiseColors.gold,
+                  color: CR.gold,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -348,8 +478,8 @@ class _ZoneA extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  CrickRiseColors.primary.withOpacity(0.5),
-                  CrickRiseColors.primary.withOpacity(0.05),
+                  CR.green.withOpacity(0.5),
+                  CR.green.withOpacity(0.05),
                 ],
               ),
             ),
@@ -371,9 +501,67 @@ class _ZoneA extends StatelessWidget {
             _BowlerRow(bowler: state.currentBowler!)
           else
             const _EmptyPlayerRow(label: 'SET BOWLER'),
-          const SizedBox(height: 10),
-          // Recent balls — circular dots styled like cricket balls
-          _RecentBalls(deliveries: state.last6Deliveries),
+          const SizedBox(height: 6),
+          // Partnership + run rate line
+          if (state.striker != null && state.nonStriker != null)
+            Row(
+              children: [
+                Text(
+                  'Partnership: $_partnershipRuns runs ($pOvers ov)',
+                  style: GoogleFonts.inter(
+                    color: CR.text3,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(width: 1, height: 10, color: CR.text3),
+                const SizedBox(width: 8),
+                if (isChasing) ...[
+                  Text(
+                    'RRR: ${rrr.toStringAsFixed(1)}',
+                    style: GoogleFonts.inter(
+                      color: rrr > crr ? CR.red : CR.green,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '· CRR: ${crr.toStringAsFixed(1)}',
+                    style: GoogleFonts.inter(
+                      color: CR.text3,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ] else
+                  Text(
+                    'CRR: ${crr.toStringAsFixed(1)}',
+                    style: GoogleFonts.inter(
+                      color: CR.text3,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
+            ),
+          const SizedBox(height: 6),
+          // Recent balls + boundary counter
+          Row(
+            children: [
+              Expanded(child: _RecentBalls(deliveries: state.last6Deliveries)),
+              const SizedBox(width: 8),
+              Text(
+                '4s: $_fours  ·  6s: $_sixes',
+                style: GoogleFonts.inter(
+                  color: CR.text3,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -398,10 +586,10 @@ class _BatterRow extends StatelessWidget {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: CrickRiseColors.primary,
+                    color: CR.green,
                     boxShadow: [
                       BoxShadow(
-                        color: CrickRiseColors.primary.withOpacity(0.6),
+                        color: CR.green.withOpacity(0.6),
                         blurRadius: 6,
                       ),
                     ],
@@ -412,7 +600,7 @@ class _BatterRow extends StatelessWidget {
         Text(
           batter.player.jerseyDisplay,
           style: GoogleFonts.spaceGrotesk(
-            color: CrickRiseColors.textMuted,
+            color: CR.text3,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -423,8 +611,8 @@ class _BatterRow extends StatelessWidget {
             batter.player.displayName,
             style: GoogleFonts.inter(
               color: isStriker
-                  ? CrickRiseColors.textPrimary
-                  : CrickRiseColors.textSecondary,
+                  ? CR.text1
+                  : CR.text2,
               fontSize: 15,
               fontWeight: isStriker ? FontWeight.w700 : FontWeight.w500,
             ),
@@ -435,8 +623,8 @@ class _BatterRow extends StatelessWidget {
           '${batter.runs}*(${batter.balls})',
           style: GoogleFonts.spaceGrotesk(
             color: isStriker
-                ? CrickRiseColors.textPrimary
-                : CrickRiseColors.textSecondary,
+                ? CR.text1
+                : CR.text2,
             fontSize: isStriker ? 17 : 14,
             fontWeight: FontWeight.w700,
           ),
@@ -455,12 +643,12 @@ class _BowlerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.sports_cricket, color: CrickRiseColors.textMuted, size: 14),
+        const Icon(Icons.sports_cricket, color: CR.text3, size: 14),
         const SizedBox(width: 8),
         Text(
           bowler.player.jerseyDisplay,
           style: GoogleFonts.spaceGrotesk(
-            color: CrickRiseColors.textMuted,
+            color: CR.text3,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -470,7 +658,7 @@ class _BowlerRow extends StatelessWidget {
           child: Text(
             bowler.player.displayName,
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textSecondary,
+              color: CR.text2,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -479,7 +667,7 @@ class _BowlerRow extends StatelessWidget {
         Text(
           '${bowler.figuresDisplay}  ${bowler.oversDisplay}',
           style: GoogleFonts.spaceGrotesk(
-            color: CrickRiseColors.textSecondary,
+            color: CR.text2,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -499,14 +687,14 @@ class _EmptyPlayerRow extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: CrickRiseColors.textMuted, style: BorderStyle.solid),
+        border: Border.all(color: CR.text3, style: BorderStyle.solid),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Center(
         child: Text(
           label,
           style: const TextStyle(
-            color: CrickRiseColors.textMuted,
+            color: CR.text3,
             fontSize: 11,
             letterSpacing: 1,
           ),
@@ -522,28 +710,29 @@ class _RecentBalls extends StatelessWidget {
 
   Color _chipBg(DeliveryRecord d) {
     switch (d.ballResult) {
-      case BallResult.dot:      return CrickRiseColors.ballDot;
+      case BallResult.dot:      return CR.bDot;
       case BallResult.single:
       case BallResult.two:
-      case BallResult.three:   return CrickRiseColors.ballRuns;
-      case BallResult.four:    return CrickRiseColors.ballFour;
-      case BallResult.six:     return CrickRiseColors.ballSix;
-      case BallResult.wicket:  return CrickRiseColors.ballWicket;
+      case BallResult.three:   return CR.bRuns;
+      case BallResult.four:    return CR.bFour;
+      case BallResult.six:     return CR.bSix;
+      case BallResult.wicket:  return CR.bWicket;
       case BallResult.wide:
-      case BallResult.noBall:  return CrickRiseColors.ballExtra;
+      case BallResult.noBall:  return CR.bExtra;
       case BallResult.bye:
+      // Warm brown tint for bye/leg-bye — distinct from extra orange
       case BallResult.legBye:  return const Color(0xFF3B1E0E);
     }
   }
 
   Color _chipText(DeliveryRecord d) {
     switch (d.ballResult) {
-      case BallResult.four:   return CrickRiseColors.primary;
-      case BallResult.six:    return CrickRiseColors.gold;
-      case BallResult.wicket: return CrickRiseColors.danger;
+      case BallResult.four:   return CR.green;
+      case BallResult.six:    return CR.gold;
+      case BallResult.wicket: return CR.red;
       case BallResult.wide:
-      case BallResult.noBall: return CrickRiseColors.warning;
-      default:                return CrickRiseColors.textSecondary;
+      case BallResult.noBall: return CR.orange;
+      default:                return CR.text2;
     }
   }
 
@@ -554,7 +743,7 @@ class _RecentBalls extends StatelessWidget {
         Text(
           'LAST 6',
           style: GoogleFonts.inter(
-            color: CrickRiseColors.textMuted,
+            color: CR.text3,
             fontSize: 9,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.5,
@@ -590,7 +779,7 @@ class _RecentBalls extends StatelessWidget {
           Text(
             'no balls yet',
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textMuted,
+              color: CR.text3,
               fontSize: 11,
             ),
           ),
@@ -617,7 +806,7 @@ class _ZoneB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: CrickRiseColors.background,
+      color: CR.bg,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       child: Column(
         children: [
@@ -655,22 +844,22 @@ class _ZoneB extends StatelessWidget {
                 _EventButton(
                   label: 'W',
                   bgColor: CR.wicket,
-                  textColor: CrickRiseColors.danger,
-                  borderColor: CrickRiseColors.danger.withOpacity(0.4),
+                  textColor: CR.red,
+                  borderColor: CR.red.withOpacity(0.4),
                   onTap: onWicket,
                 ),
                 _EventButton(
                   label: 'WD',
                   bgColor: CR.extra,
-                  textColor: CrickRiseColors.warning,
-                  borderColor: CrickRiseColors.warning.withOpacity(0.3),
+                  textColor: CR.orange,
+                  borderColor: CR.orange.withOpacity(0.3),
                   onTap: () => onExtra(ExtraType.wide),
                 ),
                 _EventButton(
                   label: 'NB',
                   bgColor: CR.extra,
-                  textColor: CrickRiseColors.warning,
-                  borderColor: CrickRiseColors.warning.withOpacity(0.3),
+                  textColor: CR.orange,
+                  borderColor: CR.orange.withOpacity(0.3),
                   onTap: () => onExtra(ExtraType.noBall),
                 ),
                 _EventButton(
@@ -887,7 +1076,7 @@ class _ZoneC extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: CrickRiseColors.background,
+      color: CR.bg,
       padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
       child: Row(
         children: [
@@ -934,11 +1123,11 @@ class _ActionBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = highlighted
-        ? CrickRiseColors.primary.withOpacity(0.3)
-        : CrickRiseColors.surfaceElevated;
+        ? CR.green.withOpacity(0.3)
+        : CR.cardHigh;
     final iconColor = highlighted
-        ? CrickRiseColors.primary
-        : CrickRiseColors.textSecondary;
+        ? CR.green
+        : CR.text2;
 
     return compact
         ? GestureDetector(
@@ -947,11 +1136,11 @@ class _ActionBtn extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: CrickRiseColors.surfaceCard,
+                color: CR.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: CrickRiseColors.surfaceElevated),
+                border: Border.all(color: CR.cardHigh),
               ),
-              child: Icon(icon, color: CrickRiseColors.textMuted, size: 20),
+              child: Icon(icon, color: CR.text3, size: 20),
             ),
           )
         : Expanded(
@@ -961,8 +1150,8 @@ class _ActionBtn extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: highlighted
-                      ? CrickRiseColors.primary.withOpacity(0.07)
-                      : CrickRiseColors.surfaceCard,
+                      ? CR.green.withOpacity(0.07)
+                      : CR.card,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: borderColor),
                 ),
@@ -1001,9 +1190,9 @@ class _ConnectivityBanner extends StatelessWidget {
     if (status == ConnectivityStatus.online) return const SizedBox.shrink();
 
     final (color, text) = switch (status) {
-      ConnectivityStatus.offline => (CrickRiseColors.danger, '🔴 OFFLINE — All scoring saved locally'),
-      ConnectivityStatus.syncing => (CrickRiseColors.gold, '🟡 SYNCING...'),
-      ConnectivityStatus.online => (CrickRiseColors.primary, '🟢 Live'),
+      ConnectivityStatus.offline => (CR.red, '🔴 OFFLINE — All scoring saved locally'),
+      ConnectivityStatus.syncing => (CR.gold, '🟡 SYNCING...'),
+      ConnectivityStatus.online => (CR.green, '🟢 Live'),
     };
 
     return Container(
@@ -1051,7 +1240,7 @@ class _WicketModalState extends State<_WicketModal> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: CrickRiseColors.surface,
+        color: CR.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(
@@ -1069,7 +1258,7 @@ class _WicketModalState extends State<_WicketModal> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: CrickRiseColors.textMuted,
+                  color: CR.text3,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1078,7 +1267,7 @@ class _WicketModalState extends State<_WicketModal> {
             Text(
               'WICKET — ${widget.state.striker?.player.jerseyDisplay} ${widget.state.striker?.player.displayName}',
               style: GoogleFonts.inter(
-                color: CrickRiseColors.danger,
+                color: CR.red,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -1086,7 +1275,7 @@ class _WicketModalState extends State<_WicketModal> {
             const SizedBox(height: 16),
             const Text(
               'How out?',
-              style: TextStyle(color: CrickRiseColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: CR.text2, fontSize: 13),
             ),
             const SizedBox(height: 10),
             // Dismissal type chips
@@ -1104,12 +1293,12 @@ class _WicketModalState extends State<_WicketModal> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? CrickRiseColors.danger.withOpacity(0.2)
-                          : CrickRiseColors.surfaceElevated,
+                          ? CR.red.withOpacity(0.2)
+                          : CR.cardHigh,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isSelected
-                            ? CrickRiseColors.danger
+                            ? CR.red
                             : Colors.transparent,
                         width: 1.5,
                       ),
@@ -1118,8 +1307,8 @@ class _WicketModalState extends State<_WicketModal> {
                       type.displayName,
                       style: GoogleFonts.inter(
                         color: isSelected
-                            ? CrickRiseColors.danger
-                            : CrickRiseColors.textPrimary,
+                            ? CR.red
+                            : CR.text1,
                         fontWeight: isSelected
                             ? FontWeight.w700
                             : FontWeight.w500,
@@ -1137,7 +1326,7 @@ class _WicketModalState extends State<_WicketModal> {
               const SizedBox(height: 20),
               Text(
                 _selectedType!.requiresRunOutDetails ? 'Who effected the run out?' : 'Who fielded?',
-                style: const TextStyle(color: CrickRiseColors.textSecondary, fontSize: 13),
+                style: const TextStyle(color: CR.text2, fontSize: 13),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -1151,11 +1340,11 @@ class _WicketModalState extends State<_WicketModal> {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? CrickRiseColors.primary.withOpacity(0.2)
-                            : CrickRiseColors.surfaceElevated,
+                            ? CR.green.withOpacity(0.2)
+                            : CR.cardHigh,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isSelected ? CrickRiseColors.primary : Colors.transparent,
+                          color: isSelected ? CR.green : Colors.transparent,
                           width: 1.5,
                         ),
                       ),
@@ -1164,7 +1353,7 @@ class _WicketModalState extends State<_WicketModal> {
                           Text(
                             p.jerseyDisplay,
                             style: GoogleFonts.spaceGrotesk(
-                              color: CrickRiseColors.textMuted,
+                              color: CR.text3,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1173,8 +1362,8 @@ class _WicketModalState extends State<_WicketModal> {
                             p.name.split(' ').first.toUpperCase(),
                             style: GoogleFonts.inter(
                               color: isSelected
-                                  ? CrickRiseColors.primary
-                                  : CrickRiseColors.textPrimary,
+                                  ? CR.green
+                                  : CR.text1,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1191,13 +1380,13 @@ class _WicketModalState extends State<_WicketModal> {
             const SizedBox(height: 20),
             const Text(
               'Next batter coming in:',
-              style: TextStyle(color: CrickRiseColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: CR.text2, fontSize: 13),
             ),
             const SizedBox(height: 10),
             if (widget.state.availableBatters.isEmpty)
               const Text(
                 'No more batters',
-                style: TextStyle(color: CrickRiseColors.textMuted),
+                style: TextStyle(color: CR.text3),
               )
             else
               Wrap(
@@ -1213,11 +1402,11 @@ class _WicketModalState extends State<_WicketModal> {
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? CrickRiseColors.primary.withOpacity(0.15)
-                            : CrickRiseColors.surfaceElevated,
+                            ? CR.green.withOpacity(0.15)
+                            : CR.cardHigh,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isSelected ? CrickRiseColors.primary : Colors.transparent,
+                          color: isSelected ? CR.green : Colors.transparent,
                           width: 1.5,
                         ),
                       ),
@@ -1225,8 +1414,8 @@ class _WicketModalState extends State<_WicketModal> {
                         '${p.jerseyDisplay} ${p.name.split(' ').first}',
                         style: GoogleFonts.inter(
                           color: isSelected
-                              ? CrickRiseColors.primary
-                              : CrickRiseColors.textPrimary,
+                              ? CR.green
+                              : CR.text1,
                           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 13,
                         ),
@@ -1255,8 +1444,8 @@ class _WicketModalState extends State<_WicketModal> {
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _selectedType != null
-                      ? CrickRiseColors.danger
-                      : CrickRiseColors.surfaceElevated,
+                      ? CR.red
+                      : CR.cardHigh,
                   minimumSize: const Size(double.infinity, 52),
                 ),
                 child: Text(
@@ -1264,7 +1453,7 @@ class _WicketModalState extends State<_WicketModal> {
                   style: GoogleFonts.inter(
                     color: _selectedType != null
                         ? Colors.white
-                        : CrickRiseColors.textMuted,
+                        : CR.text3,
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),
@@ -1298,7 +1487,7 @@ class _BowlingChangeModal extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: CrickRiseColors.surface,
+        color: CR.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: const EdgeInsets.all(20),
@@ -1311,7 +1500,7 @@ class _BowlingChangeModal extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: CrickRiseColors.textMuted,
+                color: CR.text3,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1320,7 +1509,7 @@ class _BowlingChangeModal extends StatelessWidget {
           Text(
             'Who is bowling next?',
             style: GoogleFonts.inter(
-              color: CrickRiseColors.textPrimary,
+              color: CR.text1,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
@@ -1335,16 +1524,16 @@ class _BowlingChangeModal extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: CrickRiseColors.surfaceElevated,
+                    color: CR.cardHigh,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: CrickRiseColors.textMuted.withOpacity(0.3)),
+                    border: Border.all(color: CR.text3.withOpacity(0.3)),
                   ),
                   child: Column(
                     children: [
                       Text(
                         p.jerseyDisplay,
                         style: GoogleFonts.spaceGrotesk(
-                          color: CrickRiseColors.textMuted,
+                          color: CR.text3,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1353,7 +1542,7 @@ class _BowlingChangeModal extends StatelessWidget {
                       Text(
                         p.name.split(' ').first.toUpperCase(),
                         style: GoogleFonts.inter(
-                          color: CrickRiseColors.textPrimary,
+                          color: CR.text1,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1387,16 +1576,318 @@ class _MoreMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: CrickRiseColors.textSecondary, size: 20),
+      leading: Icon(icon, color: CR.text2, size: 20),
       title: Text(
         label,
         style: GoogleFonts.inter(
-          color: CrickRiseColors.textPrimary,
+          color: CR.text1,
           fontSize: 14,
         ),
       ),
       onTap: onTap,
       dense: true,
+    );
+  }
+}
+
+// ─── Full Scorecard Bottom Sheet ──────────────────────────────────────────────
+
+class _FullScorecardSheet extends StatelessWidget {
+  final MatchState state;
+  const _FullScorecardSheet({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    // Build batting scorecard from delivery log
+    final Map<String, _ScorecardBatterEntry> batters = {};
+    for (final p in state.battingTeamPlayers) {
+      batters[p.id] = _ScorecardBatterEntry(name: '${p.jerseyDisplay} ${p.displayName}');
+    }
+    for (final d in state.deliveryLog) {
+      if (batters.containsKey(d.batsmanId)) {
+        final b = batters[d.batsmanId]!;
+        b.runs += d.runsOffBat;
+        if (d.isLegalDelivery) b.balls++;
+        if (d.runsOffBat == 4) b.fours++;
+        if (d.runsOffBat == 6) b.sixes++;
+        if (d.isWicket && d.dismissedPlayerId == d.batsmanId) b.isOut = true;
+      }
+    }
+
+    // Build bowling scorecard
+    final Map<String, _ScorecardBowlerEntry> bowlers = {};
+    for (final p in state.fieldingTeamPlayers) {
+      bowlers[p.id] = _ScorecardBowlerEntry(name: '${p.jerseyDisplay} ${p.displayName}');
+    }
+    for (final d in state.deliveryLog) {
+      if (bowlers.containsKey(d.bowlerId)) {
+        final b = bowlers[d.bowlerId]!;
+        b.runs += d.totalRuns;
+        if (d.isLegalDelivery) b.balls++;
+        if (d.isWicket) b.wickets++;
+      }
+    }
+
+    final activeBatters = batters.values.where((b) => b.balls > 0 || b.runs > 0).toList();
+    final activeBowlers = bowlers.values.where((b) => b.balls > 0).toList();
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: const BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(color: CR.text3, borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  'SCORECARD',
+                  style: GoogleFonts.inter(
+                    color: CR.text1, fontSize: 16, fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  state.battingTeamName,
+                  style: GoogleFonts.inter(color: CR.text3, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Batting section
+                  const _ScorecardSectionHeader(label: 'BATTING'),
+                  const SizedBox(height: 4),
+                  _ScorecardBattingHeader(),
+                  ...activeBatters.map((b) => _ScorecardBattingRow(entry: b)),
+                  if (state.striker != null && !activeBatters.any((b) => b.name.contains(state.striker!.player.jerseyDisplay))) ...[
+                    _ScorecardBattingRow(
+                      entry: _ScorecardBatterEntry(
+                        name: '${state.striker!.player.jerseyDisplay} ${state.striker!.player.displayName}',
+                      )
+                        ..runs = state.striker!.runs
+                        ..balls = state.striker!.balls
+                        ..fours = state.striker!.fours
+                        ..sixes = state.striker!.sixes,
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  // Bowling section
+                  const _ScorecardSectionHeader(label: 'BOWLING'),
+                  const SizedBox(height: 4),
+                  _ScorecardBowlingHeader(),
+                  ...activeBowlers.map((b) => _ScorecardBowlingRow(entry: b)),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScorecardBatterEntry {
+  final String name;
+  int runs = 0;
+  int balls = 0;
+  int fours = 0;
+  int sixes = 0;
+  bool isOut = false;
+  _ScorecardBatterEntry({required this.name});
+
+  double get sr => balls == 0 ? 0 : (runs / balls) * 100;
+}
+
+class _ScorecardBowlerEntry {
+  final String name;
+  int runs = 0;
+  int balls = 0;
+  int wickets = 0;
+  _ScorecardBowlerEntry({required this.name});
+
+  String get oversDisplay => '${balls ~/ 6}.${balls % 6}';
+  double get econ => balls == 0 ? 0 : (runs / balls) * 6;
+}
+
+class _ScorecardSectionHeader extends StatelessWidget {
+  final String label;
+  const _ScorecardSectionHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+            width: 3, height: 12,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), color: CR.green)),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            color: CR.green, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ScorecardBattingHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: const Row(
+        children: [
+          Expanded(child: SizedBox()),
+          _SCellH('R'), _SCellH('B'), _SCellH('4s'), _SCellH('6s'), _SCellH('SR'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScorecardBowlingHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: const Row(
+        children: [
+          Expanded(child: SizedBox()),
+          _SCellH('O'), _SCellH('R'), _SCellH('W'), _SCellH('ECO'),
+        ],
+      ),
+    );
+  }
+}
+
+class _SCellH extends StatelessWidget {
+  final String text;
+  const _SCellH(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 36,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: GoogleFonts.inter(color: CR.text3, fontSize: 10, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _ScorecardBattingRow extends StatelessWidget {
+  final _ScorecardBatterEntry entry;
+  const _ScorecardBattingRow({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: CR.cardHigh, width: 1)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.name,
+                  style: GoogleFonts.inter(
+                    color: entry.isOut ? CR.text2 : CR.text1,
+                    fontSize: 12, fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (!entry.isOut)
+                  Text('not out',
+                      style: GoogleFonts.inter(color: CR.green, fontSize: 10)),
+              ],
+            ),
+          ),
+          _SCell('${entry.runs}${entry.isOut ? '' : '*'}', bold: true),
+          _SCell(entry.balls.toString()),
+          _SCell(entry.fours.toString()),
+          _SCell(entry.sixes.toString()),
+          _SCell(entry.sr.toStringAsFixed(1)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScorecardBowlingRow extends StatelessWidget {
+  final _ScorecardBowlerEntry entry;
+  const _ScorecardBowlingRow({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: CR.cardHigh, width: 1)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              entry.name,
+              style: GoogleFonts.inter(color: CR.text1, fontSize: 12, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          _SCell(entry.oversDisplay),
+          _SCell(entry.runs.toString()),
+          _SCell(entry.wickets.toString(), bold: entry.wickets > 0, color: entry.wickets > 0 ? CR.red : null),
+          _SCell(entry.econ.toStringAsFixed(1)),
+        ],
+      ),
+    );
+  }
+}
+
+class _SCell extends StatelessWidget {
+  final String text;
+  final bool bold;
+  final Color? color;
+  const _SCell(this.text, {this.bold = false, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 36,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: GoogleFonts.spaceGrotesk(
+          color: color ?? CR.text2,
+          fontSize: 12,
+          fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
     );
   }
 }

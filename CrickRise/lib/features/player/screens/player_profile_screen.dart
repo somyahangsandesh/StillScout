@@ -62,7 +62,7 @@ class _PlayerProfileScreenState extends ConsumerState<PlayerProfileScreen>
     final belowRating = ref.watch(belowPlayerRatingProvider);
 
     return Scaffold(
-      backgroundColor: CrickRiseColors.background,
+      backgroundColor: CR.bg,
       body: Stack(
         children: [
           // Background atmospheric glow
@@ -77,7 +77,7 @@ class _PlayerProfileScreenState extends ConsumerState<PlayerProfileScreen>
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    CrickRiseColors.primaryDeep.withOpacity(0.25),
+                    CR.greenDim.withOpacity(0.25),
                     Colors.transparent,
                   ],
                 ),
@@ -105,7 +105,7 @@ class _PlayerProfileScreenState extends ConsumerState<PlayerProfileScreen>
                 elevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new,
-                      color: CrickRiseColors.textSecondary, size: 18),
+                      color: CR.text2, size: 18),
                   onPressed: () => context.pop(),
                 ),
                 actions: [
@@ -116,21 +116,21 @@ class _PlayerProfileScreenState extends ConsumerState<PlayerProfileScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: CrickRiseColors.surfaceElevated,
+                        color: CR.cardHigh,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: CrickRiseColors.primary.withOpacity(0.3)),
+                            color: CR.green.withOpacity(0.3)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.ios_share,
-                              color: CrickRiseColors.primary, size: 14),
+                              color: CR.green, size: 14),
                           const SizedBox(width: 6),
                           Text(
                             'Share Card',
                             style: GoogleFonts.inter(
-                              color: CrickRiseColors.primary,
+                              color: CR.green,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -235,12 +235,12 @@ class _OvrHeroCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: CrickRiseColors.primary.withOpacity(0.2),
+          color: CR.green.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: CrickRiseColors.primary.withOpacity(0.1),
+            color: CR.green.withOpacity(0.1),
             blurRadius: 32,
             spreadRadius: -4,
             offset: const Offset(0, 12),
@@ -258,7 +258,7 @@ class _OvrHeroCard extends StatelessWidget {
               child: Text(
                 player.jerseyNumber?.toString() ?? '',
                 style: GoogleFonts.spaceGrotesk(
-                  color: CrickRiseColors.primary.withOpacity(0.04),
+                  color: CR.green.withOpacity(0.04),
                   fontSize: 220,
                   fontWeight: FontWeight.w800,
                   height: 0.8,
@@ -275,7 +275,7 @@ class _OvrHeroCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     colors: [
-                      CrickRiseColors.gold.withOpacity(0.05),
+                      CR.gold.withOpacity(0.05),
                       Colors.transparent,
                     ],
                   ),
@@ -301,16 +301,16 @@ class _OvrHeroCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: CrickRiseColors.primary.withOpacity(0.12),
+                                color: CR.green.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: CrickRiseColors.primary.withOpacity(0.3),
+                                  color: CR.green.withOpacity(0.3),
                                 ),
                               ),
                               child: Text(
                                 player.role.displayName.toUpperCase(),
                                 style: GoogleFonts.inter(
-                                  color: CrickRiseColors.primary,
+                                  color: CR.green,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 1,
@@ -324,7 +324,7 @@ class _OvrHeroCard extends StatelessWidget {
                                 Text(
                                   player.jerseyDisplay,
                                   style: GoogleFonts.spaceGrotesk(
-                                    color: CrickRiseColors.textMuted,
+                                    color: CR.text3,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -334,7 +334,7 @@ class _OvrHeroCard extends StatelessWidget {
                                   child: Text(
                                     player.displayName,
                                     style: GoogleFonts.inter(
-                                      color: CrickRiseColors.textPrimary,
+                                      color: CR.text1,
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -347,7 +347,7 @@ class _OvrHeroCard extends StatelessWidget {
                             Text(
                               player.teamName ?? '',
                               style: GoogleFonts.inter(
-                                color: CrickRiseColors.textSecondary,
+                                color: CR.text2,
                                 fontSize: 13,
                               ),
                             ),
@@ -355,7 +355,7 @@ class _OvrHeroCard extends StatelessWidget {
                             if (rating.hasHotStreak)
                               CRBadge(
                                 '🔥 ${rating.hotStreakCount}-match streak',
-                                color: CrickRiseColors.gold,
+                                color: CR.gold,
                               ),
                           ],
                         ),
@@ -367,7 +367,7 @@ class _OvrHeroCard extends StatelessWidget {
                           Text(
                             'OVR',
                             style: GoogleFonts.inter(
-                              color: CrickRiseColors.gold.withOpacity(0.6),
+                              color: CR.gold.withOpacity(0.6),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 2,
@@ -381,7 +381,7 @@ class _OvrHeroCard extends StatelessWidget {
                               return Text(
                                 v.toString(),
                                 style: GoogleFonts.spaceGrotesk(
-                                  color: CrickRiseColors.gold,
+                                  color: CR.gold,
                                   fontSize: 88,
                                   fontWeight: FontWeight.w800,
                                   height: 0.9,
@@ -401,8 +401,8 @@ class _OvrHeroCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          CrickRiseColors.primary.withOpacity(0.3),
-                          CrickRiseColors.primary.withOpacity(0.05),
+                          CR.green.withOpacity(0.3),
+                          CR.green.withOpacity(0.05),
                         ],
                       ),
                     ),
@@ -414,14 +414,14 @@ class _OvrHeroCard extends StatelessWidget {
                     label: 'BAT',
                     value: rating.bat,
                     animation: batAnim,
-                    color: CrickRiseColors.primary,
+                    color: CR.green,
                   ),
                   const SizedBox(height: 14),
                   CRDomainBar(
                     label: 'BOWL',
                     value: rating.bowl,
                     animation: bowlAnim,
-                    color: CrickRiseColors.gold,
+                    color: CR.gold,
                   ),
                   const SizedBox(height: 14),
                   CRDomainBar(
@@ -466,9 +466,9 @@ class _PositionWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: CrickRiseColors.surfaceCard,
+        color: CR.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: CrickRiseColors.surfaceElevated),
+        border: Border.all(color: CR.cardHigh),
       ),
       child: Column(
         children: [
@@ -482,7 +482,7 @@ class _PositionWidget extends StatelessWidget {
             isHighlighted: false,
             roundTop: true,
           ),
-          Container(height: 1, color: CrickRiseColors.surfaceElevated),
+          Container(height: 1, color: CR.cardHigh),
           _ProfilePositionRow(
             rank: '#3',
             jerseyDisplay: player.jerseyDisplay,
@@ -493,7 +493,7 @@ class _PositionWidget extends StatelessWidget {
             isHighlighted: true,
             roundTop: false,
           ),
-          Container(height: 1, color: CrickRiseColors.surfaceElevated),
+          Container(height: 1, color: CR.cardHigh),
           _ProfilePositionRow(
             rank: '#4',
             jerseyDisplay: below.jerseyDisplay,
@@ -536,7 +536,7 @@ class _ProfilePositionRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       color: isHighlighted
-          ? CrickRiseColors.primary.withOpacity(0.05)
+          ? CR.green.withOpacity(0.05)
           : Colors.transparent,
       child: Row(
         children: [
@@ -554,7 +554,7 @@ class _ProfilePositionRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
                 boxShadow: [
                   BoxShadow(
-                    color: CrickRiseColors.primary.withOpacity(0.6),
+                    color: CR.green.withOpacity(0.6),
                     blurRadius: 8,
                   ),
                 ],
@@ -571,7 +571,7 @@ class _ProfilePositionRow extends StatelessWidget {
                     Text(
                       '$rank  $jerseyDisplay',
                       style: GoogleFonts.spaceGrotesk(
-                        color: CrickRiseColors.textMuted,
+                        color: CR.text3,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -582,8 +582,8 @@ class _ProfilePositionRow extends StatelessWidget {
                         teamName.isNotEmpty ? '$name · $teamName' : name,
                         style: GoogleFonts.inter(
                           color: isHighlighted
-                              ? CrickRiseColors.textPrimary
-                              : CrickRiseColors.textSecondary,
+                              ? CR.text1
+                              : CR.text2,
                           fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 14,
                         ),
@@ -597,8 +597,8 @@ class _ProfilePositionRow extends StatelessWidget {
                   subtext,
                   style: GoogleFonts.inter(
                     color: isHighlighted
-                        ? CrickRiseColors.primary
-                        : CrickRiseColors.textMuted,
+                        ? CR.green
+                        : CR.text3,
                     fontSize: 11,
                     fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w400,
                   ),
@@ -613,8 +613,8 @@ class _ProfilePositionRow extends StatelessWidget {
                 ovr.toString(),
                 style: GoogleFonts.spaceGrotesk(
                   color: isHighlighted
-                      ? CrickRiseColors.gold
-                      : CrickRiseColors.textSecondary,
+                      ? CR.gold
+                      : CR.text2,
                   fontSize: isHighlighted ? 30 : 22,
                   fontWeight: FontWeight.w700,
                   height: 1,
@@ -623,7 +623,7 @@ class _ProfilePositionRow extends StatelessWidget {
               Text(
                 'OVR',
                 style: GoogleFonts.inter(
-                  color: CrickRiseColors.textMuted,
+                  color: CR.text3,
                   fontSize: 9,
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.w600,
@@ -648,9 +648,9 @@ class _SeasonStats extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: CrickRiseColors.surfaceCard,
+        color: CR.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: CrickRiseColors.surfaceElevated),
+        border: Border.all(color: CR.cardHigh),
       ),
       child: Column(
         children: [
@@ -666,11 +666,11 @@ class _SeasonStats extends StatelessWidget {
               _StatCell('C', stats.catches.toString()),
               _Vdivider(),
               _StatCell('MVP', stats.mvpAwards.toString(),
-                  color: CrickRiseColors.gold),
+                  color: CR.gold),
             ],
           ),
           const SizedBox(height: 14),
-          Container(height: 1, color: CrickRiseColors.surfaceElevated),
+          Container(height: 1, color: CR.cardHigh),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -699,7 +699,7 @@ class _StatCell extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.spaceGrotesk(
-            color: color ?? CrickRiseColors.textPrimary,
+            color: color ?? CR.text1,
             fontSize: 24,
             fontWeight: FontWeight.w700,
             height: 1,
@@ -709,7 +709,7 @@ class _StatCell extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CrickRiseColors.textMuted,
+            color: CR.text3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
@@ -732,7 +732,7 @@ class _MiniStat extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CrickRiseColors.textMuted,
+            color: CR.text3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
@@ -742,7 +742,7 @@ class _MiniStat extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.spaceGrotesk(
-            color: CrickRiseColors.textSecondary,
+            color: CR.text2,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -758,7 +758,7 @@ class _Vdivider extends StatelessWidget {
     return Container(
       width: 1,
       height: 36,
-      color: CrickRiseColors.surfaceElevated,
+      color: CR.cardHigh,
     );
   }
 }
@@ -781,15 +781,15 @@ class _RecentForm extends StatelessWidget {
     return Column(
       children: matches.map((m) {
         final color = m.positive == null
-            ? CrickRiseColors.textMuted
+            ? CR.text3
             : m.positive!
-                ? CrickRiseColors.primary
-                : CrickRiseColors.danger;
+                ? CR.green
+                : CR.red;
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: CrickRiseColors.surfaceCard,
+            color: CR.card,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: color.withOpacity(0.15),
@@ -824,7 +824,7 @@ class _RecentForm extends StatelessWidget {
                     Text(
                       m.label,
                       style: GoogleFonts.inter(
-                        color: CrickRiseColors.textPrimary,
+                        color: CR.text1,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -833,7 +833,7 @@ class _RecentForm extends StatelessWidget {
                     Text(
                       m.stats,
                       style: GoogleFonts.inter(
-                        color: CrickRiseColors.textSecondary,
+                        color: CR.text2,
                         fontSize: 12,
                       ),
                     ),
@@ -889,13 +889,13 @@ class _Milestones extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: isChampion
-                ? CrickRiseColors.gold.withOpacity(0.08)
-                : CrickRiseColors.surfaceCard,
+                ? CR.gold.withOpacity(0.08)
+                : CR.card,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isChampion
-                  ? CrickRiseColors.gold.withOpacity(0.3)
-                  : CrickRiseColors.surfaceElevated,
+                  ? CR.gold.withOpacity(0.3)
+                  : CR.cardHigh,
             ),
           ),
           child: Row(
@@ -907,8 +907,8 @@ class _Milestones extends StatelessWidget {
                 label,
                 style: GoogleFonts.inter(
                   color: isChampion
-                      ? CrickRiseColors.gold
-                      : CrickRiseColors.textSecondary,
+                      ? CR.gold
+                      : CR.text2,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),

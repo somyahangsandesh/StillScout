@@ -74,7 +74,12 @@ class _EmptyState extends StatelessWidget {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Create League — coming soon'),
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                },
                 child: Text(
                   '+ Create League',
                   style: GoogleFonts.inter(
@@ -177,14 +182,14 @@ class _StandingsTab extends StatelessWidget {
   const _StandingsTab();
 
   static const _teams = [
-    _TeamRow(rank: 1, name: 'Tokyo Rhinos', p: 8, w: 6, l: 2, pts: 12, isYou: false),
-    _TeamRow(rank: 2, name: 'Osaka Kings', p: 8, w: 5, l: 3, pts: 10, isYou: false),
-    _TeamRow(rank: 3, name: 'Okinawa Warriors', p: 8, w: 5, l: 3, pts: 10, isYou: true),
-    _TeamRow(rank: 4, name: 'Kobe Bulls', p: 8, w: 4, l: 4, pts: 8, isYou: false),
-    _TeamRow(rank: 5, name: 'Fukuoka FC', p: 8, w: 3, l: 5, pts: 6, isYou: false),
-    _TeamRow(rank: 6, name: 'Nagoya Stars', p: 8, w: 3, l: 5, pts: 6, isYou: false),
-    _TeamRow(rank: 7, name: 'Kyoto Hawks', p: 8, w: 2, l: 6, pts: 4, isYou: false),
-    _TeamRow(rank: 8, name: 'Sapporo Ice', p: 8, w: 1, l: 7, pts: 2, isYou: false),
+    _TeamRow(rank: 1, name: 'Tokyo Rhinos', p: 8, w: 6, l: 2, pts: 12, isYou: false, nrr: 0.82, form: ['W','W','L','W','W']),
+    _TeamRow(rank: 2, name: 'Osaka Kings', p: 8, w: 5, l: 3, pts: 10, isYou: false, nrr: 0.42, form: ['W','L','W','W','L']),
+    _TeamRow(rank: 3, name: 'Okinawa Warriors', p: 8, w: 5, l: 3, pts: 10, isYou: true, nrr: 0.31, form: ['W','W','W','W','L']),
+    _TeamRow(rank: 4, name: 'Kobe Bulls', p: 8, w: 4, l: 4, pts: 8, isYou: false, nrr: -0.05, form: ['L','W','L','W','W']),
+    _TeamRow(rank: 5, name: 'Fukuoka FC', p: 8, w: 3, l: 5, pts: 6, isYou: false, nrr: -0.18, form: ['L','L','W','L','W']),
+    _TeamRow(rank: 6, name: 'Nagoya Stars', p: 8, w: 3, l: 5, pts: 6, isYou: false, nrr: -0.29, form: ['W','L','L','W','L']),
+    _TeamRow(rank: 7, name: 'Kyoto Hawks', p: 8, w: 2, l: 6, pts: 4, isYou: false, nrr: -0.55, form: ['L','L','W','L','L']),
+    _TeamRow(rank: 8, name: 'Sapporo Ice', p: 8, w: 1, l: 7, pts: 2, isYou: false, nrr: -0.91, form: ['L','L','L','L','W']),
   ];
 
   @override
@@ -210,7 +215,7 @@ class _StandingsTab extends StatelessWidget {
               ),
               const _HeaderCell('P'),
               const _HeaderCell('W'),
-              const _HeaderCell('L'),
+              const _HeaderCell('NRR'),
               const _HeaderCell('PTS'),
             ],
           ),
@@ -259,6 +264,8 @@ class _TeamRow {
   final String name;
   final int p, w, l, pts;
   final bool isYou;
+  final double nrr;
+  final List<String> form; // last 5: 'W' or 'L'
 
   const _TeamRow({
     required this.rank,
@@ -268,6 +275,8 @@ class _TeamRow {
     required this.l,
     required this.pts,
     required this.isYou,
+    this.nrr = 0.0,
+    this.form = const [],
   });
 }
 
@@ -279,55 +288,107 @@ class _StandingsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isQualZone = team.rank <= 2;
+    final nrrStr =
+        team.nrr >= 0 ? '+${team.nrr.toStringAsFixed(2)}' : team.nrr.toStringAsFixed(2);
+    final nrrColor = team.nrr >= 0 ? CR.green : CR.red;
+
     return Container(
-      height: 52,
       decoration: BoxDecoration(
         color: team.isYou
             ? CR.green.withOpacity(0.07)
             : even
                 ? CR.card
+                // Slightly darker than CR.card for alternating zebra stripe
                 : const Color(0xFF131313),
         border: team.isYou
             ? const Border(left: BorderSide(color: CR.green, width: 3))
-            : null,
+            : isQualZone
+                ? Border(
+                    left: BorderSide(
+                        color: CR.green.withOpacity(0.3), width: 2),
+                    bottom: BorderSide(
+                        color: CR.green.withOpacity(0.08), width: 1),
+                  )
+                : null,
       ),
-      child: Row(
+      child: Column(
         children: [
+          // Main row
           SizedBox(
-            width: 24,
-            child: Center(
-              child: Text(
-                '${team.rank}',
-                style: GoogleFonts.spaceGrotesk(
-                  color: team.isYou ? CR.green : CR.text3,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+            height: 44,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: Center(
+                    child: Text(
+                      '${team.rank}',
+                      style: GoogleFonts.spaceGrotesk(
+                        color: team.isYou ? CR.green : CR.text3,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      team.name,
+                      style: GoogleFonts.inter(
+                        color: team.isYou ? CR.text1 : CR.text2,
+                        fontSize: 12,
+                        fontWeight:
+                            team.isYou ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                _Cell(team.p.toString()),
+                _Cell(team.w.toString()),
+                _Cell(nrrStr, color: nrrColor),
+                _Cell(
+                  team.pts.toString(),
+                  bold: true,
+                  color: team.isYou ? CR.green : null,
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                team.name,
-                style: GoogleFonts.inter(
-                  color: team.isYou ? CR.text1 : CR.text2,
-                  fontSize: 13,
-                  fontWeight: team.isYou ? FontWeight.w700 : FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
+          // Form chips row
+          if (team.form.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 32, bottom: 6),
+              child: Row(
+                children: team.form.map((f) {
+                  final isW = f == 'W';
+                  return Container(
+                    width: 18,
+                    height: 18,
+                    margin: const EdgeInsets.only(right: 4),
+                    decoration: BoxDecoration(
+                      color: isW
+                          ? CR.green.withOpacity(0.15)
+                          : CR.red.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        f,
+                        style: GoogleFonts.inter(
+                          color: isW ? CR.green : CR.red,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
-          ),
-          _Cell(team.p.toString()),
-          _Cell(team.w.toString()),
-          _Cell(team.l.toString()),
-          _Cell(
-            team.pts.toString(),
-            bold: true,
-            color: team.isYou ? CR.green : null,
-          ),
         ],
       ),
     );

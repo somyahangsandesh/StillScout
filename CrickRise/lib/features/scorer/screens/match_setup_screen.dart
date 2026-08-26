@@ -88,7 +88,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CrickRiseColors.background,
+      backgroundColor: CR.bg,
       appBar: AppBar(
         title: const Text('New Match'),
         leading: IconButton(
@@ -103,9 +103,9 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
           // Progress bar
           LinearProgressIndicator(
             value: (_step + 1) / 6,
-            backgroundColor: CrickRiseColors.surfaceElevated,
+            backgroundColor: CR.cardHigh,
             valueColor:
-                const AlwaysStoppedAnimation<Color>(CrickRiseColors.primary),
+                const AlwaysStoppedAnimation<Color>(CR.green),
             minHeight: 2,
           ),
           Expanded(
@@ -204,18 +204,18 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         const SizedBox(height: 8),
         const Text(
           'Optional — you can skip these',
-          style: TextStyle(color: CrickRiseColors.textSecondary),
+          style: TextStyle(color: CR.text2),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _teamAController,
-          style: const TextStyle(color: CrickRiseColors.textPrimary),
+          style: const TextStyle(color: CR.text1),
           decoration: const InputDecoration(labelText: 'Your team name'),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _teamBController,
-          style: const TextStyle(color: CrickRiseColors.textPrimary),
+          style: const TextStyle(color: CR.text1),
           decoration: const InputDecoration(labelText: 'Opponent team name'),
         ),
       ],
@@ -252,7 +252,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
             children: [
               const Text(
                 'Overs per side:',
-                style: TextStyle(color: CrickRiseColors.textSecondary),
+                style: TextStyle(color: CR.text2),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -262,14 +262,14 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                   max: 50,
                   divisions: 48,
                   label: _customOvers.toString(),
-                  activeColor: CrickRiseColors.primary,
+                  activeColor: CR.green,
                   onChanged: (v) => setState(() => _customOvers = v.round()),
                 ),
               ),
               Text(
                 '$_customOvers',
                 style: GoogleFonts.spaceGrotesk(
-                  color: CrickRiseColors.textPrimary,
+                  color: CR.text1,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -301,7 +301,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         const SizedBox(height: 32),
         const Text(
           'Who won the toss?',
-          style: TextStyle(color: CrickRiseColors.textSecondary),
+          style: TextStyle(color: CR.text2),
         ),
         const SizedBox(height: 12),
         Row(
@@ -326,7 +326,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         const SizedBox(height: 24),
         const Text(
           'Decision?',
-          style: TextStyle(color: CrickRiseColors.textSecondary),
+          style: TextStyle(color: CR.text2),
         ),
         const SizedBox(height: 12),
         Row(
@@ -367,8 +367,8 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
           '${_selectedPlayers.length} / 11 selected',
           style: TextStyle(
             color: _selectedPlayers.length == 11
-                ? CrickRiseColors.primary
-                : CrickRiseColors.textSecondary,
+                ? CR.green
+                : CR.text2,
           ),
         ),
         const SizedBox(height: 16),
@@ -394,12 +394,12 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                       horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? CrickRiseColors.primary.withOpacity(0.1)
-                        : CrickRiseColors.surface,
+                        ? CR.green.withOpacity(0.1)
+                        : CR.card,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected
-                          ? CrickRiseColors.primary.withOpacity(0.4)
+                          ? CR.green.withOpacity(0.4)
                           : Colors.transparent,
                     ),
                   ),
@@ -408,7 +408,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                       Text(
                         p.jerseyDisplay,
                         style: GoogleFonts.spaceGrotesk(
-                          color: CrickRiseColors.textMuted,
+                          color: CR.text3,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -418,7 +418,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                         child: Text(
                           p.name,
                           style: GoogleFonts.inter(
-                            color: CrickRiseColors.textPrimary,
+                            color: CR.text1,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -427,7 +427,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                       Text(
                         p.role.shortName,
                         style: const TextStyle(
-                          color: CrickRiseColors.textMuted,
+                          color: CR.text3,
                           fontSize: 11,
                         ),
                       ),
@@ -437,8 +437,8 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                             ? Icons.check_circle
                             : Icons.circle_outlined,
                         color: isSelected
-                            ? CrickRiseColors.primary
-                            : CrickRiseColors.textMuted,
+                            ? CR.green
+                            : CR.text3,
                         size: 20,
                       ),
                     ],
@@ -516,13 +516,13 @@ class _MatchTypeCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: selected
-              ? CrickRiseColors.primary.withOpacity(0.1)
-              : CrickRiseColors.surface,
+              ? CR.green.withOpacity(0.1)
+              : CR.card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected
-                ? CrickRiseColors.primary
-                : CrickRiseColors.surfaceElevated,
+                ? CR.green
+                : CR.cardHigh,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -536,8 +536,8 @@ class _MatchTypeCard extends StatelessWidget {
                     type.displayName.toUpperCase(),
                     style: GoogleFonts.inter(
                       color: selected
-                          ? CrickRiseColors.primary
-                          : CrickRiseColors.textPrimary,
+                          ? CR.green
+                          : CR.text1,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
@@ -546,7 +546,7 @@ class _MatchTypeCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      color: CrickRiseColors.textSecondary,
+                      color: CR.text2,
                       fontSize: 12,
                     ),
                   ),
@@ -555,7 +555,7 @@ class _MatchTypeCard extends StatelessWidget {
             ),
             if (selected)
               const Icon(Icons.check_circle,
-                  color: CrickRiseColors.primary, size: 20),
+                  color: CR.green, size: 20),
           ],
         ),
       ),
@@ -582,13 +582,13 @@ class _FormatOption extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: selected
-              ? CrickRiseColors.primary.withOpacity(0.1)
-              : CrickRiseColors.surface,
+              ? CR.green.withOpacity(0.1)
+              : CR.card,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: selected
-                ? CrickRiseColors.primary
-                : CrickRiseColors.surfaceElevated,
+                ? CR.green
+                : CR.cardHigh,
           ),
         ),
         child: Row(
@@ -598,8 +598,8 @@ class _FormatOption extends StatelessWidget {
                 format.displayName,
                 style: GoogleFonts.inter(
                   color: selected
-                      ? CrickRiseColors.primary
-                      : CrickRiseColors.textPrimary,
+                      ? CR.green
+                      : CR.text1,
                   fontSize: 15,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
@@ -607,7 +607,7 @@ class _FormatOption extends StatelessWidget {
             ),
             if (selected)
               const Icon(Icons.check_circle,
-                  color: CrickRiseColors.primary, size: 18),
+                  color: CR.green, size: 18),
           ],
         ),
       ),
@@ -634,13 +634,13 @@ class _TossButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: selected
-              ? CrickRiseColors.primary.withOpacity(0.15)
-              : CrickRiseColors.surface,
+              ? CR.green.withOpacity(0.15)
+              : CR.card,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: selected
-                ? CrickRiseColors.primary
-                : CrickRiseColors.surfaceElevated,
+                ? CR.green
+                : CR.cardHigh,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -649,8 +649,8 @@ class _TossButton extends StatelessWidget {
             label,
             style: GoogleFonts.inter(
               color: selected
-                  ? CrickRiseColors.primary
-                  : CrickRiseColors.textPrimary,
+                  ? CR.green
+                  : CR.text1,
               fontSize: 14,
               fontWeight: FontWeight.w700,
             ),
@@ -677,14 +677,14 @@ class _ReviewRow extends StatelessWidget {
             width: 100,
             child: Text(
               label,
-              style: const TextStyle(color: CrickRiseColors.textSecondary),
+              style: const TextStyle(color: CR.text2),
             ),
           ),
           Expanded(
             child: Text(
               value,
               style: GoogleFonts.inter(
-                color: CrickRiseColors.textPrimary,
+                color: CR.text1,
                 fontWeight: FontWeight.w600,
               ),
             ),

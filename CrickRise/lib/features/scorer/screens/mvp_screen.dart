@@ -99,7 +99,19 @@ class MvpScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Card copied — paste in WhatsApp or LINE',
+                            style: GoogleFonts.inter(fontSize: 13),
+                          ),
+                          backgroundColor: CR.cardHigh,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: CR.gold,
                       foregroundColor: CR.inv,

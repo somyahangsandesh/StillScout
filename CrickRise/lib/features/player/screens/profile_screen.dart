@@ -21,7 +21,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   late AnimationController _ctrl;
   late Animation<double> _ovrAnim, _batAnim, _bowlAnim, _fieldAnim;
   int _tab = 0; // 0 = season, 1 = career
+  int _formatFilter = 0; // 0=ALL, 1=T20, 2=10-over, 3=5-over
   bool _ovrRevealShown = false;
+  bool _insightsExpanded = false;
 
   @override
   void initState() {
@@ -155,6 +157,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   tab: _tab,
                   onChanged: (t) => setState(() => _tab = t),
                 ),
+                const SizedBox(height: 12),
+
+                // Format filter pills
+                _FormatFilter(
+                  selected: _formatFilter,
+                  onChanged: (f) => setState(() => _formatFilter = f),
+                ),
                 const SizedBox(height: 16),
 
                 // Stats grid
@@ -178,6 +187,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 const CRSectionLabel('Recent Matches'),
                 const SizedBox(height: 10),
                 const _RecentMatchesList(),
+                const SizedBox(height: 20),
+
+                // BATTING INSIGHTS (Pro gate)
+                const SizedBox(height: 20),
+                _PlayerInsightsSection(
+                  expanded: _insightsExpanded,
+                  onToggle: () =>
+                      setState(() => _insightsExpanded = !_insightsExpanded),
+                ),
                 const SizedBox(height: 20),
 
                 // MILESTONES
@@ -274,21 +292,35 @@ class _ProfileOvrCard extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            if (rating.hasHotStreak) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                '🔥 ${rating.hotStreakCount}-match streak',
-                                style: GoogleFonts.inter(
-                                  color: CR.gold,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            const SizedBox(height: 4),
+                            // CR Number
+                            Text(
+                              player.crDisplay,
+                              style: GoogleFonts.spaceGrotesk(
+                                color: CR.text3,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            if (rating.hasHotStreak || player.hasHeritage) ...[
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 6,
+                                children: [
+                  if (player.hasElder)
+                    const _MicroBadge('ELDER', CR.gold),
+                  if (!player.hasElder && player.hasHeritage)
+                    const _MicroBadge('HERITAGE', CR.blue),
+                                  if (rating.hasHotStreak)
+                                    _MicroBadge('🔥 ${rating.hotStreakCount} streak', CR.orange),
+                                ],
                               ),
                             ],
                           ],
                         ),
                       ),
-                      // OVR
+                      // OVR with decorative glow ring
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -301,22 +333,41 @@ class _ProfileOvrCard extends StatelessWidget {
                               letterSpacing: 2,
                             ),
                           ),
-                          AnimatedBuilder(
-                            animation: ovrAnim,
-                            builder: (_, __) {
-                              final v =
-                                  (50 + (rating.ovr - 50) * ovrAnim.value)
-                                      .round();
-                              return Text(
-                                v.toString(),
-                                style: GoogleFonts.spaceGrotesk(
-                                  color: CR.gold,
-                                  fontSize: 72,
-                                  fontWeight: FontWeight.w800,
-                                  height: 0.9,
-                                ),
-                              );
-                            },
+                          Container(
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: CR.gold.withOpacity(0.15),
+                                width: 1,
+                              ),
+                              gradient: RadialGradient(
+                                colors: [
+                                  CR.gold.withOpacity(0.08),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: AnimatedBuilder(
+                                animation: ovrAnim,
+                                builder: (_, __) {
+                                  final v =
+                                      (50 + (rating.ovr - 50) * ovrAnim.value)
+                                          .round();
+                                  return Text(
+                                    v.toString(),
+                                    style: GoogleFonts.spaceGrotesk(
+                                      color: CR.gold,
+                                      fontSize: 56,
+                                      fontWeight: FontWeight.w800,
+                                      height: 0.9,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -340,11 +391,12 @@ class _ProfileOvrCard extends StatelessWidget {
                       label: 'FIELD',
                       value: rating.field,
                       animation: fieldAnim,
-                      color: const Color(0xFF60A5FA)),
+                      color: CR.blue),
                   const SizedBox(height: 16),
                   // Form sparkline
                   const _FormSparkline(
-                    dataPoints: [72, 74, 77, 76, 84],
+                    // Sample OVR history — last 5 matches
+                    dataPoints: [72.0, 74.0, 77.0, 76.0, 84.0],
                   ),
                 ],
               ),
@@ -414,6 +466,343 @@ class _ToggleItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: CR.green,
               borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Format Filter ────────────────────────────────────────────────────────────
+
+class _FormatFilter extends StatelessWidget {
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  const _FormatFilter({required this.selected, required this.onChanged});
+
+  static const _labels = ['ALL', 'T20', '10-over', '5-over'];
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _labels.asMap().entries.map((e) {
+          final i = e.key;
+          final label = e.value;
+          final isSelected = selected == i;
+          return GestureDetector(
+            onTap: () => onChanged(i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSelected ? CR.green : CR.card,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? CR.green : CR.cardHigh,
+                ),
+              ),
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: isSelected ? CR.textInv : CR.text3,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+// ─── Player Insights Section ──────────────────────────────────────────────────
+
+class _PlayerInsightsSection extends StatelessWidget {
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  const _PlayerInsightsSection({
+    required this.expanded,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          // Header row — tappable to expand
+          GestureDetector(
+            onTap: onToggle,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Text(
+                    'PLAYER INSIGHTS',
+                    style: GoogleFonts.inter(
+                      color: CR.text3,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: CR.gold.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'PRO',
+                      style: GoogleFonts.inter(
+                        color: CR.gold,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: CR.text3,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (expanded) ...[
+            const Divider(height: 1, color: CR.cardHigh),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Toss stats
+                  const _InsightRow(
+                    label: 'Toss: Win batting',
+                    value: '67% win rate',
+                    valueColor: CR.green,
+                  ),
+                  const _InsightRow(
+                    label: 'Toss: Win fielding',
+                    value: '55% win rate',
+                    valueColor: CR.text2,
+                  ),
+                  const SizedBox(height: 12),
+                  Container(height: 1, color: CR.cardHigh),
+                  const SizedBox(height: 12),
+                  // Wicket type breakdown
+                  Text(
+                    'Wicket Types',
+                    style: GoogleFonts.inter(
+                      color: CR.text3,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _WicketChip('Caught', '41%'),
+                      _WicketChip('Bowled', '32%'),
+                      _WicketChip('LBW', '18%'),
+                      _WicketChip('Run Out', '9%'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Container(height: 1, color: CR.cardHigh),
+                  const SizedBox(height: 12),
+                  // Phase strike rates
+                  Text(
+                    'Strike Rate by Phase',
+                    style: GoogleFonts.inter(
+                      color: CR.text3,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Row(
+                    children: [
+                      Expanded(
+                          child: _PhaseCell('PP\n0–6 ov', '141')),
+                      Expanded(
+                          child: _PhaseCell('MID\n7–15 ov', '138')),
+                      Expanded(
+                          child: _PhaseCell('DEATH\n16–20 ov', '163',
+                              highlight: true)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            // Blurred preview when collapsed
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: ClipRect(
+                child: ImageFiltered(
+                  imageFilter: ColorFilter.mode(
+                      CR.card, BlendMode.saturation),
+                  child: Opacity(
+                    opacity: 0.3,
+                    child: Column(
+                      children: [
+                        _InsightRow(
+                            label: 'Toss: Win batting', value: '67%'),
+                        _InsightRow(
+                            label: 'Wicket type: Caught', value: '41%'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _InsightRow(
+      {required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(color: CR.text2, fontSize: 13),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              color: valueColor ?? CR.text1,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WicketChip extends StatelessWidget {
+  final String type;
+  final String pct;
+  const _WicketChip(this.type, this.pct);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: CR.cardHigh,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            type,
+            style: GoogleFonts.inter(color: CR.text2, fontSize: 11),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            pct,
+            style: GoogleFonts.inter(
+              color: CR.text1,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PhaseCell extends StatelessWidget {
+  final String label;
+  final String sr;
+  final bool highlight;
+  const _PhaseCell(this.label, this.sr, {this.highlight = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: highlight ? CR.green.withOpacity(0.08) : CR.cardHigh,
+        borderRadius: BorderRadius.circular(8),
+        border: highlight
+            ? Border.all(color: CR.green.withOpacity(0.3))
+            : null,
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              color: CR.text3,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            sr,
+            style: GoogleFonts.spaceGrotesk(
+              color: highlight ? CR.green : CR.text1,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            'SR',
+            style: GoogleFonts.inter(
+              color: CR.text3,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1,
             ),
           ),
         ],
@@ -875,7 +1264,8 @@ class _OvrRevealOverlayState extends State<_OvrRevealOverlay>
     _ctrl.forward().then((_) {
       if (mounted) {
         setState(() => _showUnlocked = true);
-        Future.delayed(const Duration(seconds: 1), () {
+        // After showing "UNLOCKED", wait then pop and let the caller show Pro upsell
+        Future.delayed(const Duration(milliseconds: 1600), () {
           if (mounted) Navigator.of(context).pop();
         });
       }
@@ -1102,6 +1492,35 @@ class _LockedDomainItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── Micro Badge ──────────────────────────────────────────────────────────────
+
+class _MicroBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _MicroBadge(this.label, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
+      ),
     );
   }
 }

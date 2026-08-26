@@ -35,7 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CrickRiseColors.background,
+      backgroundColor: CR.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -50,8 +50,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     margin: const EdgeInsets.only(right: 4),
                     decoration: BoxDecoration(
                       color: i <= _step
-                          ? CrickRiseColors.primary
-                          : CrickRiseColors.surfaceElevated,
+                          ? CR.green
+                          : CR.cardHigh,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -99,14 +99,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'We\'ll send you a verification code',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CrickRiseColors.textSecondary,
+                color: CR.text2,
               ),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
-          style: const TextStyle(color: CrickRiseColors.textPrimary),
+          style: const TextStyle(color: CR.text1),
           decoration: const InputDecoration(
             labelText: 'Phone number',
             prefixText: '+81 ',
@@ -128,7 +128,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'Sent to ${_phoneController.text}',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CrickRiseColors.textSecondary,
+                color: CR.text2,
               ),
         ),
         const SizedBox(height: 32),
@@ -140,15 +140,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               width: 48,
               height: 56,
               decoration: BoxDecoration(
-                color: CrickRiseColors.surface,
+                color: CR.card,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: CrickRiseColors.textMuted),
+                border: Border.all(color: CR.text3),
               ),
               child: const Center(
                 child: Text(
                   '—',
                   style: TextStyle(
-                    color: CrickRiseColors.textMuted,
+                    color: CR.text3,
                     fontSize: 20,
                   ),
                 ),
@@ -172,14 +172,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'This will appear on your player profile',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CrickRiseColors.textSecondary,
+                color: CR.text2,
               ),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _nameController,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(color: CrickRiseColors.textPrimary),
+          style: const TextStyle(color: CR.text1),
           decoration: const InputDecoration(labelText: 'Full name'),
         ),
       ],
@@ -198,13 +198,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'Your city determines your league rankings',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CrickRiseColors.textSecondary,
+                color: CR.text2,
               ),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _cityController,
-          style: const TextStyle(color: CrickRiseColors.textPrimary),
+          style: const TextStyle(color: CR.text1),
           decoration: const InputDecoration(labelText: 'City (e.g. Okinawa, Tokyo)'),
         ),
       ],

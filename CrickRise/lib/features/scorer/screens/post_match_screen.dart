@@ -46,7 +46,7 @@ class PostMatchScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: CrickRiseColors.background,
+      backgroundColor: CR.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -59,20 +59,20 @@ class PostMatchScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      CrickRiseColors.primary.withOpacity(0.15),
-                      CrickRiseColors.primary.withOpacity(0.05),
+                      CR.green.withOpacity(0.15),
+                      CR.green.withOpacity(0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border:
-                      Border.all(color: CrickRiseColors.primary.withOpacity(0.4)),
+                      Border.all(color: CR.green.withOpacity(0.4)),
                 ),
                 child: Column(
                   children: [
                     const Text(
                       '✓  MATCH COMPLETE',
                       style: TextStyle(
-                        color: CrickRiseColors.primary,
+                        color: CR.green,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 2,
                         fontSize: 12,
@@ -82,7 +82,7 @@ class PostMatchScreen extends ConsumerWidget {
                     Text(
                       winnerName,
                       style: GoogleFonts.spaceGrotesk(
-                        color: CrickRiseColors.textPrimary,
+                        color: CR.text1,
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
@@ -92,7 +92,7 @@ class PostMatchScreen extends ConsumerWidget {
                     Text(
                       'beat $loserName by $margin',
                       style: GoogleFonts.inter(
-                        color: CrickRiseColors.textSecondary,
+                        color: CR.text2,
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -106,7 +106,7 @@ class PostMatchScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: CrickRiseColors.surface,
+                  color: CR.card,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -119,7 +119,7 @@ class PostMatchScreen extends ConsumerWidget {
                       isWinner: !chasingTeamWon,
                     ),
                     const SizedBox(height: 12),
-                    const Divider(height: 1, color: CrickRiseColors.surfaceElevated),
+                    const Divider(height: 1, color: CR.cardHigh),
                     const SizedBox(height: 12),
                     _ScoreRow(
                       teamName: state.teamBName,
@@ -145,9 +145,9 @@ class PostMatchScreen extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: CrickRiseColors.gold.withOpacity(0.1),
+                  color: CR.gold.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: CrickRiseColors.gold.withOpacity(0.3)),
+                  border: Border.all(color: CR.gold.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -160,7 +160,7 @@ class PostMatchScreen extends ConsumerWidget {
                           Text(
                             'OVR UPDATING',
                             style: GoogleFonts.inter(
-                              color: CrickRiseColors.gold,
+                              color: CR.gold,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.5,
@@ -170,7 +170,7 @@ class PostMatchScreen extends ConsumerWidget {
                           Text(
                             'Confirm result to update all player ratings',
                             style: GoogleFonts.inter(
-                              color: CrickRiseColors.textSecondary,
+                              color: CR.text2,
                               fontSize: 13,
                             ),
                           ),
@@ -182,58 +182,9 @@ class PostMatchScreen extends ConsumerWidget {
               ).animate().fadeIn(delay: 260.ms),
               const SizedBox(height: 16),
 
-              // MVP suggestion
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: CrickRiseColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star_rounded,
-                        color: CrickRiseColors.gold, size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'SUGGESTED MVP',
-                            style: GoogleFonts.inter(
-                              color: CrickRiseColors.textMuted,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '#7 ROSHAN KC',
-                            style: GoogleFonts.inter(
-                              color: CrickRiseColors.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            '58*(39)  ·  3/24',
-                            style: GoogleFonts.inter(
-                              color: CrickRiseColors.textSecondary,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Change',
-                          style: TextStyle(color: CrickRiseColors.textSecondary)),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(delay: 320.ms),
+              // Awards section
+              const _AwardsSection()
+                  .animate().fadeIn(delay: 320.ms).slideY(begin: 0.06),
               const SizedBox(height: 32),
 
               // Actions
@@ -241,7 +192,12 @@ class PostMatchScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Edit scorecard — coming soon'),
+                          behavior: SnackBarBehavior.floating,
+                        ));
+                      },
                       child: const Text('EDIT'),
                     ),
                   ),
@@ -249,7 +205,7 @@ class PostMatchScreen extends ConsumerWidget {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
-                      onPressed: () => context.go('/home'),
+                      onPressed: () => context.go('/match/mvp'),
                       child: const Text('CONFIRM + UPDATE OVR'),
                     ),
                   ),
@@ -260,6 +216,192 @@ class PostMatchScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─── Awards Section ───────────────────────────────────────────────────────────
+
+class _AwardsSection extends StatefulWidget {
+  const _AwardsSection();
+
+  @override
+  State<_AwardsSection> createState() => _AwardsSectionState();
+}
+
+class _AwardsSectionState extends State<_AwardsSection> {
+  bool _potmConfirmed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          // Player of the Match — captain confirms
+          // TODO: replace with real MVP derived from match delivery log
+          _AwardCard(
+            icon: '⭐',
+            label: 'PLAYER OF THE MATCH',
+            iconColor: CR.gold,
+            playerLine: '#7 Roshan KC',   // sample — from top-scorer in log
+            statsLine: '58*(39)  ·  3/24',
+            isConfirmable: true,
+            isConfirmed: _potmConfirmed,
+            onConfirm: () => setState(() => _potmConfirmed = true),
+            showDivider: true,
+          ),
+          // Best Batter — auto display
+          // TODO: replace with real top-scorer computed from deliveryLog
+          const _AwardCard(
+            icon: '🏏',
+            label: 'BEST BATTER',
+            iconColor: CR.green,
+            playerLine: '#7 Roshan KC',   // sample
+            statsLine: '58*(39)  avg 48.7',
+            isConfirmable: false,
+            isConfirmed: false,
+            showDivider: true,
+          ),
+          // Best Bowler — auto display
+          // TODO: replace with real best-figures computed from deliveryLog
+          const _AwardCard(
+            icon: '🎳',
+            label: 'BEST BOWLER',
+            iconColor: CR.blue,
+            playerLine: '#23 Bikash Rai', // sample
+            statsLine: '3/18  econ 5.1',
+            isConfirmable: false,
+            isConfirmed: false,
+            showDivider: true,
+          ),
+          // Best Fielder — auto display
+          // TODO: replace with real top-catcher computed from deliveryLog
+          const _AwardCard(
+            icon: '🤝',
+            label: 'BEST FIELDER',
+            iconColor: CR.orange,
+            playerLine: '#18 Sandip',     // sample
+            statsLine: '2 catches',
+            isConfirmable: false,
+            isConfirmed: false,
+            showDivider: false,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AwardCard extends StatelessWidget {
+  final String icon;
+  final String label;
+  final Color iconColor;
+  final String playerLine;
+  final String statsLine;
+  final bool isConfirmable;
+  final bool isConfirmed;
+  final VoidCallback? onConfirm;
+  final bool showDivider;
+
+  const _AwardCard({
+    required this.icon,
+    required this.label,
+    required this.iconColor,
+    required this.playerLine,
+    required this.statsLine,
+    required this.isConfirmable,
+    required this.isConfirmed,
+    this.onConfirm,
+    required this.showDivider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        color: iconColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      playerLine,
+                      style: GoogleFonts.inter(
+                        color: CR.text1,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      statsLine,
+                      style: GoogleFonts.inter(
+                        color: CR.text2,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isConfirmable)
+                isConfirmed
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: CR.green.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '✓ CONFIRMED',
+                          style: GoogleFonts.inter(
+                            color: CR.green,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      )
+                    : ElevatedButton(
+                        onPressed: onConfirm,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: CR.gold,
+                          minimumSize: const Size(80, 36),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 0),
+                        ),
+                        child: Text(
+                          'CONFIRM',
+                          style: GoogleFonts.inter(
+                            color: CR.textInv,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+            ],
+          ),
+        ),
+        if (showDivider)
+          const Divider(height: 1, color: CR.cardHigh),
+      ],
     );
   }
 }
@@ -359,15 +501,15 @@ class _ScoreRow extends StatelessWidget {
           children: [
             if (isWinner) ...[
               const Icon(Icons.emoji_events_rounded,
-                  color: CrickRiseColors.gold, size: 16),
+                  color: CR.gold, size: 16),
               const SizedBox(width: 6),
             ],
             Text(
               teamName,
               style: GoogleFonts.inter(
                 color: isWinner
-                    ? CrickRiseColors.textPrimary
-                    : CrickRiseColors.textSecondary,
+                    ? CR.text1
+                    : CR.text2,
                 fontSize: 15,
                 fontWeight: isWinner ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -378,8 +520,8 @@ class _ScoreRow extends StatelessWidget {
           score,
           style: GoogleFonts.spaceGrotesk(
             color: isWinner
-                ? CrickRiseColors.textPrimary
-                : CrickRiseColors.textSecondary,
+                ? CR.text1
+                : CR.text2,
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),

@@ -47,14 +47,14 @@ class WelcomeScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              // Feature lines
+              // Feature lines — with green dot bullets
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _FeatureLine('Verified match stats for every game you play.'),
-                  SizedBox(height: 8),
+                  _FeatureLine('Every match you play, remembered forever.'),
+                  SizedBox(height: 10),
                   _FeatureLine('Live OVR rating that rises with your form.'),
-                  SizedBox(height: 8),
+                  SizedBox(height: 10),
                   _FeatureLine('Your career follows you across every team.'),
                 ],
               ).animate().fadeIn(delay: 400.ms),
@@ -104,25 +104,18 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () => context.push('/auth/phone'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: CR.text1,
-                        side: const BorderSide(color: Color(0xFF333333)),
+                        side: const BorderSide(color: Color(0xFF2A2A2A)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('G', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Sign in with Google',
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              color: CR.text1,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'Continue with Google',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: CR.text1,
+                        ),
                       ),
                     ),
                   ),
@@ -152,13 +145,32 @@ class _FeatureLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        color: CR.text2,
-        fontSize: 14,
-        height: 1.4,
-      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: CR.green,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              color: CR.text2,
+              fontSize: 15,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

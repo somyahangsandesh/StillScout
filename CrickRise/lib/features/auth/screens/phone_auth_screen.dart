@@ -99,7 +99,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   }
 }
 
-class _PhoneView extends StatelessWidget {
+class _PhoneView extends StatefulWidget {
   final ValueChanged<String> onPhoneChanged;
   final VoidCallback onSend;
   final VoidCallback onBack;
@@ -112,8 +112,21 @@ class _PhoneView extends StatelessWidget {
   });
 
   @override
+  State<_PhoneView> createState() => _PhoneViewState();
+}
+
+class _PhoneViewState extends State<_PhoneView> {
+  // Controller lives in State so it persists across rebuilds
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ctrl = TextEditingController();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -122,7 +135,7 @@ class _PhoneView extends StatelessWidget {
           const SizedBox(height: 16),
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: CR.text2, size: 18),
-            onPressed: onBack,
+            onPressed: widget.onBack,
             padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 32),
@@ -162,8 +175,9 @@ class _PhoneView extends StatelessWidget {
                 Container(width: 1, height: 24, color: CR.cardHigh),
                 Expanded(
                   child: TextField(
-                    controller: ctrl,
+                    controller: _ctrl,
                     keyboardType: TextInputType.phone,
+                    autofocus: true,
                     style: GoogleFonts.spaceGrotesk(
                       color: CR.text1,
                       fontSize: 18,
@@ -171,48 +185,64 @@ class _PhoneView extends StatelessWidget {
                     ),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                       hintText: '090 0000 0000',
                       hintStyle: TextStyle(color: CR.text3),
                     ),
-                    onChanged: onPhoneChanged,
+                    onChanged: widget.onPhoneChanged,
                   ),
                 ),
               ],
             ),
           ).animate().fadeIn(delay: 200.ms),
           const Spacer(),
-          StatefulBuilder(
-            builder: (context, setLocal) {
-              return ValueListenableBuilder<TextEditingValue>(
-                valueListenable: ctrl,
-                builder: (_, val, __) {
-                  final enabled = val.text.length >= 10;
-                  return SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: enabled ? onSend : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: enabled ? CR.green : CR.card,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        'SEND CODE',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          letterSpacing: 1,
-                          color: enabled ? CR.textInv : CR.text3,
-                        ),
-                      ),
+          // Primary CTA — enabled with any input
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _ctrl,
+            builder: (_, val, __) {
+              final enabled = val.text.isNotEmpty;
+              return SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: enabled ? widget.onSend : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: enabled ? CR.green : CR.card,
+                    foregroundColor: CR.inv,
+                    disabledForegroundColor: CR.text3,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'SEND CODE',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: enabled ? CR.inv : CR.text3,
                     ),
-                  );
-                },
+                  ),
+                ),
               );
             },
+          ),
+          const SizedBox(height: 12),
+          // Demo skip button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: TextButton(
+              onPressed: () => context.go('/auth/setup'),
+              child: Text(
+                'Skip for now — enter app directly',
+                style: GoogleFonts.inter(
+                  color: CR.text3,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 24),
         ],

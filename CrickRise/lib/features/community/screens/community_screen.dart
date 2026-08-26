@@ -20,7 +20,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 4, vsync: this);
+    _tabCtrl = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -108,8 +108,6 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                   ),
                   tabs: const [
                     Tab(text: 'OVR'),
-                    Tab(text: 'BATTING'),
-                    Tab(text: 'BOWLING'),
                     Tab(text: 'FORM'),
                   ],
                 ),
@@ -123,8 +121,6 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                 controller: _tabCtrl,
                 children: [
                   _TopPlayersTab(currentPlayerId: player.id, rankType: 'OVR'),
-                  _TopPlayersTab(currentPlayerId: player.id, rankType: 'BAT'),
-                  _TopPlayersTab(currentPlayerId: player.id, rankType: 'BOWL'),
                   _TopPlayersTab(currentPlayerId: player.id, rankType: 'FORM'),
                 ],
               ),
@@ -235,6 +231,39 @@ class _PlayerRow extends StatelessWidget {
     required this.isMe,
   });
 
+  Widget _rankIndicator(int r) {
+    if (r == 1) {
+      return const Text(
+        '🥇',
+        style: TextStyle(fontSize: 16),
+        textAlign: TextAlign.center,
+      );
+    }
+    if (r == 2) {
+      return const Text(
+        '🥈',
+        style: TextStyle(fontSize: 16),
+        textAlign: TextAlign.center,
+      );
+    }
+    if (r == 3) {
+      return const Text(
+        '🥉',
+        style: TextStyle(fontSize: 16),
+        textAlign: TextAlign.center,
+      );
+    }
+    return Text(
+      '#$r',
+      style: GoogleFonts.spaceGrotesk(
+        color: CR.t3,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -250,14 +279,7 @@ class _PlayerRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 28,
-            child: Text(
-              '$rank',
-              style: GoogleFonts.spaceGrotesk(
-                color: rank == 1 ? CR.gold : CR.t3,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            child: _rankIndicator(rank),
           ),
           Expanded(
             child: Column(
@@ -265,12 +287,15 @@ class _PlayerRow extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      entry.name,
-                      style: GoogleFonts.inter(
-                        color: isMe ? CR.t1 : CR.t2,
-                        fontSize: 14,
-                        fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
+                    Flexible(
+                      child: Text(
+                        entry.name,
+                        style: GoogleFonts.inter(
+                          color: isMe ? CR.t1 : CR.t2,
+                          fontSize: 14,
+                          fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -285,6 +310,7 @@ class _PlayerRow extends StatelessWidget {
                     color: CR.t3,
                     fontSize: 11,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

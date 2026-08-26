@@ -11,7 +11,7 @@ class MainShell extends StatelessWidget {
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/league')) return 1;
-    if (location.startsWith('/play') || location.startsWith('/match/setup')) return 2;
+    if (location.startsWith('/play') || location.startsWith('/session')) return 2;
     if (location.startsWith('/community')) return 3;
     if (location.startsWith('/me')) return 4;
     return 0; // /home
@@ -106,7 +106,25 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 22),
+            Stack(
+              alignment: Alignment.topCenter,
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: color, size: 22),
+                if (selected)
+                  Positioned(
+                    top: -5,
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: const BoxDecoration(
+                        color: CR.green,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 3),
             Text(
               label,

@@ -4,8 +4,162 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
 
-class OrganizerHomeScreen extends StatelessWidget {
-  const OrganizerHomeScreen({super.key});
+class OrganizerHomeScreen extends StatefulWidget {
+  final bool isNewOrganizer;
+  const OrganizerHomeScreen({super.key, this.isNewOrganizer = false});
+
+  @override
+  State<OrganizerHomeScreen> createState() => _OrganizerHomeScreenState();
+}
+
+class _OrganizerHomeScreenState extends State<OrganizerHomeScreen> {
+  bool _hasLeague = false; // new organizers start without a league
+
+  @override
+  void initState() {
+    super.initState();
+    // If arriving from onboarding, show creation flow first
+    _hasLeague = !widget.isNewOrganizer;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasLeague) {
+      return _CreateLeagueScreen(onCreated: () => setState(() => _hasLeague = true));
+    }
+    return const _OrganizerDashboard();
+  }
+}
+
+// ─── Create League Screen (shown to new organizers) ───────────────────────────
+
+class _CreateLeagueScreen extends StatefulWidget {
+  final VoidCallback onCreated;
+  const _CreateLeagueScreen({required this.onCreated});
+
+  @override
+  State<_CreateLeagueScreen> createState() => _CreateLeagueScreenState();
+}
+
+class _CreateLeagueScreenState extends State<_CreateLeagueScreen> {
+  final _nameCtrl = TextEditingController();
+  int _overs = 20;
+  static const _overOpts = [5, 10, 15, 20];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: CR.bg,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () => context.pop(),
+                child: Row(children: [
+                  const Icon(Icons.arrow_back_ios, color: CR.text3, size: 14),
+                  const SizedBox(width: 4),
+                  Text('Back', style: GoogleFonts.inter(color: CR.text3, fontSize: 13)),
+                ]),
+              ),
+              const SizedBox(height: 24),
+              Text('CREATE YOUR LEAGUE',
+                  style: GoogleFonts.inter(color: CR.gold, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 2)),
+              const SizedBox(height: 8),
+              Text('Set up your cricket community',
+                  style: GoogleFonts.inter(color: CR.text1, fontSize: 24, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 32),
+
+              // League name
+              Text('LEAGUE NAME', style: GoogleFonts.inter(color: CR.text3, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _nameCtrl,
+                style: GoogleFonts.inter(color: CR.text1, fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Okinawa Nepali Cricket League',
+                  hintStyle: GoogleFonts.inter(color: CR.text3, fontSize: 15),
+                  filled: true,
+                  fillColor: CR.card,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: CR.green, width: 2),
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 28),
+
+              // Format
+              Text('FORMAT (OVERS PER SIDE)', style: GoogleFonts.inter(color: CR.text3, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+              const SizedBox(height: 10),
+              Row(
+                children: _overOpts.map((o) {
+                  final sel = _overs == o;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _overs = o),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: sel ? CR.green : CR.card,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text('$o',
+                                style: GoogleFonts.spaceGrotesk(
+                                    color: sel ? CR.inv : CR.text2,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 40),
+
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: _nameCtrl.text.trim().length > 3 ? widget.onCreated : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: CR.green,
+                    foregroundColor: CR.inv,
+                    disabledBackgroundColor: CR.cardHigh,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'CREATE LEAGUE →',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15,
+                        color: _nameCtrl.text.trim().length > 3 ? CR.inv : CR.text3),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Organizer Dashboard ──────────────────────────────────────────────────────
+
+class _OrganizerDashboard extends StatelessWidget {
+  const _OrganizerDashboard();
 
   @override
   Widget build(BuildContext context) {

@@ -24,10 +24,7 @@ class JoinOrBuildScreen extends StatelessWidget {
                   children: [
                     const Icon(Icons.arrow_back_ios, color: CR.t3, size: 14),
                     const SizedBox(width: 4),
-                    Text(
-                      'Back',
-                      style: GoogleFonts.inter(color: CR.t3, fontSize: 13),
-                    ),
+                    Text('Back', style: GoogleFonts.inter(color: CR.t3, fontSize: 13)),
                   ],
                 ),
               ).animate().fadeIn(duration: 200.ms),
@@ -35,11 +32,7 @@ class JoinOrBuildScreen extends StatelessWidget {
 
               Text(
                 'How will you use CrickRise?',
-                style: GoogleFonts.inter(
-                  color: CR.t1,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: GoogleFonts.inter(color: CR.t1, fontSize: 24, fontWeight: FontWeight.w700),
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 8),
               Text(
@@ -48,7 +41,7 @@ class JoinOrBuildScreen extends StatelessWidget {
               ).animate().fadeIn(delay: 150.ms),
               const SizedBox(height: 32),
 
-              // JOINING CARD
+              // PLAYER CARD
               _UsageCard(
                 emoji: '🏏',
                 title: "I'm a player",
@@ -59,15 +52,15 @@ class JoinOrBuildScreen extends StatelessWidget {
               ).animate().fadeIn(delay: 200.ms),
               const SizedBox(height: 16),
 
-              // ORGANIZING CARD
+              // ORGANIZER CARD — requires approval
               _UsageCard(
                 emoji: '⚙️',
-                title: "I'm setting up a league",
-                subtitle: 'Create a league and manage your community',
-                buttonLabel: 'CREATE A LEAGUE →',
+                title: "I want to organise a league",
+                subtitle: 'Requires organiser access — apply or enter your access code',
+                buttonLabel: 'APPLY FOR ACCESS →',
                 accent: CR.gold,
                 outlined: true,
-                onTap: () => context.push('/organizer'),
+                onTap: () => context.push('/auth/organizer-access'),
               ).animate().fadeIn(delay: 280.ms),
 
               const Spacer(),
@@ -77,16 +70,11 @@ class JoinOrBuildScreen extends StatelessWidget {
                   onTap: () => context.go('/home'),
                   child: Text(
                     'Just watching? Follow without playing →',
-                    style: GoogleFonts.inter(
-                      color: CR.t3,
-                      fontSize: 12,
-                      decoration: TextDecoration.underline,
-                      decorationColor: CR.t3,
-                    ),
-                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(color: CR.t3, fontSize: 13),
                   ),
                 ),
               ).animate().fadeIn(delay: 360.ms),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -94,6 +82,8 @@ class JoinOrBuildScreen extends StatelessWidget {
     );
   }
 }
+
+// ─── Usage Card ───────────────────────────────────────────────────────────────
 
 class _UsageCard extends StatelessWidget {
   final String emoji;
@@ -130,62 +120,38 @@ class _UsageCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: GoogleFonts.inter(
-              color: CR.t1,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
+            style: GoogleFonts.inter(color: CR.t1, fontSize: 17, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             subtitle,
-            style: GoogleFonts.inter(
-              color: CR.t2,
-              fontSize: 13,
-            ),
+            style: GoogleFonts.inter(color: CR.t2, fontSize: 13, height: 1.4),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 46,
             child: outlined
                 ? OutlinedButton(
                     onPressed: onTap,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: accent,
                       side: BorderSide(color: accent),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: Text(
-                      buttonLabel,
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
+                    child: Text(buttonLabel,
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13, color: accent)),
                   )
                 : ElevatedButton(
                     onPressed: onTap,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: accent,
                       foregroundColor: CR.inv,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                       elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: Text(
-                      buttonLabel,
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        letterSpacing: 0.3,
-                        color: CR.inv,
-                      ),
-                    ),
+                    child: Text(buttonLabel,
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13, color: CR.inv)),
                   ),
           ),
         ],

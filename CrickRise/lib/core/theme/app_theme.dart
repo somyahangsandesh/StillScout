@@ -20,6 +20,8 @@ class CR {
   static const goldDim  = Color(0xFF2D1500);
   static const red      = Color(0xFFEF4444);
   static const orange   = Color(0xFFF97316);
+  // Blue used for FIELD domain across stats cards
+  static const blue     = Color(0xFF60A5FA);
 
   // Text (long names — keep for backward compatibility)
   static const white   = Color(0xFFFFFFFF);
@@ -311,7 +313,7 @@ class AppTheme {
 
 // ─── Shared Widgets ──────────────────────────────────────────────────────────
 
-/// Section header — uppercase, muted, letterSpaced
+/// Section header — uppercase, muted, letterSpaced, with green left accent bar
 class CRSectionLabel extends StatelessWidget {
   final String text;
   final EdgeInsetsGeometry padding;
@@ -323,14 +325,28 @@ class CRSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
-      child: Text(
-        text.toUpperCase(),
-        style: GoogleFonts.inter(
-          color: CR.text3,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 2.0,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 3,
+            height: 12,
+            decoration: BoxDecoration(
+              color: CR.green,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text.toUpperCase(),
+            style: GoogleFonts.inter(
+              color: CR.text3,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2.0,
+            ),
+          ),
+        ],
       ),
     );
   }

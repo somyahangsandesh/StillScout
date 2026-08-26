@@ -7,6 +7,7 @@ import '../../features/auth/screens/phone_auth_screen.dart';
 import '../../features/auth/screens/player_setup_screen.dart';
 import '../../features/auth/screens/join_or_build_screen.dart';
 import '../../features/auth/screens/invite_screen.dart';
+import '../../features/auth/screens/organizer_access_screen.dart';
 import '../../features/community/screens/community_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/league/screens/league_screen.dart';
@@ -55,6 +56,10 @@ final appRouter = GoRouter(
       path: '/auth/invite',
       builder: (context, state) => const InviteScreen(),
     ),
+    GoRoute(
+      path: '/auth/organizer-access',
+      builder: (context, state) => const OrganizerAccessScreen(),
+    ),
 
     // Shell routes — with bottom nav
     ShellRoute(
@@ -86,7 +91,9 @@ final appRouter = GoRouter(
     // Full-screen routes — no nav
     GoRoute(
       path: '/organizer',
-      builder: (context, state) => const OrganizerHomeScreen(),
+      builder: (context, state) => OrganizerHomeScreen(
+        isNewOrganizer: state.uri.queryParameters['new'] == 'true',
+      ),
     ),
     GoRoute(
       path: '/session/qr',

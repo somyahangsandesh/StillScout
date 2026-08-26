@@ -12,8 +12,11 @@ class OpenSessionScreen extends StatefulWidget {
   State<OpenSessionScreen> createState() => _OpenSessionScreenState();
 }
 
+enum _BallType { leather, tennis, tape }
+
 class _OpenSessionScreenState extends State<OpenSessionScreen> {
   int? _casualOvers;
+  _BallType _ballType = _BallType.leather;
   static const _overOptions = [5, 10, 15, 20];
 
   @override
@@ -74,6 +77,8 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
                   options: _overOptions,
                   onSelect: (v) => setState(() => _casualOvers = v),
                   onCustom: () => setState(() => _casualOvers = 0),
+                  ballType: _ballType,
+                  onBallType: (t) => setState(() => _ballType = t),
                   onStart: _casualOvers != null
                       ? () => context.push('/session/qr')
                       : null,
@@ -203,6 +208,8 @@ class _CasualOversSelector extends StatelessWidget {
   final ValueChanged<int> onSelect;
   final VoidCallback onCustom;
   final VoidCallback? onStart;
+  final _BallType ballType;
+  final ValueChanged<_BallType> onBallType;
 
   const _CasualOversSelector({
     required this.selected,
@@ -210,6 +217,8 @@ class _CasualOversSelector extends StatelessWidget {
     required this.onSelect,
     required this.onCustom,
     required this.onStart,
+    required this.ballType,
+    required this.onBallType,
   });
 
   @override
@@ -283,6 +292,45 @@ class _CasualOversSelector extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 20),
+        // Ball type selector
+        Text(
+          'BALL TYPE',
+          style: GoogleFonts.inter(
+            color: CR.t3,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.5,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            _BallTypeButton(
+              emoji: '🔴',
+              label: 'LEATHER',
+              weight: '1.0×',
+              selected: ballType == _BallType.leather,
+              onTap: () => onBallType(_BallType.leather),
+            ),
+            const SizedBox(width: 8),
+            _BallTypeButton(
+              emoji: '🎾',
+              label: 'TENNIS',
+              weight: '0.8×',
+              selected: ballType == _BallType.tennis,
+              onTap: () => onBallType(_BallType.tennis),
+            ),
+            const SizedBox(width: 8),
+            _BallTypeButton(
+              emoji: '⬛',
+              label: 'TAPE',
+              weight: '0.7×',
+              selected: ballType == _BallType.tape,
+              onTap: () => onBallType(_BallType.tape),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
@@ -307,6 +355,69 @@ class _CasualOversSelector extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── Ball Type Button ─────────────────────────────────────────────────────────
+
+class _BallTypeButton extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final String weight;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _BallTypeButton({
+    required this.emoji,
+    required this.label,
+    required this.weight,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? CR.green.withOpacity(0.12) : CR.cardHigh,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? CR.green : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: selected ? CR.green : CR.t2,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'OVR $weight',
+                style: GoogleFonts.inter(
+                  color: CR.t3,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
