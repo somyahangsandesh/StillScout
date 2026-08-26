@@ -77,7 +77,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                         const Icon(Icons.keyboard_arrow_down, color: CR.t3, size: 14),
                       ],
                     ),
-                  ).animate().fadeIn(delay: 100.ms),
+                  ).animate().fadeIn(delay: 80.ms),
                 ],
               ),
             ),
@@ -186,7 +186,7 @@ class _TopPlayersTab extends StatelessWidget {
           value: _valueForType(p),
           rankType: rankType,
           isMe: isMe,
-        ).animate().fadeIn(delay: (i * 40).ms);
+        ).animate().fadeIn(delay: (i * 80).ms);
       },
     );
   }
@@ -266,11 +266,19 @@ class _PlayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color medalTint() {
+      if (isMe) return CR.green.withOpacity(0.06);
+      if (rank == 1) return CR.gold.withOpacity(0.04);
+      if (rank == 2) return const Color(0xFF9E9E9E).withOpacity(0.04);
+      if (rank == 3) return const Color(0xFF8D4A1F).withOpacity(0.04);
+      return Colors.transparent;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: isMe ? CR.green.withOpacity(0.06) : Colors.transparent,
+        color: medalTint(),
         border: isMe
             ? const Border(left: BorderSide(color: CR.green, width: 3))
             : null,
@@ -322,7 +330,7 @@ class _PlayerRow extends StatelessWidget {
                 value.toString(),
                 style: GoogleFonts.spaceGrotesk(
                   color: isMe ? CR.gold : CR.t2,
-                  fontSize: isMe ? 22 : 18,
+                  fontSize: rank <= 3 ? 22 : 18,
                   fontWeight: FontWeight.w700,
                   height: 1,
                 ),
@@ -356,7 +364,7 @@ class _RecordsSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -443,7 +451,7 @@ class _TheMovementSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

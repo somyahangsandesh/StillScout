@@ -33,8 +33,28 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: CR.bg,
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: Stack(
+        children: [
+          // Atmospheric radial glow — very subtle sports-app atmosphere
+          Positioned(
+            top: -120,
+            right: -80,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    CR.green.withOpacity(0.04),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,6 +154,8 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
+          ),
+        ],
       ),
     );
   }
@@ -341,7 +363,9 @@ class _OvrCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            Container(height: 1, color: CR.cardHigh),
+            const SizedBox(height: 8),
             // Form sparkline
             Row(
               children: [
@@ -462,11 +486,11 @@ class _HuntingListHeader extends StatelessWidget {
         ),
         const Spacer(),
         // League selector hint
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: CR.card,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -753,7 +777,7 @@ class _StartMatchButtonState extends State<_StartMatchButton>
       animation: _glowAnim,
       builder: (_, child) => Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: CR.green.withOpacity(_glowAnim.value),
@@ -771,7 +795,7 @@ class _StartMatchButtonState extends State<_StartMatchButton>
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
           decoration: BoxDecoration(
             color: CR.green,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
@@ -1044,7 +1068,7 @@ class _LastMatchCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
@@ -1144,7 +1168,7 @@ class _CommunityTeaser extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

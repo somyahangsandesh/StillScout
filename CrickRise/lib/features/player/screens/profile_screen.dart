@@ -90,7 +90,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     return Scaffold(
       backgroundColor: CR.bg,
-      body: CustomScrollView(
+      body: Stack(
+        children: [
+          // Atmospheric radial glow
+          Positioned(
+            top: -120,
+            right: -80,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    CR.green.withOpacity(0.04),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          CustomScrollView(
         slivers: [
           // App bar
           SliverAppBar(
@@ -218,6 +238,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
           ),
         ],
+          ),
+        ],
       ),
     );
   }
@@ -258,7 +280,7 @@ class _ProfileOvrCard extends StatelessWidget {
               child: Text(
                 player.jerseyNumber?.toString() ?? '',
                 style: GoogleFonts.spaceGrotesk(
-                  color: CR.green.withOpacity(0.04),
+                  color: CR.green.withOpacity(0.03),
                   fontSize: 220,
                   fontWeight: FontWeight.w800,
                   height: 0.8,
@@ -280,7 +302,7 @@ class _ProfileOvrCard extends StatelessWidget {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                  horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: CR.green.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(6),
@@ -1124,7 +1146,7 @@ class _BestPerformances extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: items.map((item) {

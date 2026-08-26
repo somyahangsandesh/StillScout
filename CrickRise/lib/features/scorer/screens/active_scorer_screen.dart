@@ -389,7 +389,7 @@ class _ZoneA extends StatelessWidget {
                           state.battingTeamName.toUpperCase(),
                           style: GoogleFonts.inter(
                             color: CR.text3,
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 2,
                           ),
@@ -439,21 +439,21 @@ class _ZoneA extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    // Large score — broadcast-size
+                    const SizedBox(height: 4),
+                    // Large score — broadcast-size, dominant element
                     Text(
                       state.scoreDisplay,
                       style: GoogleFonts.spaceGrotesk(
                         color: CR.text1,
                         fontSize: 52,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                         height: 0.95,
                       ),
                     ),
                   ],
                 ),
               ),
-              // Overs
+              // Overs — right-aligned, understated complement to the score
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -461,7 +461,7 @@ class _ZoneA extends StatelessWidget {
                     state.oversDisplay,
                     style: GoogleFonts.spaceGrotesk(
                       color: CR.text2,
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

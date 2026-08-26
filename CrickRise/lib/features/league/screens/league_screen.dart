@@ -256,7 +256,7 @@ class _StandingsTab extends StatelessWidget {
               final t = _teams[i];
               return _StandingsRow(team: t, even: i.isEven)
                   .animate()
-                  .fadeIn(delay: (i * 50).ms);
+                  .fadeIn(delay: (i * 80).ms);
             },
           ),
         ),
@@ -466,7 +466,7 @@ class _FixturesTab extends StatelessWidget {
       itemBuilder: (ctx, i) {
         return _FixtureCard(data: fixtures[i])
             .animate()
-            .fadeIn(delay: (i * 60).ms);
+            .fadeIn(delay: (i * 80).ms);
       },
     );
   }
@@ -600,7 +600,7 @@ class _SeasonStoryTab extends StatelessWidget {
           heading: 'Week 4',
           body:
               'Fukuoka Tigers upset the standings with back-to-back wins. Three teams within 2 points — the title race is wide open.',
-        ).animate().fadeIn(delay: 140.ms),
+        ).animate().fadeIn(delay: 160.ms),
         const SizedBox(height: 12),
 
         const _StoryParagraph(
@@ -608,7 +608,7 @@ class _SeasonStoryTab extends StatelessWidget {
           highlight: true,
           body:
               'Roshan KC broke the league record for highest individual score — 127* vs Osaka Kings. Warriors are now 3 points clear at the top.',
-        ).animate().fadeIn(delay: 200.ms),
+        ).animate().fadeIn(delay: 240.ms),
         const SizedBox(height: 24),
 
         // Season records mini-section
@@ -620,7 +620,7 @@ class _SeasonStoryTab extends StatelessWidget {
             fontWeight: FontWeight.w700,
             letterSpacing: 2,
           ),
-        ).animate().fadeIn(delay: 220.ms),
+        ).animate().fadeIn(delay: 320.ms),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.all(14),
@@ -639,7 +639,7 @@ class _SeasonStoryTab extends StatelessWidget {
               _SeasonRecordMinRow('Most sixes', 'Roshan KC', '14', 'this season'),
             ],
           ),
-        ).animate().fadeIn(delay: 240.ms),
+        ).animate().fadeIn(delay: 400.ms),
         const SizedBox(height: 24),
 
         // Current Form table
@@ -651,7 +651,7 @@ class _SeasonStoryTab extends StatelessWidget {
             fontWeight: FontWeight.w700,
             letterSpacing: 2,
           ),
-        ).animate().fadeIn(delay: 240.ms),
+        ).animate().fadeIn(delay: 480.ms),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
@@ -667,7 +667,7 @@ class _SeasonStoryTab extends StatelessWidget {
               _FormRow('Fukuoka Tigers', ['L', 'W', 'W', 'L', 'W'], 'INCONSISTENT'),
             ],
           ),
-        ).animate().fadeIn(delay: 280.ms),
+        ).animate().fadeIn(delay: 560.ms),
         const SizedBox(height: 24),
 
         // Title race
@@ -679,7 +679,7 @@ class _SeasonStoryTab extends StatelessWidget {
             fontWeight: FontWeight.w700,
             letterSpacing: 2,
           ),
-        ).animate().fadeIn(delay: 320.ms),
+        ).animate().fadeIn(delay: 640.ms),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.all(14),
@@ -696,7 +696,7 @@ class _SeasonStoryTab extends StatelessWidget {
                   'Tokyo Rhinos', 'Win all 3 + Warriors drop points'),
             ],
           ),
-        ).animate().fadeIn(delay: 340.ms),
+        ).animate().fadeIn(delay: 720.ms),
         const SizedBox(height: 24),
 
         // Records this season
@@ -708,7 +708,7 @@ class _SeasonStoryTab extends StatelessWidget {
             fontWeight: FontWeight.w700,
             letterSpacing: 2,
           ),
-        ).animate().fadeIn(delay: 380.ms),
+        ).animate().fadeIn(delay: 800.ms),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
@@ -724,7 +724,7 @@ class _SeasonStoryTab extends StatelessWidget {
               _SeasonRecordRow(label: 'Most MVPs', value: 'Roshan  ×3', detail: 'Season'),
             ],
           ),
-        ).animate().fadeIn(delay: 420.ms),
+        ).animate().fadeIn(delay: 880.ms),
       ],
     );
   }
