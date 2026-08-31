@@ -4,63 +4,28 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="CrickRise — Every Sunday, a story worth sending home">
   <title>CrickRise</title>
   <link rel="icon" type="image/png" href="favicon.png"/>
   <style>
-    body { margin: 0; background: #0F0B08; overflow: hidden; }
+    body { margin: 0; background: #0F0B08; }
     #boot-loader {
       position: fixed; inset: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: radial-gradient(ellipse at 50% 20%, #1F3D2E, #0F0B08 60%, #050403);
-      color: #D4A574; font-family: system-ui, sans-serif;
-      z-index: 9999; transition: opacity 0.4s ease;
+      background: #0F0B08;
+      z-index: 9999;
+      transition: opacity 0.35s ease;
     }
     #boot-loader.hide { opacity: 0; pointer-events: none; }
-    .scene { position: relative; width: 80px; height: 100px; margin-bottom: 24px; }
-    .shadow {
-      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-      width: 36px; height: 8px; background: rgba(0,0,0,0.45); border-radius: 50%;
-      animation: shadow 0.7s ease-in-out infinite;
-    }
-    .ball {
-      position: absolute; left: 50%; margin-left: -20px;
-      width: 40px; height: 40px; border-radius: 50%;
-      background: radial-gradient(circle at 32% 28%, #FF6B6B, #B91C1C 55%, #7F1D1D);
-      box-shadow: 0 0 28px rgba(185,28,28,0.55);
-      animation: bounce 0.7s cubic-bezier(0.33, 0, 0.2, 1) infinite;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0) scaleX(1.08) scaleY(0.92); }
-      45% { transform: translateY(-58px) scaleX(0.94) scaleY(1.06); }
-    }
-    @keyframes shadow {
-      0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.5; }
-      45% { transform: translateX(-50%) scaleX(0.55); opacity: 0.2; }
-    }
-    h1 { margin: 0; font-size: 0.7rem; letter-spacing: 0.4em; font-weight: 600; }
-    p { margin: 10px 0 0; color: #9C8B7E; font-size: 0.8rem; }
   </style>
 </head>
 <body>
-  <div id="boot-loader">
-    <div class="scene">
-      <div class="shadow"></div>
-      <div class="ball"></div>
-    </div>
-    <h1>CRICKRISE</h1>
-    <p>Loading matchday…</p>
-  </div>
+  <div id="boot-loader"></div>
   <script>
     function hideBootLoader() {
       var el = document.getElementById('boot-loader');
-      if (el && !el.classList.contains('hide')) {
-        el.classList.add('hide');
-        setTimeout(function () { el.remove(); }, 450);
-      }
+      if (el) { el.classList.add('hide'); setTimeout(function () { el.remove(); }, 400); }
     }
     window.addEventListener('flutter-first-frame', hideBootLoader);
-    setTimeout(hideBootLoader, 10000);
+    setTimeout(hideBootLoader, 8000);
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

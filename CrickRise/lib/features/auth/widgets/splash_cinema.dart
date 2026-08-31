@@ -29,7 +29,7 @@ class SplashCinema extends StatelessWidget {
         if (scene.batsmanOpacity > 0.01)
           Positioned(
             right: size.width * 0.07,
-            bottom: pitchY - 6,
+            top: pitchY - (size.height * 0.26) + 8,
             child: Opacity(
               opacity: scene.batsmanOpacity,
               child: _BatsmanFigure(swing: scene.batSwing, height: size.height * 0.26),
