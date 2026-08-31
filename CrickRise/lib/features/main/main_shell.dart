@@ -98,7 +98,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? CR.green : CR.text3;
+    final color = selected ? CR.green : CR.t3;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,

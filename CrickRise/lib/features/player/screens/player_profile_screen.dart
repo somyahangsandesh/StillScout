@@ -105,7 +105,7 @@ class _PlayerProfileScreenState extends ConsumerState<PlayerProfileScreen>
                 elevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new,
-                      color: CR.text2, size: 18),
+                      color: CR.t2, size: 18),
                   onPressed: () => context.pop(),
                 ),
                 actions: [
@@ -324,7 +324,7 @@ class _OvrHeroCard extends StatelessWidget {
                                 Text(
                                   player.jerseyDisplay,
                                   style: GoogleFonts.spaceGrotesk(
-                                    color: CR.text3,
+                                    color: CR.t3,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -334,7 +334,7 @@ class _OvrHeroCard extends StatelessWidget {
                                   child: Text(
                                     player.displayName,
                                     style: GoogleFonts.inter(
-                                      color: CR.text1,
+                                      color: CR.t1,
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -347,7 +347,7 @@ class _OvrHeroCard extends StatelessWidget {
                             Text(
                               player.teamName ?? '',
                               style: GoogleFonts.inter(
-                                color: CR.text2,
+                                color: CR.t2,
                                 fontSize: 13,
                               ),
                             ),
@@ -571,7 +571,7 @@ class _ProfilePositionRow extends StatelessWidget {
                     Text(
                       '$rank  $jerseyDisplay',
                       style: GoogleFonts.spaceGrotesk(
-                        color: CR.text3,
+                        color: CR.t3,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -582,8 +582,8 @@ class _ProfilePositionRow extends StatelessWidget {
                         teamName.isNotEmpty ? '$name · $teamName' : name,
                         style: GoogleFonts.inter(
                           color: isHighlighted
-                              ? CR.text1
-                              : CR.text2,
+                              ? CR.t1
+                              : CR.t2,
                           fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 14,
                         ),
@@ -598,7 +598,7 @@ class _ProfilePositionRow extends StatelessWidget {
                   style: GoogleFonts.inter(
                     color: isHighlighted
                         ? CR.green
-                        : CR.text3,
+                        : CR.t3,
                     fontSize: 11,
                     fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w400,
                   ),
@@ -614,7 +614,7 @@ class _ProfilePositionRow extends StatelessWidget {
                 style: GoogleFonts.spaceGrotesk(
                   color: isHighlighted
                       ? CR.gold
-                      : CR.text2,
+                      : CR.t2,
                   fontSize: isHighlighted ? 30 : 22,
                   fontWeight: FontWeight.w700,
                   height: 1,
@@ -623,7 +623,7 @@ class _ProfilePositionRow extends StatelessWidget {
               Text(
                 'OVR',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 9,
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.w600,
@@ -699,7 +699,7 @@ class _StatCell extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.spaceGrotesk(
-            color: color ?? CR.text1,
+            color: color ?? CR.t1,
             fontSize: 24,
             fontWeight: FontWeight.w700,
             height: 1,
@@ -709,7 +709,7 @@ class _StatCell extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
@@ -732,7 +732,7 @@ class _MiniStat extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
@@ -742,7 +742,7 @@ class _MiniStat extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.spaceGrotesk(
-            color: CR.text2,
+            color: CR.t2,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -781,7 +781,7 @@ class _RecentForm extends StatelessWidget {
     return Column(
       children: matches.map((m) {
         final color = m.positive == null
-            ? CR.text3
+            ? CR.t3
             : m.positive!
                 ? CR.green
                 : CR.red;
@@ -824,7 +824,7 @@ class _RecentForm extends StatelessWidget {
                     Text(
                       m.label,
                       style: GoogleFonts.inter(
-                        color: CR.text1,
+                        color: CR.t1,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -833,7 +833,7 @@ class _RecentForm extends StatelessWidget {
                     Text(
                       m.stats,
                       style: GoogleFonts.inter(
-                        color: CR.text2,
+                        color: CR.t2,
                         fontSize: 12,
                       ),
                     ),
@@ -908,7 +908,7 @@ class _Milestones extends StatelessWidget {
                 style: GoogleFonts.inter(
                   color: isChampion
                       ? CR.gold
-                      : CR.text2,
+                      : CR.t2,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -13,146 +14,29 @@ class OrganizerHomeScreen extends StatefulWidget {
 }
 
 class _OrganizerHomeScreenState extends State<OrganizerHomeScreen> {
-  bool _hasLeague = false; // new organizers start without a league
+  bool _hasLeague = false;
 
   @override
   void initState() {
     super.initState();
-    // If arriving from onboarding, show creation flow first
     _hasLeague = !widget.isNewOrganizer;
+    if (!_hasLeague) {
+      // Redirect new organizers to the setup wizard after the first frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/organizer/setup');
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_hasLeague) {
-      return _CreateLeagueScreen(onCreated: () => setState(() => _hasLeague = true));
+      return const Scaffold(
+        backgroundColor: CR.bg,
+        body: Center(child: CircularProgressIndicator(color: CR.green)),
+      );
     }
     return const _OrganizerDashboard();
-  }
-}
-
-// ─── Create League Screen (shown to new organizers) ───────────────────────────
-
-class _CreateLeagueScreen extends StatefulWidget {
-  final VoidCallback onCreated;
-  const _CreateLeagueScreen({required this.onCreated});
-
-  @override
-  State<_CreateLeagueScreen> createState() => _CreateLeagueScreenState();
-}
-
-class _CreateLeagueScreenState extends State<_CreateLeagueScreen> {
-  final _nameCtrl = TextEditingController();
-  int _overs = 20;
-  static const _overOpts = [5, 10, 15, 20];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: CR.bg,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Row(children: [
-                  const Icon(Icons.arrow_back_ios, color: CR.text3, size: 14),
-                  const SizedBox(width: 4),
-                  Text('Back', style: GoogleFonts.inter(color: CR.text3, fontSize: 13)),
-                ]),
-              ),
-              const SizedBox(height: 24),
-              Text('CREATE YOUR LEAGUE',
-                  style: GoogleFonts.inter(color: CR.gold, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 2)),
-              const SizedBox(height: 8),
-              Text('Set up your cricket community',
-                  style: GoogleFonts.inter(color: CR.text1, fontSize: 24, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 32),
-
-              // League name
-              Text('LEAGUE NAME', style: GoogleFonts.inter(color: CR.text3, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _nameCtrl,
-                style: GoogleFonts.inter(color: CR.text1, fontSize: 16),
-                decoration: InputDecoration(
-                  hintText: 'e.g. Okinawa Nepali Cricket League',
-                  hintStyle: GoogleFonts.inter(color: CR.text3, fontSize: 15),
-                  filled: true,
-                  fillColor: CR.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: CR.green, width: 2),
-                  ),
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: 28),
-
-              // Format
-              Text('FORMAT (OVERS PER SIDE)', style: GoogleFonts.inter(color: CR.text3, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-              const SizedBox(height: 10),
-              Row(
-                children: _overOpts.map((o) {
-                  final sel = _overs == o;
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _overs = o),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: sel ? CR.green : CR.card,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Center(
-                            child: Text('$o',
-                                style: GoogleFonts.spaceGrotesk(
-                                    color: sel ? CR.inv : CR.text2,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 40),
-
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _nameCtrl.text.trim().length > 3 ? widget.onCreated : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: CR.green,
-                    foregroundColor: CR.inv,
-                    disabledBackgroundColor: CR.cardHigh,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'CREATE LEAGUE →',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15,
-                        color: _nameCtrl.text.trim().length > 3 ? CR.inv : CR.text3),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -166,281 +50,430 @@ class _OrganizerDashboard extends StatelessWidget {
     return Scaffold(
       backgroundColor: CR.bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back to player view
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Row(
-                  children: [
-                    const Icon(Icons.arrow_back_ios, color: CR.text3, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Back to Player View',
-                      style: GoogleFonts.inter(
-                        color: CR.text3,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Header
-              Text(
-                'ORGANIZER',
-                style: GoogleFonts.inter(
-                  color: CR.gold,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2.0,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Okinawa Nepali Cricket League',
-                style: GoogleFonts.inter(
-                  color: CR.text1,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Season 2026 · Active',
-                style: GoogleFonts.inter(
-                  color: CR.green,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 28),
-
-              // Quick actions
-              const CRSectionLabel('Quick Actions'),
-              const SizedBox(height: 12),
-              Row(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+          children: [
+            // ── Top bar ───────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
                 children: [
                   Expanded(
-                    child: _QuickActionButton(
-                      icon: Icons.add_circle_outline,
-                      label: '+ Create Fixture',
-                      onTap: () {},
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ORGANIZER',
+                          style: GoogleFonts.oswald(
+                            color: CR.gold,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 2.5,
+                          ),
+                        ),
+                        Text(
+                          'Okinawa League · Season 2026 · Week 8',
+                          style: GoogleFonts.inter(
+                            color: CR.text1,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _QuickActionButton(
-                      icon: Icons.person_add_outlined,
-                      label: '+ Add Player',
-                      onTap: () {},
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: CR.card,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: CR.cardHigh),
+                      ),
+                      child: Text(
+                        '← Player',
+                        style: GoogleFonts.inter(
+                            color: CR.text2, fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
+            ).animate().fadeIn(duration: 250.ms),
 
-              // Upcoming matches
-              const CRSectionLabel('Upcoming Matches'),
-              const SizedBox(height: 12),
-              _UpcomingMatchItem(
-                homeTeam: 'Okinawa',
-                awayTeam: 'Tokyo',
-                day: 'SAT',
-                scorerName: 'Roshan KC',
-                scorerJersey: '#7',
-                scorerAssigned: true,
-                onTap: () {},
+            // ── NEXT ACTION ───────────────────────────────────────────
+            _NextActionCard(
+              urgency: _Urgency.warning,
+              title: 'Upcoming match has no scorer assigned',
+              detail: 'Warriors vs Rhinos · Saturday',
+              actionLabel: 'ASSIGN SCORER →',
+              onAction: () => _toast(context, 'Assign scorer — coming soon'),
+            ).animate().fadeIn(delay: 80.ms),
+
+            const SizedBox(height: 24),
+
+            // ── THIS WEEK ─────────────────────────────────────────────
+            _sectionLabel('THIS WEEK'),
+            const SizedBox(height: 10),
+            _WeekMatchItem(
+              day: 'Saturday',
+              teams: 'Warriors vs Rhinos',
+              scorerAssigned: false,
+              onAssign: () => _toast(context, 'Assign scorer — coming soon'),
+              onEdit: () => _toast(context, 'Edit match — coming soon'),
+            ).animate().fadeIn(delay: 140.ms),
+            const SizedBox(height: 8),
+            _WeekMatchItem(
+              day: 'Sunday',
+              teams: 'Osaka vs Fukuoka',
+              scorerAssigned: true,
+              scorerName: 'Bikash',
+              onAssign: () {},
+              onEdit: () => _toast(context, 'Edit match — coming soon'),
+            ).animate().fadeIn(delay: 180.ms),
+
+            const SizedBox(height: 24),
+
+            // ── PENDING APPROVAL ──────────────────────────────────────
+            _sectionLabel('PENDING APPROVAL'),
+            const SizedBox(height: 10),
+            _PendingApprovalCard(
+              result: 'Warriors 174/6  def  Rhinos 172/9',
+              onApprove: () => _toast(context, 'Result approved!'),
+              onEdit: () => _toast(context, 'Edit result — coming soon'),
+            ).animate().fadeIn(delay: 220.ms),
+
+            const SizedBox(height: 24),
+
+            // ── QUICK ACTIONS ─────────────────────────────────────────
+            _sectionLabel('QUICK ACTIONS'),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _QuickBtn(
+                    icon: Icons.add_circle_outline,
+                    label: '+ Add Match',
+                    onTap: () => _toast(context, 'Add match — coming soon'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _QuickBtn(
+                    icon: Icons.person_add_outlined,
+                    label: '+ Add Player',
+                    onTap: () => _toast(context, 'Add player — coming soon'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _QuickBtn(
+                    icon: Icons.list_alt_outlined,
+                    label: 'All Results',
+                    onTap: () => _toast(context, 'All results — coming soon'),
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 280.ms),
+
+            const SizedBox(height: 24),
+
+            // ── SEASON SNAPSHOT ───────────────────────────────────────
+            _sectionLabel('SEASON SNAPSHOT'),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: CR.card,
+                borderRadius: BorderRadius.circular(14),
               ),
-              const SizedBox(height: 8),
-              _UpcomingMatchItem(
-                homeTeam: 'Osaka',
-                awayTeam: 'Fukuoka',
-                day: 'SUN',
-                scorerAssigned: false,
-                onTap: () {},
-              ),
-              const SizedBox(height: 28),
-
-              // Results pending approval
-              const CRSectionLabel('Pending Approval'),
-              const SizedBox(height: 12),
-              _PendingResultCard(
-                homeTeam: 'Okinawa',
-                awayTeam: 'Tokyo',
-                result: '127/4 def 98/9',
-                onApprove: () {},
-                onEdit: () {},
-              ),
-              const SizedBox(height: 28),
-
-              // Compact standings
-              const CRSectionLabel('Standings'),
-              const SizedBox(height: 12),
-              _StandingsTable(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Quick Action Button ──────────────────────────────────────────────────────
-
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        decoration: BoxDecoration(
-          color: CR.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: CR.cardHigh),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: CR.text2, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                color: CR.text1,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Upcoming Match Item ──────────────────────────────────────────────────────
-
-class _UpcomingMatchItem extends StatelessWidget {
-  final String homeTeam;
-  final String awayTeam;
-  final String day;
-  final bool scorerAssigned;
-  final String? scorerName;
-  final String? scorerJersey;
-  final VoidCallback onTap;
-
-  const _UpcomingMatchItem({
-    required this.homeTeam,
-    required this.awayTeam,
-    required this.day,
-    required this.scorerAssigned,
-    this.scorerName,
-    this.scorerJersey,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: CR.card,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '$homeTeam vs $awayTeam',
-                    style: GoogleFonts.inter(
-                      color: CR.text1,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text(
-                        day,
-                        style: GoogleFonts.inter(
-                          color: CR.text3,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (scorerAssigned && scorerName != null) ...[
-                        Text(
-                          'Scorer: $scorerJersey $scorerName',
-                          style: GoogleFonts.inter(
-                            color: CR.green,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Text('✓',
-                            style: TextStyle(color: CR.green, fontSize: 12)),
-                      ] else ...[
-                        Text(
-                          'Scorer: unassigned',
-                          style: GoogleFonts.inter(
-                            color: CR.orange,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Text('⚠',
-                            style: TextStyle(color: CR.orange, fontSize: 12)),
-                      ],
+                      _SnapStat('Matches', '8'),
+                      const SizedBox(width: 24),
+                      _SnapStat('Players', '45'),
+                      const SizedBox(width: 24),
+                      _SnapStat('Disputes', '0', valueColor: CR.green),
                     ],
                   ),
+                  const SizedBox(height: 14),
+                  const Divider(height: 1, color: CR.cardHigh),
+                  const SizedBox(height: 12),
+                  _SnapRecord('Top batter', 'Roshan KC', '487 runs'),
+                  const SizedBox(height: 6),
+                  _SnapRecord('Top bowler', 'Bikash Rai', '21 wkts'),
                 ],
               ),
-            ),
-            const Icon(Icons.chevron_right, color: CR.text3, size: 18),
+            ).animate().fadeIn(delay: 340.ms),
+
+            const SizedBox(height: 24),
+
+            // ── STANDINGS (mini) ──────────────────────────────────────
+            _sectionLabel('STANDINGS'),
+            const SizedBox(height: 10),
+            _MiniStandingsTable().animate().fadeIn(delay: 400.ms),
           ],
         ),
       ),
     );
   }
+
+  static Widget _sectionLabel(String text) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: CR.greenGradient,
+            ),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text.toUpperCase(),
+          style: GoogleFonts.oswald(
+            color: CR.text2,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 2.0,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static void _toast(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    );
+  }
 }
 
-// ─── Pending Result Card ──────────────────────────────────────────────────────
+// ─── Next Action Card ─────────────────────────────────────────────────────────
 
-class _PendingResultCard extends StatelessWidget {
-  final String homeTeam;
-  final String awayTeam;
+enum _Urgency { blocking, warning, ok }
+
+class _NextActionCard extends StatelessWidget {
+  final _Urgency urgency;
+  final String title;
+  final String detail;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _NextActionCard({
+    required this.urgency,
+    required this.title,
+    required this.detail,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  Color get _color => switch (urgency) {
+        _Urgency.blocking => CR.ballRed,
+        _Urgency.warning => CR.amber,
+        _Urgency.ok => CR.green,
+      };
+
+  String get _icon => switch (urgency) {
+        _Urgency.blocking => '🚨',
+        _Urgency.warning => '⚠️',
+        _Urgency.ok => '✅',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _color.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'NEXT ACTION',
+                style: GoogleFonts.oswald(
+                    color: _color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 2),
+              ),
+              const Spacer(),
+              Text(_icon, style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+                color: CR.text1, fontSize: 15, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            detail,
+            style: GoogleFonts.inter(color: CR.text2, fontSize: 13),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton(
+              onPressed: onAction,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _color,
+                foregroundColor: CR.inv,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ),
+              child: Text(
+                actionLabel,
+                style: GoogleFonts.oswald(
+                    fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1, color: CR.inv),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Week Match Item ──────────────────────────────────────────────────────────
+
+class _WeekMatchItem extends StatelessWidget {
+  final String day;
+  final String teams;
+  final bool scorerAssigned;
+  final String? scorerName;
+  final VoidCallback onAssign;
+  final VoidCallback onEdit;
+
+  const _WeekMatchItem({
+    required this.day,
+    required this.teams,
+    required this.scorerAssigned,
+    this.scorerName,
+    required this.onAssign,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: CR.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  day,
+                  style: GoogleFonts.inter(color: CR.text3, fontSize: 11),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  teams,
+                  style: GoogleFonts.inter(
+                      color: CR.text1, fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                if (scorerAssigned && scorerName != null)
+                  Row(
+                    children: [
+                      Text(
+                        'Scorer: $scorerName',
+                        style: GoogleFonts.inter(
+                            color: CR.green, fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text('✓', style: TextStyle(color: CR.green, fontSize: 12)),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      const Text('⚠', style: TextStyle(color: CR.amber, fontSize: 12)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Scorer: unassigned',
+                        style: GoogleFonts.inter(
+                            color: CR.amber, fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          // Action buttons
+          Row(
+            children: [
+              if (!scorerAssigned)
+                GestureDetector(
+                  onTap: onAssign,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: CR.amber.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: CR.amber.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      'ASSIGN',
+                      style: GoogleFonts.oswald(
+                          color: CR.amber, fontSize: 10, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: onEdit,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: CR.cardHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'EDIT',
+                    style: GoogleFonts.oswald(
+                        color: CR.text2, fontSize: 10, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Pending Approval Card ────────────────────────────────────────────────────
+
+class _PendingApprovalCard extends StatelessWidget {
   final String result;
   final VoidCallback onApprove;
   final VoidCallback onEdit;
 
-  const _PendingResultCard({
-    required this.homeTeam,
-    required this.awayTeam,
+  const _PendingApprovalCard({
     required this.result,
     required this.onApprove,
     required this.onEdit,
@@ -453,103 +486,72 @@ class _PendingResultCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: CR.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: CR.gold.withOpacity(0.2)),
+        border: Border.all(color: CR.gold.withOpacity(0.25)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      '$homeTeam vs $awayTeam',
-                      style: GoogleFonts.inter(
-                        color: CR.text1,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: CR.gold.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: CR.gold.withOpacity(0.3)),
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      result,
-                      style: GoogleFonts.inter(
-                        color: CR.text2,
-                        fontSize: 13,
+                      child: Text(
+                        'PENDING',
+                        style: GoogleFonts.oswald(
+                            color: CR.gold, fontSize: 9, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: CR.gold.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: CR.gold.withOpacity(0.3)),
-                ),
-                child: Text(
-                  'PENDING',
+                const SizedBox(height: 6),
+                Text(
+                  result,
                   style: GoogleFonts.inter(
-                    color: CR.gold,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                  ),
+                      color: CR.text1, fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(width: 8),
+          // Action buttons
           Row(
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: onApprove,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: CR.green,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'APPROVE',
-                        style: GoogleFonts.inter(
-                          color: CR.textInv,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
+              GestureDetector(
+                onTap: onApprove,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: CR.green,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'APPROVE',
+                    style: GoogleFonts.oswald(
+                        color: CR.inv, fontSize: 11, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: GestureDetector(
-                  onTap: onEdit,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: CR.cardHigh,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'EDIT',
-                        style: GoogleFonts.inter(
-                          color: CR.text2,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: onEdit,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: CR.cardHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'EDIT',
+                    style: GoogleFonts.oswald(
+                        color: CR.text2, fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -561,14 +563,110 @@ class _PendingResultCard extends StatelessWidget {
   }
 }
 
-// ─── Standings Table ──────────────────────────────────────────────────────────
+// ─── Quick Button ─────────────────────────────────────────────────────────────
 
-class _StandingsTable extends StatelessWidget {
-  static const _teams = [
-    ('Okinawa Warriors', 6, 5, 1, 10),
-    ('Tokyo Rhinos', 6, 4, 2, 8),
-    ('Osaka Kings', 6, 3, 3, 6),
-    ('Fukuoka Bulls', 6, 1, 5, 2),
+class _QuickBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickBtn({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: CR.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: CR.cardHigh),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: CR.text2, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                  color: CR.text2, fontSize: 11, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Season Snapshot Widgets ──────────────────────────────────────────────────
+
+class _SnapStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _SnapStat(this.label, this.value, {this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.spaceGrotesk(
+            color: valueColor ?? CR.text1,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.inter(color: CR.text3, fontSize: 11),
+        ),
+      ],
+    );
+  }
+}
+
+class _SnapRecord extends StatelessWidget {
+  final String label;
+  final String name;
+  final String stat;
+
+  const _SnapRecord(this.label, this.name, this.stat);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(label, style: GoogleFonts.inter(color: CR.text3, fontSize: 12)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(name,
+              style: GoogleFonts.inter(
+                  color: CR.text1, fontSize: 13, fontWeight: FontWeight.w600)),
+        ),
+        Text(
+          stat,
+          style: GoogleFonts.spaceGrotesk(
+              color: CR.green, fontSize: 13, fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Mini Standings Table ─────────────────────────────────────────────────────
+
+class _MiniStandingsTable extends StatelessWidget {
+  static const _rows = [
+    ('Warriors', 5, 2, 10),
+    ('Rhinos', 4, 3, 8),
+    ('Osaka', 3, 4, 6),
+    ('Fukuoka', 1, 6, 2),
   ];
 
   @override
@@ -576,7 +674,7 @@ class _StandingsTable extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
@@ -587,39 +685,34 @@ class _StandingsTable extends StatelessWidget {
               children: [
                 const SizedBox(width: 20),
                 Expanded(
-                  child: Text(
-                    'TEAM',
-                    style: GoogleFonts.inter(
-                      color: CR.text3,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
+                  child: Text('TEAM',
+                      style: GoogleFonts.oswald(
+                          color: CR.text3,
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w500)),
                 ),
-                const _StandingHeader('P'),
-                const _StandingHeader('W'),
-                const _StandingHeader('L'),
-                const _StandingHeader('PTS'),
+                const _MHdr('W'),
+                const _MHdr('L'),
+                const _MHdr('PTS'),
               ],
             ),
           ),
           Container(height: 1, color: CR.cardHigh),
-          ..._teams.asMap().entries.map((entry) {
+          ..._rows.asMap().entries.map((entry) {
             final idx = entry.key;
-            final (name, p, w, l, pts) = entry.value;
-            final isLast = idx == _teams.length - 1;
+            final (name, w, l, pts) = entry.value;
+            final isLast = idx == _rows.length - 1;
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 11),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                   child: Row(
                     children: [
                       SizedBox(
                         width: 20,
                         child: Text(
-                          '${idx + 1}',
+                          '${idx + 1}.',
                           style: GoogleFonts.spaceGrotesk(
                             color: idx == 0 ? CR.gold : CR.text3,
                             fontSize: 12,
@@ -628,23 +721,13 @@ class _StandingsTable extends StatelessWidget {
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          name,
-                          style: GoogleFonts.inter(
-                            color: CR.text1,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        child: Text(name,
+                            style: GoogleFonts.inter(
+                                color: CR.text1, fontSize: 13, fontWeight: FontWeight.w500)),
                       ),
-                      _StandingValue(p.toString()),
-                      _StandingValue(w.toString(), highlight: true),
-                      _StandingValue(l.toString()),
-                      _StandingValue(
-                        pts.toString(),
-                        bold: true,
-                        highlight: true,
-                      ),
+                      _MVal(w.toString(), green: true),
+                      _MVal(l.toString()),
+                      _MVal(pts.toString(), bold: true, green: true),
                     ],
                   ),
                 ),
@@ -658,45 +741,40 @@ class _StandingsTable extends StatelessWidget {
   }
 }
 
-class _StandingHeader extends StatelessWidget {
+class _MHdr extends StatelessWidget {
   final String text;
-  const _StandingHeader(this.text);
+  const _MHdr(this.text);
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 32,
+      width: 36,
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: GoogleFonts.inter(
-          color: CR.text3,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
-        ),
+        style: GoogleFonts.oswald(
+            color: CR.text3, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.w500),
       ),
     );
   }
 }
 
-class _StandingValue extends StatelessWidget {
+class _MVal extends StatelessWidget {
   final String text;
-  final bool highlight;
   final bool bold;
+  final bool green;
 
-  const _StandingValue(this.text,
-      {this.highlight = false, this.bold = false});
+  const _MVal(this.text, {this.bold = false, this.green = false});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 32,
+      width: 36,
       child: Text(
         text,
         textAlign: TextAlign.center,
         style: GoogleFonts.spaceGrotesk(
-          color: highlight ? CR.text1 : CR.text2,
+          color: green ? CR.text1 : CR.text2,
           fontSize: 13,
           fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
         ),

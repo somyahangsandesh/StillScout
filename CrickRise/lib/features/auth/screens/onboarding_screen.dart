@@ -100,14 +100,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'We\'ll send you a verification code',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CR.text2,
+                color: CR.t2,
               ),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
-          style: const TextStyle(color: CR.text1),
+          style: const TextStyle(color: CR.t1),
           decoration: const InputDecoration(
             labelText: 'Phone number',
             prefixText: '+81 ',
@@ -129,7 +129,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'Sent to ${_phoneController.text}',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CR.text2,
+                color: CR.t2,
               ),
         ),
         const SizedBox(height: 32),
@@ -143,13 +143,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               decoration: BoxDecoration(
                 color: CR.card,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: CR.text3),
+                border: Border.all(color: CR.t3),
               ),
               child: const Center(
                 child: Text(
                   '—',
                   style: TextStyle(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 20,
                   ),
                 ),
@@ -173,14 +173,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'This will appear on your player profile',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CR.text2,
+                color: CR.t2,
               ),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _nameController,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(color: CR.text1),
+          style: const TextStyle(color: CR.t1),
           decoration: const InputDecoration(labelText: 'Full name'),
         ),
       ],
@@ -199,13 +199,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Text(
           'Your city determines your league rankings',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: CR.text2,
+                color: CR.t2,
               ),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _cityController,
-          style: const TextStyle(color: CR.text1),
+          style: const TextStyle(color: CR.t1),
           decoration: const InputDecoration(labelText: 'City (e.g. Okinawa, Tokyo)'),
         ),
       ],

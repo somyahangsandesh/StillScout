@@ -74,13 +74,13 @@ class _WitnessScreenState extends ConsumerState<WitnessScreen> {
         backgroundColor: CR.bg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: CR.text1),
+          icon: const Icon(Icons.arrow_back, color: CR.t1),
           onPressed: () => context.go('/match/scorer'),
         ),
         title: Text(
           'Confirm Result',
           style: GoogleFonts.inter(
-            color: CR.text1,
+            color: CR.t1,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -96,7 +96,7 @@ class _WitnessScreenState extends ConsumerState<WitnessScreen> {
               Text(
                 '2 players must verify this scorecard is correct.',
                 style: GoogleFonts.inter(
-                  color: CR.text2,
+                  color: CR.t2,
                   fontSize: 14,
                 ),
               ).animate().fadeIn(duration: 300.ms),
@@ -122,7 +122,7 @@ class _WitnessScreenState extends ConsumerState<WitnessScreen> {
               Text(
                 'WITNESSES',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2.0,
@@ -185,7 +185,7 @@ class _WitnessScreenState extends ConsumerState<WitnessScreen> {
                       : null,
                   style: ElevatedButton.styleFrom(
                     disabledBackgroundColor: CR.cardHigh,
-                    disabledForegroundColor: CR.text3,
+                    disabledForegroundColor: CR.t3,
                   ),
                   child: Text(
                     'CONFIRM RESULT',
@@ -206,7 +206,7 @@ class _WitnessScreenState extends ConsumerState<WitnessScreen> {
                   child: Text(
                     'Skip witnesses (informal match)',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 13,
                     ),
                   ),
@@ -258,7 +258,7 @@ class _ScorecardSummary extends StatelessWidget {
               Text(
                 teamAName,
                 style: GoogleFonts.inter(
-                  color: CR.text2,
+                  color: CR.t2,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -266,7 +266,7 @@ class _ScorecardSummary extends StatelessWidget {
               Text(
                 innings1Score,
                 style: GoogleFonts.spaceGrotesk(
-                  color: CR.text1,
+                  color: CR.t1,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -282,7 +282,7 @@ class _ScorecardSummary extends StatelessWidget {
               Text(
                 teamBName,
                 style: GoogleFonts.inter(
-                  color: CR.text2,
+                  color: CR.t2,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -290,7 +290,7 @@ class _ScorecardSummary extends StatelessWidget {
               Text(
                 innings2Score,
                 style: GoogleFonts.spaceGrotesk(
-                  color: CR.text1,
+                  color: CR.t1,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -342,7 +342,7 @@ class _WitnessSlot extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.5,
@@ -366,12 +366,12 @@ class _WitnessSlot extends StatelessWidget {
                 ? Row(
                     children: [
                       const Icon(Icons.add_circle_outline,
-                          color: CR.text3, size: 18),
+                          color: CR.t3, size: 18),
                       const SizedBox(width: 10),
                       Text(
                         'Enter jersey number',
                         style: GoogleFonts.inter(
-                          color: CR.text3,
+                          color: CR.t3,
                           fontSize: 14,
                         ),
                       ),
@@ -402,7 +402,7 @@ class _WitnessSlot extends StatelessWidget {
                         child: Text(
                           player!.name,
                           style: GoogleFonts.inter(
-                            color: CR.text1,
+                            color: CR.t1,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -498,7 +498,7 @@ class _JerseyEntrySheetState extends State<_JerseyEntrySheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: CR.text3,
+                color: CR.t3,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -506,7 +506,7 @@ class _JerseyEntrySheetState extends State<_JerseyEntrySheet> {
             Text(
               'Enter Jersey Number',
               style: GoogleFonts.inter(
-                color: CR.text1,
+                color: CR.t1,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -526,7 +526,7 @@ class _JerseyEntrySheetState extends State<_JerseyEntrySheet> {
                   Text(
                     _input.isEmpty ? '—' : '#$_input',
                     style: GoogleFonts.spaceGrotesk(
-                      color: _found != null ? CR.green : CR.text1,
+                      color: _found != null ? CR.green : CR.t1,
                       fontSize: 44,
                       fontWeight: FontWeight.w800,
                       height: 1,
@@ -554,7 +554,7 @@ class _JerseyEntrySheetState extends State<_JerseyEntrySheet> {
                     const SizedBox(height: 6),
                     Text(
                       'No player with #$_input',
-                      style: GoogleFonts.inter(color: CR.text3, fontSize: 13),
+                      style: GoogleFonts.inter(color: CR.t3, fontSize: 13),
                     ),
                   ],
                 ],
@@ -573,7 +573,7 @@ class _JerseyEntrySheetState extends State<_JerseyEntrySheet> {
                 onPressed: _found != null ? _confirm : null,
                 style: ElevatedButton.styleFrom(
                   disabledBackgroundColor: CR.cardHigh,
-                  disabledForegroundColor: CR.text3,
+                  disabledForegroundColor: CR.t3,
                 ),
                 child: Text(
                   _found != null
@@ -631,11 +631,11 @@ class _NumPad extends StatelessWidget {
                   child: Center(
                     child: isDel
                         ? const Icon(Icons.backspace_outlined,
-                            color: CR.text2, size: 22)
+                            color: CR.t2, size: 22)
                         : Text(
                             d,
                             style: GoogleFonts.spaceGrotesk(
-                              color: CR.text1,
+                              color: CR.t1,
                               fontSize: 22,
                               fontWeight: FontWeight.w600,
                             ),

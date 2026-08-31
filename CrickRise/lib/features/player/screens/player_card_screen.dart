@@ -69,7 +69,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
               Text(
                 'Free card — your OVR number only.',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 12,
                 ),
               )
@@ -119,7 +119,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
               Text(
                 '7-day free trial · No credit card needed',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 12,
                 ),
               ),
@@ -191,7 +191,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             Text(
               'Go Pro',
               style: GoogleFonts.spaceGrotesk(
-                color: CR.text1,
+                color: CR.t1,
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
               ),
@@ -200,7 +200,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             Text(
               'One price. One year. Everything.',
               style: GoogleFonts.inter(
-                color: CR.text2,
+                color: CR.t2,
                 fontSize: 14,
               ),
             ),
@@ -218,7 +218,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
                       Text(
                         f,
                         style: GoogleFonts.inter(
-                          color: CR.text1,
+                          color: CR.t1,
                           fontSize: 14,
                         ),
                       ),
@@ -245,7 +245,7 @@ class _PlayerCardScreenState extends ConsumerState<PlayerCardScreen> {
             Text(
               '¥1,980/year after trial · Cancel anytime',
               style: GoogleFonts.inter(
-                color: CR.text3,
+                color: CR.t3,
                 fontSize: 12,
               ),
             ),
@@ -469,7 +469,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '${player.jerseyDisplay}  ${player.displayName}',
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),
@@ -478,7 +478,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '${player.teamName ?? ''} · ${player.role.displayName}',
             style: GoogleFonts.inter(
-              color: CR.text2,
+              color: CR.t2,
               fontSize: 13,
             ),
           ),
@@ -491,7 +491,7 @@ class _ProCard extends StatelessWidget {
                 Text(
                   'OVR',
                   style: GoogleFonts.inter(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2,
@@ -526,7 +526,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '#3 Okinawa  ·  14 Matches  ·  Season 2026',
             style: GoogleFonts.inter(
-              color: CR.text2,
+              color: CR.t2,
               fontSize: 12,
               letterSpacing: 0.3,
             ),
@@ -537,7 +537,7 @@ class _ProCard extends StatelessWidget {
           Text(
             'vs Tokyo Rhinos · WON ✓',
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -546,7 +546,7 @@ class _ProCard extends StatelessWidget {
           Text(
             '58*(39)  ·  3/24  ·  ★ MVP',
             style: GoogleFonts.inter(
-              color: CR.text2,
+              color: CR.t2,
               fontSize: 13,
             ),
           ),
@@ -585,7 +585,7 @@ class _ProStatCell extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
@@ -713,7 +713,7 @@ class _ToggleBtn extends StatelessWidget {
         child: Text(
           label,
           style: GoogleFonts.inter(
-            color: active ? activeColor : CR.text2,
+            color: active ? activeColor : CR.t2,
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),

@@ -27,7 +27,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'Your cricket career.',
                     style: GoogleFonts.inter(
-                      color: CR.text1,
+                      color: CR.t1,
                       fontSize: 36,
                       fontWeight: FontWeight.w800,
                       height: 1.1,
@@ -71,7 +71,7 @@ class WelcomeScreen extends StatelessWidget {
                       onPressed: () => context.push('/auth/phone'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: CR.green,
-                        foregroundColor: CR.textInv,
+                        foregroundColor: CR.inv,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -79,10 +79,11 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                       child: Text(
                         'Continue with Phone',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: CR.textInv,
+                        style: GoogleFonts.oswald(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                          letterSpacing: 0.5,
+                          color: CR.inv,
                         ),
                       ),
                     ),
@@ -91,7 +92,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'or',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 13,
                     ),
                     textAlign: TextAlign.center,
@@ -103,7 +104,7 @@ class WelcomeScreen extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () => context.push('/auth/phone'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: CR.text1,
+                        foregroundColor: CR.t1,
                         side: const BorderSide(color: Color(0xFF2A2A2A)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -114,7 +115,7 @@ class WelcomeScreen extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
-                          color: CR.text1,
+                          color: CR.t1,
                         ),
                       ),
                     ),
@@ -123,7 +124,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'By continuing you agree to our Terms',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,
@@ -164,7 +165,7 @@ class _FeatureLine extends StatelessWidget {
           child: Text(
             text,
             style: GoogleFonts.inter(
-              color: CR.text2,
+              color: CR.t2,
               fontSize: 15,
               height: 1.4,
             ),

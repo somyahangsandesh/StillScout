@@ -134,7 +134,7 @@ class _PhoneViewState extends State<_PhoneView> {
         children: [
           const SizedBox(height: 16),
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: CR.text2, size: 18),
+            icon: const Icon(Icons.arrow_back_ios_new, color: CR.t2, size: 18),
             onPressed: widget.onBack,
             padding: EdgeInsets.zero,
           ),
@@ -142,7 +142,7 @@ class _PhoneViewState extends State<_PhoneView> {
           Text(
             'Enter your number',
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
@@ -150,7 +150,7 @@ class _PhoneViewState extends State<_PhoneView> {
           const SizedBox(height: 8),
           Text(
             "We'll send a 6-digit code.",
-            style: GoogleFonts.inter(color: CR.text2, fontSize: 14),
+            style: GoogleFonts.inter(color: CR.t2, fontSize: 14),
           ).animate().fadeIn(delay: 100.ms),
           const SizedBox(height: 40),
           // Phone input
@@ -166,7 +166,7 @@ class _PhoneViewState extends State<_PhoneView> {
                   child: Text(
                     '+81 🇯🇵',
                     style: GoogleFonts.inter(
-                      color: CR.text1,
+                      color: CR.t1,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -179,7 +179,7 @@ class _PhoneViewState extends State<_PhoneView> {
                     keyboardType: TextInputType.phone,
                     autofocus: true,
                     style: GoogleFonts.spaceGrotesk(
-                      color: CR.text1,
+                      color: CR.t1,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -188,7 +188,7 @@ class _PhoneViewState extends State<_PhoneView> {
                       contentPadding:
                           EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                       hintText: '090 0000 0000',
-                      hintStyle: TextStyle(color: CR.text3),
+                      hintStyle: TextStyle(color: CR.t3),
                     ),
                     onChanged: widget.onPhoneChanged,
                   ),
@@ -210,7 +210,7 @@ class _PhoneViewState extends State<_PhoneView> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: enabled ? CR.green : CR.card,
                     foregroundColor: CR.inv,
-                    disabledForegroundColor: CR.text3,
+                    disabledForegroundColor: CR.t3,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
@@ -220,7 +220,7 @@ class _PhoneViewState extends State<_PhoneView> {
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
-                      color: enabled ? CR.inv : CR.text3,
+                      color: enabled ? CR.inv : CR.t3,
                     ),
                   ),
                 ),
@@ -237,7 +237,7 @@ class _PhoneViewState extends State<_PhoneView> {
               child: Text(
                 'Skip for now — enter app directly',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -275,7 +275,7 @@ class _OtpView extends StatelessWidget {
       width: 52,
       height: 52,
       textStyle: GoogleFonts.spaceGrotesk(
-        color: CR.text1,
+        color: CR.t1,
         fontSize: 20,
         fontWeight: FontWeight.w700,
       ),
@@ -300,7 +300,7 @@ class _OtpView extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: CR.text2, size: 18),
+            icon: const Icon(Icons.arrow_back_ios_new, color: CR.t2, size: 18),
             onPressed: onBack,
             padding: EdgeInsets.zero,
           ),
@@ -308,7 +308,7 @@ class _OtpView extends StatelessWidget {
           Text(
             'Check your phone',
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
@@ -316,7 +316,7 @@ class _OtpView extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Sent to +81 ${phone.isEmpty ? "XXXXX XXXXX" : phone}',
-            style: GoogleFonts.inter(color: CR.text2, fontSize: 14),
+            style: GoogleFonts.inter(color: CR.t2, fontSize: 14),
           ),
           const SizedBox(height: 48),
           Center(
@@ -345,7 +345,7 @@ class _OtpView extends StatelessWidget {
                 : Text(
                     'Resend in ${countdown}s',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 14,
                     ),
                   ),

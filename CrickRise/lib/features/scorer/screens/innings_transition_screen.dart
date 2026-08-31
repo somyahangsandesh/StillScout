@@ -47,7 +47,7 @@ class InningsTransitionScreen extends ConsumerWidget {
                 Text(
                   'INNINGS COMPLETE',
                   style: GoogleFonts.inter(
-                    color: CR.text2,
+                    color: CR.t2,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2,
@@ -57,7 +57,7 @@ class InningsTransitionScreen extends ConsumerWidget {
                 Text(
                   state.teamAName,
                   style: GoogleFonts.inter(
-                    color: CR.text1,
+                    color: CR.t1,
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                   ),
@@ -66,14 +66,14 @@ class InningsTransitionScreen extends ConsumerWidget {
                 Text(
                   '${state.runs}/${state.wickets}',
                   style: GoogleFonts.spaceGrotesk(
-                    color: CR.text1,
+                    color: CR.t1,
                     fontSize: 48,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   '(${state.totalOvers} overs)',
-                  style: const TextStyle(color: CR.text2),
+                  style: const TextStyle(color: CR.t2),
                 ),
                 const SizedBox(height: 24),
 
@@ -91,7 +91,7 @@ class InningsTransitionScreen extends ConsumerWidget {
                       Text(
                         'TOP PERFORMERS',
                         style: GoogleFonts.inter(
-                          color: CR.text3,
+                          color: CR.t3,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.5,
@@ -132,7 +132,7 @@ class InningsTransitionScreen extends ConsumerWidget {
                       Text(
                         '${state.runs + 1} runs off ${state.totalOvers} overs',
                         style: GoogleFonts.spaceGrotesk(
-                          color: CR.text1,
+                          color: CR.t1,
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
                         ),
@@ -181,7 +181,7 @@ class _PerfRow extends StatelessWidget {
           child: Text(
             label,
             style: GoogleFonts.inter(
-              color: CR.text2,
+              color: CR.t2,
               fontSize: 13,
             ),
           ),
@@ -189,7 +189,7 @@ class _PerfRow extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.spaceGrotesk(
-            color: CR.text1,
+            color: CR.t1,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),

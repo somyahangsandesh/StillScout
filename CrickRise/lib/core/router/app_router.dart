@@ -11,8 +11,11 @@ import '../../features/auth/screens/organizer_access_screen.dart';
 import '../../features/community/screens/community_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/league/screens/league_screen.dart';
+import '../../features/league/screens/team_profile_screen.dart';
+import '../../features/league/screens/season_awards_screen.dart';
 import '../../features/main/main_shell.dart';
 import '../../features/organizer/screens/organizer_home_screen.dart';
+import '../../features/organizer/screens/league_setup_screen.dart';
 import '../../features/player/screens/profile_screen.dart';
 import '../../features/player/screens/player_profile_screen.dart';
 import '../../features/player/screens/player_card_screen.dart';
@@ -94,6 +97,19 @@ final appRouter = GoRouter(
       builder: (context, state) => OrganizerHomeScreen(
         isNewOrganizer: state.uri.queryParameters['new'] == 'true',
       ),
+    ),
+    GoRoute(
+      path: '/organizer/setup',
+      builder: (context, state) => const LeagueSetupScreen(),
+    ),
+    GoRoute(
+      path: '/league/team/:teamId',
+      builder: (context, state) =>
+          TeamProfileScreen(teamId: state.pathParameters['teamId'] ?? ''),
+    ),
+    GoRoute(
+      path: '/league/awards',
+      builder: (context, state) => const SeasonAwardsScreen(),
     ),
     GoRoute(
       path: '/session/qr',

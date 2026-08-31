@@ -69,17 +69,18 @@ class HomeScreen extends ConsumerWidget {
               Text(
                 _greeting(),
                 style: GoogleFonts.inter(
-                  color: CR.text2,
+                  color: CR.t2,
                   fontSize: 14,
                 ),
               ).animate().fadeIn(duration: 300.ms),
               const SizedBox(height: 2),
               Text(
                 player.name.split(' ').first,
-                style: GoogleFonts.inter(
-                  color: CR.text1,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
+                style: GoogleFonts.oswald(
+                  color: CR.t1,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ).animate().fadeIn(delay: 80.ms),
               if (player.roles.length > 1) ...[
@@ -211,7 +212,7 @@ class _OvrProgressCard extends StatelessWidget {
           Text(
             'YOUR FIRST OVR',
             style: GoogleFonts.inter(
-              color: CR.text3,
+              color: CR.t3,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 2,
@@ -221,7 +222,7 @@ class _OvrProgressCard extends StatelessWidget {
           Text(
             'Play $remaining more ${remaining == 1 ? 'match' : 'matches'} to unlock',
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -240,7 +241,7 @@ class _OvrProgressCard extends StatelessWidget {
           Text(
             '$matchesPlayed / 5 matches played',
             style: GoogleFonts.inter(
-              color: CR.text2,
+              color: CR.t2,
               fontSize: 12,
             ),
           ),
@@ -263,7 +264,6 @@ class _OvrCard extends StatelessWidget {
     required this.onTap,
   });
 
-  // Sample form data — last 5 OVR values
   static const _formData = [72.0, 76.0, 79.0, 77.0, 86.0];
 
   @override
@@ -274,194 +274,208 @@ class _OvrCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: CR.card,
-          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: [0.0, 0.5, 1.0],
+            colors: [Color(0xFF0D1A0F), Color(0xFF101810), Color(0xFF080E08)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: CR.green.withOpacity(0.2), width: 1.5),
+          boxShadow: [
+            BoxShadow(color: CR.green.withOpacity(0.08), blurRadius: 24, spreadRadius: -4, offset: const Offset(0, 8)),
+          ],
         ),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left: OVR number + streak with radial glow
-                Stack(
-                  alignment: Alignment.topLeft,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // Atmospheric seam texture
+              Positioned.fill(child: CustomPaint(painter: SeamCurvePainter(opacity: 0.06))),
+              // Gold glow behind OVR number
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  width: 200,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [CR.gold.withOpacity(0.07), Colors.transparent],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   children: [
-                    // Radial glow behind number
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      child: Container(
-                        width: 110,
-                        height: 110,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              CR.gold.withOpacity(0.08),
-                              Colors.transparent,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left: player identity
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                player.name.toUpperCase(),
+                                style: GoogleFonts.oswald(
+                                  color: CR.t1,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                player.crDisplay,
+                                style: GoogleFonts.spaceGrotesk(
+                                  color: CR.t3,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              if (rating.hasHotStreak) ...[
+                                const SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: CR.amber.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: CR.amber.withOpacity(0.3)),
+                                  ),
+                                  child: Text(
+                                    '🔥 ${rating.hotStreakCount}-match streak',
+                                    style: GoogleFonts.inter(
+                                      color: CR.amber,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'OVR',
-                          style: GoogleFonts.inter(
-                            color: CR.gold,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        Text(
-                          rating.ovr.round().toString(),
-                          style: GoogleFonts.spaceGrotesk(
-                            color: CR.gold,
-                            fontSize: 72,
-                            fontWeight: FontWeight.w900,
-                            height: 0.9,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (rating.hasHotStreak)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: CR.gold.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '🔥 ${rating.hotStreakCount}-match streak',
-                              style: GoogleFonts.inter(
-                                color: CR.gold,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
+                        // Right: gold OVR — the hero number
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'OVR',
+                              style: GoogleFonts.oswald(
+                                color: CR.gold.withOpacity(0.5),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 3,
                               ),
                             ),
+                            ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: CR.goldGradient,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ).createShader(bounds),
+                              child: Text(
+                                rating.ovr.round().toString(),
+                                style: GoogleFonts.spaceGrotesk(
+                                  color: Colors.white,
+                                  fontSize: 80,
+                                  fontWeight: FontWeight.w900,
+                                  height: 0.9,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    // Gradient divider
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [CR.green.withOpacity(0.4), Colors.transparent],
+                        ),
+                      ),
+                    ),
+                    // BAT / BOWL / FIELD as inline columns + form sparkline
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _DomainInline('BAT', rating.bat.round(), CR.green),
+                        _DomainInline('BOWL', rating.bowl.round(), CR.gold),
+                        _DomainInline('FIELD', rating.field.round(), CR.blue),
+                        // Form sparkline
+                        SizedBox(
+                          width: 80,
+                          height: 36,
+                          child: LineChart(
+                            LineChartData(
+                              gridData: const FlGridData(show: false),
+                              titlesData: const FlTitlesData(show: false),
+                              borderData: FlBorderData(show: false),
+                              lineTouchData: const LineTouchData(enabled: false),
+                              minX: 0,
+                              maxX: 4,
+                              minY: _formData.reduce((a, b) => a < b ? a : b) - 5,
+                              maxY: _formData.reduce((a, b) => a > b ? a : b) + 5,
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: _formData.asMap().entries
+                                      .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                      .toList(),
+                                  isCurved: true,
+                                  color: trending ? CR.green : CR.ballRed,
+                                  barWidth: 2,
+                                  isStrokeCapRound: true,
+                                  dotData: const FlDotData(show: false),
+                                  belowBarData: BarAreaData(
+                                    show: true,
+                                    color: trending
+                                        ? CR.green.withOpacity(0.08)
+                                        : CR.ballRed.withOpacity(0.08),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                        ),
                       ],
                     ),
                   ],
                 ),
-                const Spacer(),
-                // Right: BAT/BOWL/FIELD
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _DomainLine(label: 'BAT', value: rating.bat.round(), color: CR.green),
-                    const SizedBox(height: 12),
-                    _DomainLine(label: 'BOWL', value: rating.bowl.round(), color: CR.gold),
-                    const SizedBox(height: 12),
-                    _DomainLine(label: 'FIELD', value: rating.field.round(), color: CR.blue),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(height: 1, color: CR.cardHigh),
-            const SizedBox(height: 8),
-            // Form sparkline
-            Row(
-              children: [
-                Text(
-                  'FORM',
-                  style: GoogleFonts.inter(
-                    color: CR.text3,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 32,
-                    child: LineChart(
-                      LineChartData(
-                        gridData: const FlGridData(show: false),
-                        titlesData: const FlTitlesData(show: false),
-                        borderData: FlBorderData(show: false),
-                        lineTouchData: const LineTouchData(enabled: false),
-                        minX: 0,
-                        maxX: 4,
-                        minY: _formData.reduce((a, b) => a < b ? a : b) - 5,
-                        maxY: _formData.reduce((a, b) => a > b ? a : b) + 5,
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: _formData.asMap().entries
-                                .map((e) => FlSpot(e.key.toDouble(), e.value))
-                                .toList(),
-                            isCurved: true,
-                            color: trending ? CR.green : CR.red,
-                            barWidth: 2,
-                            isStrokeCapRound: true,
-                            dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(
-                              show: true,
-                              color: trending
-                                  ? CR.green.withOpacity(0.08)
-                                  : CR.red.withOpacity(0.08),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  trending ? '↑' : '↓',
-                  style: TextStyle(
-                    color: trending ? CR.green : CR.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _DomainLine extends StatelessWidget {
+// Inline domain display (number above label)
+class _DomainInline extends StatelessWidget {
   final String label;
   final int value;
   final Color color;
-
-  const _DomainLine({required this.label, required this.value, required this.color});
+  const _DomainInline(this.label, this.value, this.color);
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Column(
       children: [
         Text(
-          label,
-          style: GoogleFonts.inter(
-            color: CR.text3,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text(
           value.toString(),
-          style: GoogleFonts.spaceGrotesk(
-            color: color,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            height: 1,
-          ),
+          style: GoogleFonts.spaceGrotesk(color: color, fontSize: 24, fontWeight: FontWeight.w800, height: 1),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.oswald(color: CR.t2, fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 1),
         ),
       ],
     );
@@ -475,22 +489,14 @@ class _HuntingListHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          'HUNTING LIST',
-          style: GoogleFonts.inter(
-            color: CR.text3,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 2.0,
-          ),
-        ),
+        const CRSectionLabel('Hunting List'),
         const Spacer(),
-        // League selector hint
-          Container(
+        Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: CR.card,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: CR.glass),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -498,13 +504,13 @@ class _HuntingListHeader extends StatelessWidget {
               Text(
                 'League',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.keyboard_arrow_down, color: CR.text3, size: 14),
+              const Icon(Icons.keyboard_arrow_down, color: CR.t3, size: 14),
             ],
           ),
         ),
@@ -615,7 +621,7 @@ class _PositionRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: highlighted ? CR.green.withOpacity(0.05) : Colors.transparent,
+        color: highlighted ? CR.green.withOpacity(0.06) : Colors.transparent,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -628,8 +634,13 @@ class _PositionRow extends StatelessWidget {
                   height: 44,
                   margin: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
-                    color: CR.green,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: CR.greenGradient,
+                    ),
                     borderRadius: BorderRadius.circular(2),
+                    boxShadow: [BoxShadow(color: CR.green.withOpacity(0.5), blurRadius: 8)],
                   ),
                 )
               else
@@ -643,7 +654,7 @@ class _PositionRow extends StatelessWidget {
                         Text(
                           '$rank  $jersey',
                           style: GoogleFonts.spaceGrotesk(
-                            color: CR.text3,
+                            color: CR.t3,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -652,12 +663,11 @@ class _PositionRow extends StatelessWidget {
                         Expanded(
                           child: Text(
                             team.isNotEmpty ? '$name · $team' : name,
-                            style: GoogleFonts.inter(
-                              color: highlighted ? CR.text1 : CR.text2,
-                              fontWeight: highlighted
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontSize: 14,
+                            style: GoogleFonts.oswald(
+                              color: highlighted ? CR.t1 : CR.t2,
+                              fontWeight: highlighted ? FontWeight.w500 : FontWeight.w400,
+                              fontSize: 15,
+                              letterSpacing: 0.3,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -668,11 +678,9 @@ class _PositionRow extends StatelessWidget {
                     Text(
                       sub,
                       style: GoogleFonts.inter(
-                        color: highlighted ? CR.green : CR.text3,
+                        color: highlighted ? CR.green : CR.t3,
                         fontSize: 11,
-                        fontWeight: highlighted
-                            ? FontWeight.w600
-                            : FontWeight.w400,
+                        fontWeight: highlighted ? FontWeight.w600 : FontWeight.w400,
                       ),
                     ),
                   ],
@@ -684,7 +692,7 @@ class _PositionRow extends StatelessWidget {
                   Text(
                     ovr.toString(),
                     style: GoogleFonts.spaceGrotesk(
-                      color: highlighted ? CR.gold : CR.text2,
+                      color: highlighted ? CR.gold : CR.t2,
                       fontSize: highlighted ? 28 : 22,
                       fontWeight: FontWeight.w700,
                       height: 1,
@@ -693,7 +701,7 @@ class _PositionRow extends StatelessWidget {
                   Text(
                     'OVR',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 9,
                       letterSpacing: 1.2,
                       fontWeight: FontWeight.w600,
@@ -711,8 +719,7 @@ class _PositionRow extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: CR.gold.withOpacity(0.10),
                       borderRadius: BorderRadius.circular(4),
@@ -730,8 +737,6 @@ class _PositionRow extends StatelessWidget {
               ),
             ),
           ],
-          // Notification trigger concept
-          // TODO: When rival above closes gap by 1 OVR, send push notification
         ],
       ),
     );
@@ -760,7 +765,7 @@ class _StartMatchButtonState extends State<_StartMatchButton>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    _glowAnim = Tween<double>(begin: 0.15, end: 0.45).animate(
+    _glowAnim = Tween<double>(begin: 0.2, end: 0.5).animate(
       CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut),
     );
   }
@@ -777,12 +782,13 @@ class _StartMatchButtonState extends State<_StartMatchButton>
       animation: _glowAnim,
       builder: (_, child) => Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: CR.green.withOpacity(_glowAnim.value),
-              blurRadius: 20,
+              color: CR.green.withOpacity(_glowAnim.value * 0.7),
+              blurRadius: 28,
               spreadRadius: -4,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -792,10 +798,14 @@ class _StartMatchButtonState extends State<_StartMatchButton>
         onTap: widget.onTap,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           decoration: BoxDecoration(
-            color: CR.green,
-            borderRadius: BorderRadius.circular(12),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00B248), Color(0xFF00E676)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
             children: [
@@ -804,26 +814,36 @@ class _StartMatchButtonState extends State<_StartMatchButton>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'START MATCH',
-                      style: GoogleFonts.spaceGrotesk(
-                        color: CR.textInv,
+                      'START SESSION',
+                      style: GoogleFonts.oswald(
+                        color: CR.inv,
                         fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Friendly · League · Tournament',
                       style: GoogleFonts.inter(
-                        color: CR.textInv.withOpacity(0.6),
+                        color: CR.inv.withOpacity(0.6),
                         fontSize: 13,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Text('🏏', style: TextStyle(fontSize: 28)),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: CR.inv.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text('🏏', style: TextStyle(fontSize: 24)),
+                ),
+              ),
             ],
           ),
         ),
@@ -856,7 +876,7 @@ class _UpcomingMatchCard extends StatelessWidget {
               Text(
                 'NEXT MATCH',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.5,
@@ -867,7 +887,7 @@ class _UpcomingMatchCard extends StatelessWidget {
                 width: 3,
                 height: 3,
                 decoration:
-                    const BoxDecoration(color: CR.text3, shape: BoxShape.circle),
+                    const BoxDecoration(color: CR.t3, shape: BoxShape.circle),
               ),
               const SizedBox(width: 6),
               Text(
@@ -893,7 +913,7 @@ class _UpcomingMatchCard extends StatelessWidget {
                     Text(
                       'Okinawa Warriors',
                       style: GoogleFonts.inter(
-                        color: CR.text1,
+                        color: CR.t1,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -911,7 +931,7 @@ class _UpcomingMatchCard extends StatelessWidget {
               ),
               Text(
                 'vs',
-                style: GoogleFonts.inter(color: CR.text3, fontSize: 13),
+                style: GoogleFonts.inter(color: CR.t3, fontSize: 13),
               ),
               Expanded(
                 child: Column(
@@ -920,7 +940,7 @@ class _UpcomingMatchCard extends StatelessWidget {
                     Text(
                       'Tokyo Rhinos',
                       style: GoogleFonts.inter(
-                        color: CR.text2,
+                        color: CR.t2,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
@@ -928,7 +948,7 @@ class _UpcomingMatchCard extends StatelessWidget {
                     Text(
                       'OVR 71',
                       style: GoogleFonts.spaceGrotesk(
-                        color: CR.text3,
+                        color: CR.t3,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -945,11 +965,11 @@ class _UpcomingMatchCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.place_outlined, color: CR.text3, size: 14),
+              const Icon(Icons.place_outlined, color: CR.t3, size: 14),
               const SizedBox(width: 4),
               Text(
                 'Okinawa Sports Park',
-                style: GoogleFonts.inter(color: CR.text3, fontSize: 12),
+                style: GoogleFonts.inter(color: CR.t3, fontSize: 12),
               ),
               const SizedBox(width: 8),
               Container(width: 1, height: 10, color: CR.cardHigh),
@@ -957,7 +977,7 @@ class _UpcomingMatchCard extends StatelessWidget {
               Text(
                 'T20',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -980,7 +1000,7 @@ class _UpcomingMatchCard extends StatelessWidget {
                 Text(
                   'YOUR STAKES',
                   style: GoogleFonts.inter(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
@@ -1015,7 +1035,7 @@ class _UpcomingMatchCard extends StatelessWidget {
                   child: Text(
                     'SCORE THIS MATCH →',
                     style: GoogleFonts.inter(
-                      color: CR.textInv,
+                      color: CR.inv,
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
@@ -1047,7 +1067,7 @@ class _StakeLine extends StatelessWidget {
           child: Text(
             '"$text"',
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 12,
               fontStyle: FontStyle.italic,
               height: 1.4,
@@ -1090,7 +1110,7 @@ class _LastMatchCard extends StatelessWidget {
                     Text(
                       'vs Tokyo Rhinos',
                       style: GoogleFonts.inter(
-                        color: CR.text1,
+                        color: CR.t1,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1125,7 +1145,7 @@ class _LastMatchCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   '58*(39)  ·  3/24',
-                  style: GoogleFonts.inter(color: CR.text2, fontSize: 13),
+                  style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
                 ),
               ],
             ),
@@ -1145,7 +1165,7 @@ class _LastMatchCard extends StatelessWidget {
               Text(
                 'OVR',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 9,
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.w600,
@@ -1189,7 +1209,7 @@ class _CommunityTeaser extends StatelessWidget {
                   child: Text(
                     text,
                     style: GoogleFonts.inter(
-                      color: CR.text2,
+                      color: CR.t2,
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -1288,7 +1308,7 @@ class _LiveMatchBannerState extends State<_LiveMatchBanner>
                       Text(
                         state.battingTeamName.toUpperCase(),
                         style: GoogleFonts.inter(
-                          color: CR.text1,
+                          color: CR.t1,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1297,7 +1317,7 @@ class _LiveMatchBannerState extends State<_LiveMatchBanner>
                       Text(
                         state.scoreDisplay,
                         style: GoogleFonts.spaceGrotesk(
-                          color: CR.text1,
+                          color: CR.t1,
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                         ),
@@ -1306,7 +1326,7 @@ class _LiveMatchBannerState extends State<_LiveMatchBanner>
                       Text(
                         state.oversDisplay,
                         style: GoogleFonts.inter(
-                          color: CR.text3,
+                          color: CR.t3,
                           fontSize: 11,
                         ),
                       ),
@@ -1316,7 +1336,7 @@ class _LiveMatchBannerState extends State<_LiveMatchBanner>
                     Text(
                       '${state.striker!.player.jerseyDisplay} ${state.striker!.player.displayName}  ${state.striker!.runs}*',
                       style: GoogleFonts.inter(
-                        color: CR.text2,
+                        color: CR.t2,
                         fontSize: 11,
                       ),
                     ),
@@ -1366,10 +1386,10 @@ class _LookingForChip extends StatelessWidget {
             Expanded(
               child: Text(
                 'Looking for opponents? Post availability',
-                style: GoogleFonts.inter(color: CR.text2, fontSize: 13),
+                style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
               ),
             ),
-            const Icon(Icons.chevron_right, color: CR.text3, size: 18),
+            const Icon(Icons.chevron_right, color: CR.t3, size: 18),
           ],
         ),
       ),

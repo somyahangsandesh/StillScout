@@ -133,7 +133,7 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
         title: Text(
           'Undo last delivery?',
           style: GoogleFonts.inter(
-            color: CR.text1,
+            color: CR.t1,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -142,12 +142,12 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
           '${last.displayLabel} · '
           '${state.striker?.player.jerseyDisplay} ${state.striker?.player.name} batting · '
           '${state.currentBowler?.player.jerseyDisplay} ${state.currentBowler?.player.name} bowling',
-          style: const TextStyle(color: CR.text2),
+          style: const TextStyle(color: CR.t2),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('CANCEL', style: TextStyle(color: CR.text2)),
+            child: const Text('CANCEL', style: TextStyle(color: CR.t2)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -368,15 +368,23 @@ class _ZoneA extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      // Slightly brighter than CR.bg for broadcast-panel contrast
       decoration: const BoxDecoration(
-        color: Color(0xFF111111),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0A140A), Color(0xFF070A07)],
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Column(
+      child: Stack(
+        children: [
+          // Atmospheric seam decoration
+          Positioned.fill(child: CustomPaint(painter: SeamCurvePainter(opacity: 0.04))),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Team + score line — the broadcast hero
+          // Team + score line — broadcast hero
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -388,28 +396,27 @@ class _ZoneA extends StatelessWidget {
                       children: [
                         Text(
                           state.battingTeamName.toUpperCase(),
-                          style: GoogleFonts.inter(
-                            color: CR.text3,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2,
+                          style: GoogleFonts.oswald(
+                            color: CR.t2,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 3,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // Ball type badge (defaults to LEATHER for now)
+                        // Match type badge
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: CR.red.withOpacity(0.12),
+                            color: CR.ballRed.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(4),
-                            border:
-                                Border.all(color: CR.red.withOpacity(0.25)),
+                            border: Border.all(color: CR.ballRed.withOpacity(0.25)),
                           ),
                           child: Text(
                             '🔴 LEATHER',
                             style: GoogleFonts.inter(
-                              color: CR.red,
+                              color: CR.ballRed,
                               fontSize: 8,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
@@ -422,15 +429,14 @@ class _ZoneA extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: CR.text3.withOpacity(0.08),
+                              color: CR.t3.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                  color: CR.text3.withOpacity(0.2)),
+                              border: Border.all(color: CR.t3.withOpacity(0.2)),
                             ),
                             child: Text(
                               'DEMO',
                               style: GoogleFonts.inter(
-                                color: CR.text3,
+                                color: CR.t3,
                                 fontSize: 8,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -441,11 +447,11 @@ class _ZoneA extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    // Large score — broadcast-size, dominant element
+                    // The BIG score — this is the hero
                     Text(
                       state.scoreDisplay,
                       style: GoogleFonts.spaceGrotesk(
-                        color: CR.text1,
+                        color: CR.t1,
                         fontSize: 52,
                         fontWeight: FontWeight.w900,
                         height: 0.95,
@@ -454,25 +460,24 @@ class _ZoneA extends StatelessWidget {
                   ],
                 ),
               ),
-              // Overs — right-aligned, understated complement to the score
+              // Overs — right-aligned
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     state.oversDisplay,
                     style: GoogleFonts.spaceGrotesk(
-                      color: CR.text2,
+                      color: CR.t2,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     'OVERS',
-                    style: GoogleFonts.inter(
-                      color: CR.text3,
+                    style: GoogleFonts.oswald(
+                      color: CR.t3,
                       fontSize: 9,
-                      letterSpacing: 1.5,
-                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2,
                     ),
                   ),
                 ],
@@ -577,13 +582,13 @@ class _ZoneA extends StatelessWidget {
                 Text(
                   'Partnership: $_partnershipRuns runs ($pOvers ov)',
                   style: GoogleFonts.inter(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(width: 1, height: 10, color: CR.text3),
+                Container(width: 1, height: 10, color: CR.t3),
                 const SizedBox(width: 8),
                 if (isChasing) ...[
                   Text(
@@ -598,7 +603,7 @@ class _ZoneA extends StatelessWidget {
                   Text(
                     '· CRR: ${crr.toStringAsFixed(1)}',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
@@ -607,7 +612,7 @@ class _ZoneA extends StatelessWidget {
                   Text(
                     'CRR: ${crr.toStringAsFixed(1)}',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
@@ -623,7 +628,7 @@ class _ZoneA extends StatelessWidget {
               Text(
                 '4s: $_fours  ·  6s: $_sixes',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
@@ -632,7 +637,10 @@ class _ZoneA extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+    ],
+  ),
+);
   }
 }
 
@@ -668,7 +676,7 @@ class _BatterRow extends StatelessWidget {
         Text(
           batter.player.jerseyDisplay,
           style: GoogleFonts.spaceGrotesk(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -679,8 +687,8 @@ class _BatterRow extends StatelessWidget {
             batter.player.displayName,
             style: GoogleFonts.inter(
               color: isStriker
-                  ? CR.text1
-                  : CR.text2,
+                  ? CR.t1
+                  : CR.t2,
               fontSize: 15,
               fontWeight: isStriker ? FontWeight.w700 : FontWeight.w500,
             ),
@@ -691,8 +699,8 @@ class _BatterRow extends StatelessWidget {
           '${batter.runs}*(${batter.balls})',
           style: GoogleFonts.spaceGrotesk(
             color: isStriker
-                ? CR.text1
-                : CR.text2,
+                ? CR.t1
+                : CR.t2,
             fontSize: isStriker ? 17 : 14,
             fontWeight: FontWeight.w700,
           ),
@@ -711,12 +719,12 @@ class _BowlerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.sports_cricket, color: CR.text3, size: 14),
+        const Icon(Icons.sports_cricket, color: CR.t3, size: 14),
         const SizedBox(width: 8),
         Text(
           bowler.player.jerseyDisplay,
           style: GoogleFonts.spaceGrotesk(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -726,7 +734,7 @@ class _BowlerRow extends StatelessWidget {
           child: Text(
             bowler.player.displayName,
             style: GoogleFonts.inter(
-              color: CR.text2,
+              color: CR.t2,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -735,7 +743,7 @@ class _BowlerRow extends StatelessWidget {
         Text(
           '${bowler.figuresDisplay}  ${bowler.oversDisplay}',
           style: GoogleFonts.spaceGrotesk(
-            color: CR.text2,
+            color: CR.t2,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -755,14 +763,14 @@ class _EmptyPlayerRow extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: CR.text3, style: BorderStyle.solid),
+        border: Border.all(color: CR.t3, style: BorderStyle.solid),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Center(
         child: Text(
           label,
           style: const TextStyle(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 11,
             letterSpacing: 1,
           ),
@@ -800,7 +808,7 @@ class _RecentBalls extends StatelessWidget {
       case BallResult.wicket: return CR.red;
       case BallResult.wide:
       case BallResult.noBall: return CR.orange;
-      default:                return CR.text2;
+      default:                return CR.t2;
     }
   }
 
@@ -811,7 +819,7 @@ class _RecentBalls extends StatelessWidget {
         Text(
           'LAST 6',
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 9,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.5,
@@ -831,7 +839,7 @@ class _RecentBalls extends StatelessWidget {
           Text(
             'no balls yet',
             style: GoogleFonts.inter(
-              color: CR.text3,
+              color: CR.t3,
               fontSize: 11,
             ),
           ),
@@ -917,14 +925,14 @@ class _ZoneB extends StatelessWidget {
                 _EventButton(
                   label: 'BYE',
                   bgColor: CR.card,
-                  textColor: CR.text2,
+                  textColor: CR.t2,
                   borderColor: CR.cardHigh,
                   onTap: () => onExtra(ExtraType.bye),
                 ),
                 _EventButton(
                   label: 'LBY',
                   bgColor: CR.card,
-                  textColor: CR.text2,
+                  textColor: CR.t2,
                   borderColor: CR.cardHigh,
                   onTap: () => onExtra(ExtraType.legBye),
                 ),
@@ -971,11 +979,11 @@ class _RunButtonState extends State<_RunButton>
     super.dispose();
   }
 
-  Color get _bgColor {
+  Color get _bgGradientStart {
     switch (widget.runs) {
-      case 4:  return CR.four;
-      case 6:  return CR.six;
-      default: return CR.card;
+      case 4: return const Color(0xFF00391E);
+      case 6: return const Color(0xFF3D2D00);
+      default: return const Color(0xFF111811);
     }
   }
 
@@ -983,16 +991,22 @@ class _RunButtonState extends State<_RunButton>
     switch (widget.runs) {
       case 4: return CR.green;
       case 6: return CR.gold;
-      default: return CR.text1;
+      default: return CR.t1;
     }
+  }
+
+  Color get _borderColor {
+    if (widget.runs == 4) return CR.green.withOpacity(0.5);
+    if (widget.runs == 6) return CR.gold.withOpacity(0.5);
+    return CR.glass;
   }
 
   List<BoxShadow>? get _glow {
     if (widget.runs == 4) {
-      return [BoxShadow(color: CR.green.withOpacity(0.25), blurRadius: 10)];
+      return [BoxShadow(color: CR.green.withOpacity(0.18), blurRadius: 14, spreadRadius: -2)];
     }
     if (widget.runs == 6) {
-      return [BoxShadow(color: CR.gold.withOpacity(0.25), blurRadius: 10)];
+      return [BoxShadow(color: CR.gold.withOpacity(0.18), blurRadius: 14, spreadRadius: -2)];
     }
     return null;
   }
@@ -1010,19 +1024,27 @@ class _RunButtonState extends State<_RunButton>
         child: ScaleTransition(
           scale: _pressCtrl,
           child: Container(
-            margin: const EdgeInsets.all(1),
+            margin: const EdgeInsets.all(2),
             decoration: BoxDecoration(
-              color: _bgColor,
-              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_bgGradientStart, const Color(0xFF070A07)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: _borderColor,
+                width: (widget.runs == 4 || widget.runs == 6) ? 1.5 : 1,
+              ),
               boxShadow: _glow,
             ),
             child: Center(
               child: Text(
                 widget.runs.toString(),
-                style: GoogleFonts.spaceGrotesk(
+                style: GoogleFonts.oswald(
                   color: _textColor,
-                  fontSize: widget.hero ? 34 : 26,
-                  fontWeight: FontWeight.w800,
+                  fontSize: widget.hero ? 36 : 28,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -1179,7 +1201,7 @@ class _ActionBtn extends StatelessWidget {
         : CR.cardHigh;
     final iconColor = highlighted
         ? CR.green
-        : CR.text2;
+        : CR.t2;
 
     return compact
         ? GestureDetector(
@@ -1192,7 +1214,7 @@ class _ActionBtn extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: CR.cardHigh),
               ),
-              child: Icon(icon, color: CR.text3, size: 20),
+              child: Icon(icon, color: CR.t3, size: 20),
             ),
           )
         : Expanded(
@@ -1310,7 +1332,7 @@ class _WicketModalState extends State<_WicketModal> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: CR.text3,
+                  color: CR.t3,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1327,7 +1349,7 @@ class _WicketModalState extends State<_WicketModal> {
             const SizedBox(height: 16),
             const Text(
               'How out?',
-              style: TextStyle(color: CR.text2, fontSize: 13),
+              style: TextStyle(color: CR.t2, fontSize: 13),
             ),
             const SizedBox(height: 10),
             // Dismissal type chips
@@ -1360,7 +1382,7 @@ class _WicketModalState extends State<_WicketModal> {
                       style: GoogleFonts.inter(
                         color: isSelected
                             ? CR.red
-                            : CR.text1,
+                            : CR.t1,
                         fontWeight: isSelected
                             ? FontWeight.w700
                             : FontWeight.w500,
@@ -1378,7 +1400,7 @@ class _WicketModalState extends State<_WicketModal> {
               const SizedBox(height: 20),
               Text(
                 _selectedType!.requiresRunOutDetails ? 'Who effected the run out?' : 'Who fielded?',
-                style: const TextStyle(color: CR.text2, fontSize: 13),
+                style: const TextStyle(color: CR.t2, fontSize: 13),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -1405,7 +1427,7 @@ class _WicketModalState extends State<_WicketModal> {
                           Text(
                             p.jerseyDisplay,
                             style: GoogleFonts.spaceGrotesk(
-                              color: CR.text3,
+                              color: CR.t3,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1415,7 +1437,7 @@ class _WicketModalState extends State<_WicketModal> {
                             style: GoogleFonts.inter(
                               color: isSelected
                                   ? CR.green
-                                  : CR.text1,
+                                  : CR.t1,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1432,13 +1454,13 @@ class _WicketModalState extends State<_WicketModal> {
             const SizedBox(height: 20),
             const Text(
               'Next batter coming in:',
-              style: TextStyle(color: CR.text2, fontSize: 13),
+              style: TextStyle(color: CR.t2, fontSize: 13),
             ),
             const SizedBox(height: 10),
             if (widget.state.availableBatters.isEmpty)
               const Text(
                 'No more batters',
-                style: TextStyle(color: CR.text3),
+                style: TextStyle(color: CR.t3),
               )
             else
               Wrap(
@@ -1467,7 +1489,7 @@ class _WicketModalState extends State<_WicketModal> {
                         style: GoogleFonts.inter(
                           color: isSelected
                               ? CR.green
-                              : CR.text1,
+                              : CR.t1,
                           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                           fontSize: 13,
                         ),
@@ -1505,7 +1527,7 @@ class _WicketModalState extends State<_WicketModal> {
                   style: GoogleFonts.inter(
                     color: _selectedType != null
                         ? Colors.white
-                        : CR.text3,
+                        : CR.t3,
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
                   ),
@@ -1552,7 +1574,7 @@ class _BowlingChangeModal extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: CR.text3,
+                color: CR.t3,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1561,7 +1583,7 @@ class _BowlingChangeModal extends StatelessWidget {
           Text(
             'Who is bowling next?',
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
@@ -1578,14 +1600,14 @@ class _BowlingChangeModal extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: CR.cardHigh,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: CR.text3.withOpacity(0.3)),
+                    border: Border.all(color: CR.t3.withOpacity(0.3)),
                   ),
                   child: Column(
                     children: [
                       Text(
                         p.jerseyDisplay,
                         style: GoogleFonts.spaceGrotesk(
-                          color: CR.text3,
+                          color: CR.t3,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1594,7 +1616,7 @@ class _BowlingChangeModal extends StatelessWidget {
                       Text(
                         p.name.split(' ').first.toUpperCase(),
                         style: GoogleFonts.inter(
-                          color: CR.text1,
+                          color: CR.t1,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1628,11 +1650,11 @@ class _MoreMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: CR.text2, size: 20),
+      leading: Icon(icon, color: CR.t2, size: 20),
       title: Text(
         label,
         style: GoogleFonts.inter(
-          color: CR.text1,
+          color: CR.t1,
           fontSize: 14,
         ),
       ),
@@ -1717,7 +1739,7 @@ class _FullScorecardSheet extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             width: 40, height: 4,
-            decoration: BoxDecoration(color: CR.text3, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(color: CR.t3, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 16),
           Padding(
@@ -1727,14 +1749,14 @@ class _FullScorecardSheet extends StatelessWidget {
                 Text(
                   'SCORECARD',
                   style: GoogleFonts.inter(
-                    color: CR.text1, fontSize: 16, fontWeight: FontWeight.w800,
+                    color: CR.t1, fontSize: 16, fontWeight: FontWeight.w800,
                     letterSpacing: 1,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   state.battingTeamName,
-                  style: GoogleFonts.inter(color: CR.text3, fontSize: 13),
+                  style: GoogleFonts.inter(color: CR.t3, fontSize: 13),
                 ),
               ],
             ),
@@ -1868,7 +1890,7 @@ class _SCellH extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: GoogleFonts.inter(color: CR.text3, fontSize: 10, fontWeight: FontWeight.w700),
+        style: GoogleFonts.inter(color: CR.t3, fontSize: 10, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -1894,7 +1916,7 @@ class _ScorecardBattingRow extends StatelessWidget {
                 Text(
                   entry.name,
                   style: GoogleFonts.inter(
-                    color: entry.isOut ? CR.text2 : CR.text1,
+                    color: entry.isOut ? CR.t2 : CR.t1,
                     fontSize: 12, fontWeight: FontWeight.w600,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -1932,7 +1954,7 @@ class _ScorecardBowlingRow extends StatelessWidget {
           Expanded(
             child: Text(
               entry.name,
-              style: GoogleFonts.inter(color: CR.text1, fontSize: 12, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(color: CR.t1, fontSize: 12, fontWeight: FontWeight.w600),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -1961,7 +1983,7 @@ class _SCell extends StatelessWidget {
         text,
         textAlign: TextAlign.center,
         style: GoogleFonts.spaceGrotesk(
-          color: color ?? CR.text2,
+          color: color ?? CR.t2,
           fontSize: 12,
           fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
         ),

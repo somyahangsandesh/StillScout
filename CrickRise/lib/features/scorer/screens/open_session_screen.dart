@@ -70,7 +70,7 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
                 title: 'Casual game today',
                 subtitle: 'Quick match with whoever showed up',
                 badge: 'OVR 0.5×',
-                badgeColor: CR.text3,
+                badgeColor: CR.t3,
                 expanded: true,
                 expandedContent: _CasualOversSelector(
                   selected: _casualOvers,

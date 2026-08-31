@@ -29,7 +29,7 @@ class _ClubSetupScreenState extends State<ClubSetupScreen> {
               Text(
                 'Your club',
                 style: GoogleFonts.inter(
-                  color: CR.text1,
+                  color: CR.t1,
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
                 ),
@@ -37,7 +37,7 @@ class _ClubSetupScreenState extends State<ClubSetupScreen> {
               const SizedBox(height: 6),
               Text(
                 'Join an existing club or create your own.',
-                style: GoogleFonts.inter(color: CR.text2, fontSize: 14),
+                style: GoogleFonts.inter(color: CR.t2, fontSize: 14),
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 40),
 
@@ -73,10 +73,10 @@ class _ClubSetupScreenState extends State<ClubSetupScreen> {
                     child: Text(
                       'Skip for now',
                       style: GoogleFonts.inter(
-                        color: CR.text3,
+                        color: CR.t3,
                         fontSize: 14,
                         decoration: TextDecoration.underline,
-                        decorationColor: CR.text3,
+                        decorationColor: CR.t3,
                       ),
                     ),
                   ),
@@ -161,7 +161,7 @@ class _ClubCard extends StatelessWidget {
                 Text(
                   title,
                   style: GoogleFonts.inter(
-                    color: CR.text1,
+                    color: CR.t1,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -169,7 +169,7 @@ class _ClubCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: GoogleFonts.inter(color: CR.text2, fontSize: 13),
+                  style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
                 ),
               ],
             ),
@@ -186,7 +186,7 @@ class _ClubCard extends StatelessWidget {
               child: Text(
                 buttonLabel,
                 style: GoogleFonts.inter(
-                  color: CR.textInv,
+                  color: CR.inv,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -209,13 +209,13 @@ class _JoinClubForm extends StatelessWidget {
       children: [
         TextField(
           style: GoogleFonts.spaceGrotesk(
-            color: CR.text1,
+            color: CR.t1,
             fontSize: 18,
             letterSpacing: 4,
           ),
           decoration: InputDecoration(
             hintText: 'INVITE CODE',
-            hintStyle: GoogleFonts.inter(color: CR.text3, fontSize: 14),
+            hintStyle: GoogleFonts.inter(color: CR.t3, fontSize: 14),
             filled: true,
             fillColor: CR.card,
             border: OutlineInputBorder(
@@ -236,7 +236,7 @@ class _JoinClubForm extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
-                color: CR.textInv,
+                color: CR.inv,
               ),
             ),
           ),
@@ -246,7 +246,7 @@ class _JoinClubForm extends StatelessWidget {
           onPressed: onBack,
           child: Text(
             '← Back',
-            style: GoogleFonts.inter(color: CR.text2, fontSize: 14),
+            style: GoogleFonts.inter(color: CR.t2, fontSize: 14),
           ),
         ),
       ],
@@ -263,10 +263,10 @@ class _CreateClubForm extends StatelessWidget {
     return Column(
       children: [
         TextField(
-          style: GoogleFonts.inter(color: CR.text1, fontSize: 16),
+          style: GoogleFonts.inter(color: CR.t1, fontSize: 16),
           decoration: InputDecoration(
             hintText: 'Club name',
-            hintStyle: GoogleFonts.inter(color: CR.text3, fontSize: 16),
+            hintStyle: GoogleFonts.inter(color: CR.t3, fontSize: 16),
             filled: true,
             fillColor: CR.card,
             border: OutlineInputBorder(
@@ -286,7 +286,7 @@ class _CreateClubForm extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
-                color: CR.textInv,
+                color: CR.inv,
               ),
             ),
           ),
@@ -296,7 +296,7 @@ class _CreateClubForm extends StatelessWidget {
           onPressed: onBack,
           child: Text(
             '← Back',
-            style: GoogleFonts.inter(color: CR.text2, fontSize: 14),
+            style: GoogleFonts.inter(color: CR.t2, fontSize: 14),
           ),
         ),
       ],

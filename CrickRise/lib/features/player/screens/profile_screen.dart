@@ -123,7 +123,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             title: Text(
               'Me',
               style: GoogleFonts.inter(
-                color: CR.text1,
+                color: CR.t1,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -267,13 +267,24 @@ class _ProfileOvrCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: CR.card,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          stops: [0.0, 0.4, 1.0],
+          colors: [Color(0xFF0F1E10), Color(0xFF0A1308), Color(0xFF070A07)],
+        ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: CR.green.withOpacity(0.15), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: CR.green.withOpacity(0.07), blurRadius: 24, spreadRadius: -4, offset: const Offset(0, 8)),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
+            // Seam texture
+            Positioned.fill(child: CustomPaint(painter: SeamCurvePainter(opacity: 0.05))),
             // Jersey number watermark
             Positioned(
               right: -20,
@@ -281,7 +292,7 @@ class _ProfileOvrCard extends StatelessWidget {
               child: Text(
                 player.jerseyNumber?.toString() ?? '',
                 style: GoogleFonts.spaceGrotesk(
-                  color: CR.green.withOpacity(0.03),
+                  color: CR.green.withOpacity(0.025),
                   fontSize: 220,
                   fontWeight: FontWeight.w800,
                   height: 0.8,
@@ -307,24 +318,26 @@ class _ProfileOvrCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: CR.green.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: CR.green.withOpacity(0.2)),
                               ),
                               child: Text(
                                 player.role.displayName.toUpperCase(),
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.oswald(
                                   color: CR.green,
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 1.5,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               player.displayName,
-                              style: GoogleFonts.inter(
-                                color: CR.text1,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
+                              style: GoogleFonts.oswald(
+                                color: CR.t1,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -332,7 +345,7 @@ class _ProfileOvrCard extends StatelessWidget {
                             Text(
                               player.crDisplay,
                               style: GoogleFonts.spaceGrotesk(
-                                color: CR.text3,
+                                color: CR.t3,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 1,
@@ -348,61 +361,47 @@ class _ProfileOvrCard extends StatelessWidget {
                   if (!player.hasElder && player.hasHeritage)
                     const _MicroBadge('HERITAGE', CR.blue),
                                   if (rating.hasHotStreak)
-                                    _MicroBadge('🔥 ${rating.hotStreakCount} streak', CR.orange),
+                                    _MicroBadge('🔥 ${rating.hotStreakCount} streak', CR.amber),
                                 ],
                               ),
                             ],
                           ],
                         ),
                       ),
-                      // OVR with decorative glow ring
+                      // OVR — gold ShaderMask
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
                             'OVR',
-                            style: GoogleFonts.inter(
-                              color: CR.gold.withOpacity(0.6),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 2,
+                            style: GoogleFonts.oswald(
+                              color: CR.gold.withOpacity(0.5),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 3,
                             ),
                           ),
-                          Container(
-                            width: 90,
-                            height: 90,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: CR.gold.withOpacity(0.15),
-                                width: 1,
-                              ),
-                              gradient: RadialGradient(
-                                colors: [
-                                  CR.gold.withOpacity(0.08),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                            child: Center(
-                              child: AnimatedBuilder(
-                                animation: ovrAnim,
-                                builder: (_, __) {
-                                  final v =
-                                      (50 + (rating.ovr - 50) * ovrAnim.value)
-                                          .round();
-                                  return Text(
-                                    v.toString(),
-                                    style: GoogleFonts.spaceGrotesk(
-                                      color: CR.gold,
-                                      fontSize: 56,
-                                      fontWeight: FontWeight.w800,
-                                      height: 0.9,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                          AnimatedBuilder(
+                            animation: ovrAnim,
+                            builder: (_, __) {
+                              final v = (50 + (rating.ovr - 50) * ovrAnim.value).round();
+                              return ShaderMask(
+                                shaderCallback: (bounds) => const LinearGradient(
+                                  colors: CR.goldGradient,
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ).createShader(bounds),
+                                child: Text(
+                                  v.toString(),
+                                  style: GoogleFonts.spaceGrotesk(
+                                    color: Colors.white,
+                                    fontSize: 88,
+                                    fontWeight: FontWeight.w900,
+                                    height: 0.9,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -488,7 +487,7 @@ class _ToggleItem extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.inter(
-              color: selected ? CR.text1 : CR.text3,
+              color: selected ? CR.t1 : CR.t3,
               fontSize: 15,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
@@ -544,7 +543,7 @@ class _FormatFilter extends StatelessWidget {
               child: Text(
                 label,
                 style: GoogleFonts.inter(
-                  color: isSelected ? CR.textInv : CR.text3,
+                  color: isSelected ? CR.inv : CR.t3,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -588,7 +587,7 @@ class _PlayerInsightsSection extends StatelessWidget {
                   Text(
                     'PLAYER INSIGHTS',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 2,
@@ -617,7 +616,7 @@ class _PlayerInsightsSection extends StatelessWidget {
                     expanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: CR.text3,
+                    color: CR.t3,
                     size: 18,
                   ),
                 ],
@@ -640,7 +639,7 @@ class _PlayerInsightsSection extends StatelessWidget {
                   const _InsightRow(
                     label: 'Toss: Win fielding',
                     value: '55% win rate',
-                    valueColor: CR.text2,
+                    valueColor: CR.t2,
                   ),
                   const SizedBox(height: 12),
                   Container(height: 1, color: CR.cardHigh),
@@ -649,7 +648,7 @@ class _PlayerInsightsSection extends StatelessWidget {
                   Text(
                     'Wicket Types',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1,
@@ -673,7 +672,7 @@ class _PlayerInsightsSection extends StatelessWidget {
                   Text(
                     'Strike Rate by Phase',
                     style: GoogleFonts.inter(
-                      color: CR.text3,
+                      color: CR.t3,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1,
@@ -740,13 +739,13 @@ class _InsightRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: GoogleFonts.inter(color: CR.text2, fontSize: 13),
+              style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
             ),
           ),
           Text(
             value,
             style: GoogleFonts.inter(
-              color: valueColor ?? CR.text1,
+              color: valueColor ?? CR.t1,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -775,13 +774,13 @@ class _WicketChip extends StatelessWidget {
         children: [
           Text(
             type,
-            style: GoogleFonts.inter(color: CR.text2, fontSize: 11),
+            style: GoogleFonts.inter(color: CR.t2, fontSize: 11),
           ),
           const SizedBox(width: 6),
           Text(
             pct,
             style: GoogleFonts.inter(
-              color: CR.text1,
+              color: CR.t1,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -816,7 +815,7 @@ class _PhaseCell extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: CR.text3,
+              color: CR.t3,
               fontSize: 9,
               fontWeight: FontWeight.w600,
               height: 1.3,
@@ -826,7 +825,7 @@ class _PhaseCell extends StatelessWidget {
           Text(
             sr,
             style: GoogleFonts.spaceGrotesk(
-              color: highlight ? CR.green : CR.text1,
+              color: highlight ? CR.green : CR.t1,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -834,7 +833,7 @@ class _PhaseCell extends StatelessWidget {
           Text(
             'SR',
             style: GoogleFonts.inter(
-              color: CR.text3,
+              color: CR.t3,
               fontSize: 9,
               fontWeight: FontWeight.w600,
               letterSpacing: 1,
@@ -907,7 +906,7 @@ class _MiniStat extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
@@ -917,7 +916,7 @@ class _MiniStat extends StatelessWidget {
         Text(
           value,
           style: GoogleFonts.spaceGrotesk(
-            color: CR.text2,
+            color: CR.t2,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -1016,13 +1015,13 @@ class _PosRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Text('$rank  $jersey', style: GoogleFonts.spaceGrotesk(color: CR.text3, fontSize: 11, fontWeight: FontWeight.w600)),
+                  Text('$rank  $jersey', style: GoogleFonts.spaceGrotesk(color: CR.t3, fontSize: 11, fontWeight: FontWeight.w600)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       team.isNotEmpty ? '$name · $team' : name,
                       style: GoogleFonts.inter(
-                        color: highlighted ? CR.text1 : CR.text2,
+                        color: highlighted ? CR.t1 : CR.t2,
                         fontWeight: highlighted ? FontWeight.w700 : FontWeight.w500,
                         fontSize: 14,
                       ),
@@ -1031,13 +1030,13 @@ class _PosRow extends StatelessWidget {
                   ),
                 ]),
                 const SizedBox(height: 3),
-                Text(sub, style: GoogleFonts.inter(color: highlighted ? CR.green : CR.text3, fontSize: 11, fontWeight: highlighted ? FontWeight.w600 : FontWeight.w400)),
+                Text(sub, style: GoogleFonts.inter(color: highlighted ? CR.green : CR.t3, fontSize: 11, fontWeight: highlighted ? FontWeight.w600 : FontWeight.w400)),
               ],
             ),
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(ovr.toString(), style: GoogleFonts.spaceGrotesk(color: highlighted ? CR.gold : CR.text2, fontSize: highlighted ? 30 : 22, fontWeight: FontWeight.w700, height: 1)),
-            Text('OVR', style: GoogleFonts.inter(color: CR.text3, fontSize: 9, letterSpacing: 1.2, fontWeight: FontWeight.w600)),
+            Text(ovr.toString(), style: GoogleFonts.spaceGrotesk(color: highlighted ? CR.gold : CR.t2, fontSize: highlighted ? 30 : 22, fontWeight: FontWeight.w700, height: 1)),
+            Text('OVR', style: GoogleFonts.inter(color: CR.t3, fontSize: 9, letterSpacing: 1.2, fontWeight: FontWeight.w600)),
           ]),
         ],
       ),
@@ -1062,7 +1061,7 @@ class _RecentMatchesList extends StatelessWidget {
       children: matches.asMap().entries.map((e) {
         final m = e.value;
         final color = m.positive == null
-            ? CR.text3
+            ? CR.t3
             : m.positive!
                 ? CR.green
                 : CR.red;
@@ -1080,12 +1079,12 @@ class _RecentMatchesList extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Text(m.opponent, style: GoogleFonts.inter(color: CR.text1, fontSize: 13, fontWeight: FontWeight.w600)),
+                    Text(m.opponent, style: GoogleFonts.inter(color: CR.t1, fontSize: 13, fontWeight: FontWeight.w600)),
                     const SizedBox(width: 8),
                     Text(m.result, style: GoogleFonts.inter(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
                   ]),
                   const SizedBox(height: 3),
-                  Text(m.stats, style: GoogleFonts.inter(color: CR.text2, fontSize: 12)),
+                  Text(m.stats, style: GoogleFonts.inter(color: CR.t2, fontSize: 12)),
                 ]),
               ),
             ],
@@ -1186,7 +1185,7 @@ class _MilestoneChips extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.inter(
-                color: champion ? CR.gold : CR.text2,
+                color: champion ? CR.gold : CR.t2,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -1227,7 +1226,7 @@ class _CareerTab extends StatelessWidget {
               Text(
                 'CAREER SUMMARY',
                 style: GoogleFonts.inter(
-                  color: CR.text3,
+                  color: CR.t3,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
@@ -1283,7 +1282,7 @@ class _CareerTab extends StatelessWidget {
         Text(
           'CAREER BY SEASON',
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 2,
@@ -1357,7 +1356,7 @@ class _SeasonRowWidget extends StatelessWidget {
             child: Text(
               data.year,
               style: GoogleFonts.spaceGrotesk(
-                color: isCurrent ? CR.green : CR.text3,
+                color: isCurrent ? CR.green : CR.t3,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),
@@ -1374,7 +1373,7 @@ class _SeasonRowWidget extends StatelessWidget {
                       child: Text(
                         data.club,
                         style: GoogleFonts.inter(
-                          color: isCurrent ? CR.text1 : CR.text2,
+                          color: isCurrent ? CR.t1 : CR.t2,
                           fontSize: 13,
                           fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
                         ),
@@ -1389,7 +1388,7 @@ class _SeasonRowWidget extends StatelessWidget {
                 Text(
                   '${data.runs}R  ${data.wickets}W',
                   style: GoogleFonts.inter(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 11,
                   ),
                 ),
@@ -1403,7 +1402,7 @@ class _SeasonRowWidget extends StatelessWidget {
               Text(
                 'OVR ${data.ovrFrom}→${data.ovrTo}',
                 style: GoogleFonts.spaceGrotesk(
-                  color: isCurrent ? CR.gold : CR.text3,
+                  color: isCurrent ? CR.gold : CR.t3,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1453,7 +1452,7 @@ class _FormSparkline extends StatelessWidget {
             Text(
               'FORM',
               style: GoogleFonts.inter(
-                color: CR.text3,
+                color: CR.t3,
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.5,
@@ -1462,7 +1461,7 @@ class _FormSparkline extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               'last 5 matches',
-              style: GoogleFonts.inter(color: CR.text3, fontSize: 9),
+              style: GoogleFonts.inter(color: CR.t3, fontSize: 9),
             ),
           ],
         ),
@@ -1740,7 +1739,7 @@ class _ProUpsellSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: CR.text3,
+                  color: CR.t3,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1762,7 +1761,7 @@ class _ProUpsellSheet extends StatelessWidget {
               Text(
                 'YOUR OVR BREAKDOWN',
                 style: GoogleFonts.inter(
-                  color: CR.text1,
+                  color: CR.t1,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.5,
@@ -1771,7 +1770,7 @@ class _ProUpsellSheet extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'See exactly what\'s driving your rating.',
-                style: GoogleFonts.inter(color: CR.text2, fontSize: 14),
+                style: GoogleFonts.inter(color: CR.t2, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -1804,7 +1803,7 @@ class _ProUpsellSheet extends StatelessWidget {
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: CR.gold,
-                    foregroundColor: CR.textInv,
+                    foregroundColor: CR.inv,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1814,14 +1813,14 @@ class _ProUpsellSheet extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
-                          color: CR.textInv,
+                          color: CR.inv,
                         ),
                       ),
                       Text(
                         '¥1,980/year after',
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          color: CR.textInv.withOpacity(0.75),
+                          color: CR.inv.withOpacity(0.75),
                         ),
                       ),
                     ],
@@ -1836,7 +1835,7 @@ class _ProUpsellSheet extends StatelessWidget {
                 child: Text(
                   'Not now',
                   style: GoogleFonts.inter(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 14,
                   ),
                 ),
@@ -1862,7 +1861,7 @@ class _LockedDomainItem extends StatelessWidget {
         Text(
           label,
           style: GoogleFonts.inter(
-            color: CR.text3,
+            color: CR.t3,
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
@@ -1870,11 +1869,11 @@ class _LockedDomainItem extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         ImageFiltered(
-          imageFilter: const ColorFilter.mode(CR.text3, BlendMode.srcIn),
+          imageFilter: const ColorFilter.mode(CR.t3, BlendMode.srcIn),
           child: Text(
             value,
             style: GoogleFonts.spaceGrotesk(
-              color: CR.text3,
+              color: CR.t3,
               fontSize: 28,
               fontWeight: FontWeight.w700,
               height: 1,

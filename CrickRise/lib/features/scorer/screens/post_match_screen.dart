@@ -83,7 +83,7 @@ class PostMatchScreen extends ConsumerWidget {
                     Text(
                       winnerName,
                       style: GoogleFonts.spaceGrotesk(
-                        color: CR.text1,
+                        color: CR.t1,
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
@@ -93,7 +93,7 @@ class PostMatchScreen extends ConsumerWidget {
                     Text(
                       'beat $loserName by $margin',
                       style: GoogleFonts.inter(
-                        color: CR.text2,
+                        color: CR.t2,
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -171,7 +171,7 @@ class PostMatchScreen extends ConsumerWidget {
                           Text(
                             'Confirm result to update all player ratings',
                             style: GoogleFonts.inter(
-                              color: CR.text2,
+                              color: CR.t2,
                               fontSize: 13,
                             ),
                           ),
@@ -361,7 +361,7 @@ class _AwardCard extends StatelessWidget {
                     Text(
                       playerLine,
                       style: GoogleFonts.inter(
-                        color: CR.text1,
+                        color: CR.t1,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -369,7 +369,7 @@ class _AwardCard extends StatelessWidget {
                     Text(
                       statsLine,
                       style: GoogleFonts.inter(
-                        color: CR.text2,
+                        color: CR.t2,
                         fontSize: 12,
                       ),
                     ),
@@ -405,7 +405,7 @@ class _AwardCard extends StatelessWidget {
                         child: Text(
                           'CONFIRM',
                           style: GoogleFonts.inter(
-                            color: CR.textInv,
+                            color: CR.inv,
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                           ),
@@ -462,7 +462,7 @@ class _VerdictCard extends StatelessWidget {
                 Text(
                   'THE VERDICT',
                   style: GoogleFonts.inter(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.5,
@@ -472,7 +472,7 @@ class _VerdictCard extends StatelessWidget {
                 Text(
                   playerName.toUpperCase(),
                   style: GoogleFonts.inter(
-                    color: CR.text3,
+                    color: CR.t3,
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.8,
@@ -484,7 +484,7 @@ class _VerdictCard extends StatelessWidget {
             Text(
               verdictText,
               style: GoogleFonts.inter(
-                color: CR.text1,
+                color: CR.t1,
                 fontSize: 15,
                 height: 1.5,
               ),
@@ -515,7 +515,7 @@ class _ShareResultCard extends StatelessWidget {
           Text(
             'SHARE THE RESULT',
             style: GoogleFonts.inter(
-              color: CR.text3,
+              color: CR.t3,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 2,
@@ -534,7 +534,7 @@ class _ShareResultCard extends StatelessWidget {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: CR.text2,
+                    foregroundColor: CR.t2,
                     side: const BorderSide(color: CR.cardHigh),
                   ),
                   child: const Text('COPY LINK'),
@@ -552,7 +552,7 @@ class _ShareResultCard extends StatelessWidget {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: CR.green,
-                    foregroundColor: CR.textInv,
+                    foregroundColor: CR.inv,
                   ),
                   icon: const Icon(Icons.share, size: 16),
                   label: const Text('SHARE CARD'),
@@ -595,8 +595,8 @@ class _ScoreRow extends StatelessWidget {
               teamName,
               style: GoogleFonts.inter(
                 color: isWinner
-                    ? CR.text1
-                    : CR.text2,
+                    ? CR.t1
+                    : CR.t2,
                 fontSize: 15,
                 fontWeight: isWinner ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -607,8 +607,8 @@ class _ScoreRow extends StatelessWidget {
           score,
           style: GoogleFonts.spaceGrotesk(
             color: isWinner
-                ? CR.text1
-                : CR.text2,
+                ? CR.t1
+                : CR.t2,
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),

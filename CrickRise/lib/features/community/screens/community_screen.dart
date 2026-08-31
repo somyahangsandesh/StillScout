@@ -48,10 +48,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
                 children: [
                   Text(
                     'THE COMMUNITY',
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.oswald(
                       color: CR.t1,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1,
                     ),
                   ).animate().fadeIn(duration: 300.ms),
                   const Spacer(),
@@ -232,64 +233,73 @@ class _PlayerRow extends StatelessWidget {
     required this.isMe,
   });
 
+  Color? _podiumStrip(int r) {
+    if (r == 1) return CR.gold;
+    if (r == 2) return const Color(0xFFB0BEC5); // silver
+    if (r == 3) return const Color(0xFFCD7F32); // bronze
+    return null;
+  }
+
   Widget _rankIndicator(int r) {
     if (r == 1) {
-      return const Text(
-        '🥇',
-        style: TextStyle(fontSize: 16),
-        textAlign: TextAlign.center,
-      );
+      return const Text('🥇', style: TextStyle(fontSize: 16), textAlign: TextAlign.center);
     }
     if (r == 2) {
-      return const Text(
-        '🥈',
-        style: TextStyle(fontSize: 16),
-        textAlign: TextAlign.center,
-      );
+      return const Text('🥈', style: TextStyle(fontSize: 16), textAlign: TextAlign.center);
     }
     if (r == 3) {
-      return const Text(
-        '🥉',
-        style: TextStyle(fontSize: 16),
-        textAlign: TextAlign.center,
-      );
+      return const Text('🥉', style: TextStyle(fontSize: 16), textAlign: TextAlign.center);
     }
     return Text(
       '#$r',
-      style: GoogleFonts.spaceGrotesk(
-        color: CR.t3,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-      ),
+      style: GoogleFonts.spaceGrotesk(color: CR.t3, fontSize: 12, fontWeight: FontWeight.w700),
       textAlign: TextAlign.center,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    Color medalTint() {
+    final strip = isMe ? CR.green : _podiumStrip(rank);
+
+    Color rowBg() {
       if (isMe) return CR.green.withOpacity(0.06);
       if (rank == 1) return CR.gold.withOpacity(0.04);
-      if (rank == 2) return const Color(0xFF9E9E9E).withOpacity(0.04);
-      if (rank == 3) return const Color(0xFF8D4A1F).withOpacity(0.04);
+      if (rank == 2) return const Color(0xFF9E9E9E).withOpacity(0.03);
+      if (rank == 3) return const Color(0xFF8D4A1F).withOpacity(0.03);
       return Colors.transparent;
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: medalTint(),
-        border: isMe
-            ? const Border(left: BorderSide(color: CR.green, width: 3))
-            : null,
+      margin: const EdgeInsets.only(bottom: 1),
+      padding: EdgeInsets.only(
+        left: strip != null ? 0 : 12,
+        right: 12,
+        top: 12,
+        bottom: 12,
       ),
+      decoration: BoxDecoration(color: rowBg()),
       child: Row(
         children: [
-          SizedBox(
-            width: 28,
-            child: _rankIndicator(rank),
-          ),
+          // Podium/You accent strip
+          if (strip != null)
+            Container(
+              width: 3,
+              height: 48,
+              margin: const EdgeInsets.only(right: 10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isMe
+                      ? CR.greenGradient
+                      : [strip, strip.withOpacity(0.3)],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            )
+          else
+            const SizedBox(width: 13),
+          SizedBox(width: 28, child: _rankIndicator(rank)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,10 +309,11 @@ class _PlayerRow extends StatelessWidget {
                     Flexible(
                       child: Text(
                         entry.name,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.oswald(
                           color: isMe ? CR.t1 : CR.t2,
-                          fontSize: 14,
-                          fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 15,
+                          fontWeight: isMe ? FontWeight.w500 : FontWeight.w400,
+                          letterSpacing: 0.3,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -315,10 +326,7 @@ class _PlayerRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${entry.crNum}  ·  ${entry.team}',
-                  style: GoogleFonts.inter(
-                    color: CR.t3,
-                    fontSize: 11,
-                  ),
+                  style: GoogleFonts.inter(color: CR.t3, fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -330,7 +338,7 @@ class _PlayerRow extends StatelessWidget {
               Text(
                 value.toString(),
                 style: GoogleFonts.spaceGrotesk(
-                  color: isMe ? CR.gold : CR.t2,
+                  color: isMe ? CR.gold : (rank <= 3 ? CR.t1 : CR.t2),
                   fontSize: rank <= 3 ? 22 : 18,
                   fontWeight: FontWeight.w700,
                   height: 1,

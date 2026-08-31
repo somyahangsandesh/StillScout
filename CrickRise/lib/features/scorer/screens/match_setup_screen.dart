@@ -206,18 +206,18 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         const SizedBox(height: 8),
         const Text(
           'Optional — you can skip these',
-          style: TextStyle(color: CR.text2),
+          style: TextStyle(color: CR.t2),
         ),
         const SizedBox(height: 32),
         TextField(
           controller: _teamAController,
-          style: const TextStyle(color: CR.text1),
+          style: const TextStyle(color: CR.t1),
           decoration: const InputDecoration(labelText: 'Your team name'),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _teamBController,
-          style: const TextStyle(color: CR.text1),
+          style: const TextStyle(color: CR.t1),
           decoration: const InputDecoration(labelText: 'Opponent team name'),
         ),
       ],
@@ -254,7 +254,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
             children: [
               const Text(
                 'Overs per side:',
-                style: TextStyle(color: CR.text2),
+                style: TextStyle(color: CR.t2),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -271,7 +271,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
               Text(
                 '$_customOvers',
                 style: GoogleFonts.spaceGrotesk(
-                  color: CR.text1,
+                  color: CR.t1,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -303,7 +303,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         const SizedBox(height: 32),
         const Text(
           'Who won the toss?',
-          style: TextStyle(color: CR.text2),
+          style: TextStyle(color: CR.t2),
         ),
         const SizedBox(height: 12),
         Row(
@@ -328,7 +328,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
         const SizedBox(height: 24),
         const Text(
           'Decision?',
-          style: TextStyle(color: CR.text2),
+          style: TextStyle(color: CR.t2),
         ),
         const SizedBox(height: 12),
         Row(
@@ -370,7 +370,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
           style: TextStyle(
             color: _selectedPlayers.length == 11
                 ? CR.green
-                : CR.text2,
+                : CR.t2,
           ),
         ),
         const SizedBox(height: 16),
@@ -410,7 +410,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                       Text(
                         p.jerseyDisplay,
                         style: GoogleFonts.spaceGrotesk(
-                          color: CR.text3,
+                          color: CR.t3,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -420,7 +420,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                         child: Text(
                           p.name,
                           style: GoogleFonts.inter(
-                            color: CR.text1,
+                            color: CR.t1,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -429,7 +429,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                       Text(
                         p.role.shortName,
                         style: const TextStyle(
-                          color: CR.text3,
+                          color: CR.t3,
                           fontSize: 11,
                         ),
                       ),
@@ -440,7 +440,7 @@ class _MatchSetupScreenState extends ConsumerState<MatchSetupScreen> {
                             : Icons.circle_outlined,
                         color: isSelected
                             ? CR.green
-                            : CR.text3,
+                            : CR.t3,
                         size: 20,
                       ),
                     ],
@@ -539,7 +539,7 @@ class _MatchTypeCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       color: selected
                           ? CR.green
-                          : CR.text1,
+                          : CR.t1,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
@@ -548,7 +548,7 @@ class _MatchTypeCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      color: CR.text2,
+                      color: CR.t2,
                       fontSize: 12,
                     ),
                   ),
@@ -601,7 +601,7 @@ class _FormatOption extends StatelessWidget {
                 style: GoogleFonts.inter(
                   color: selected
                       ? CR.green
-                      : CR.text1,
+                      : CR.t1,
                   fontSize: 15,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
@@ -652,7 +652,7 @@ class _TossButton extends StatelessWidget {
             style: GoogleFonts.inter(
               color: selected
                   ? CR.green
-                  : CR.text1,
+                  : CR.t1,
               fontSize: 14,
               fontWeight: FontWeight.w700,
             ),
@@ -679,14 +679,14 @@ class _ReviewRow extends StatelessWidget {
             width: 100,
             child: Text(
               label,
-              style: const TextStyle(color: CR.text2),
+              style: const TextStyle(color: CR.t2),
             ),
           ),
           Expanded(
             child: Text(
               value,
               style: GoogleFonts.inter(
-                color: CR.text1,
+                color: CR.t1,
                 fontWeight: FontWeight.w600,
               ),
             ),

@@ -144,7 +144,7 @@ class _CodeEntryViewState extends State<_CodeEntryView> {
   void _submit() {
     final code = _ctrl.text.trim().toUpperCase();
     if (code == _kOrganizerAccessCode) {
-      context.go('/organizer?new=true');
+      context.go('/organizer/setup');
     } else {
       setState(() => _wrong = true);
       Future.delayed(const Duration(seconds: 2), () {

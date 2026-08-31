@@ -45,11 +45,11 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             Text(
               'CRICKRISE',
-              style: GoogleFonts.spaceGrotesk(
+              style: GoogleFonts.oswald(
                 color: CR.green,
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 3,
+                fontSize: 36,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 4,
               ),
             ).animate().fadeIn(duration: 600.ms),
             const SizedBox(height: 20),
