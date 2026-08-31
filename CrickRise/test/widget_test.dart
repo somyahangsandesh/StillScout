@@ -13,7 +13,6 @@ void main() {
     expect(find.text('CRICKRISE'), findsOneWidget);
     expect(find.textContaining('Warming'), findsOneWidget);
 
-    // Drain splash timers so the test exits cleanly.
-    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(milliseconds: 4500));
   });
 }
