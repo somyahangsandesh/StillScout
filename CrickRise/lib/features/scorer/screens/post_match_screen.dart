@@ -46,7 +46,8 @@ class PostMatchScreen extends ConsumerWidget {
       cityName: ctx.city.name,
       countryName: ctx.country.name,
       countryFlag: ctx.country.flag,
-      heritage: ctx.heritage,
+      homeCountryName: ctx.homeCountry.name,
+      homeCountryFlag: ctx.homeCountry.flag,
       shareUrl: 'https://crickrise.app/s/${ctx.squad.inviteSlug}',
       storyNumber: 13,
     );

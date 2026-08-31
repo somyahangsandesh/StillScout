@@ -7,17 +7,18 @@ class AppContext {
   final String countryCode;
   final String cityId;
   final SquadInfo squad;
-  final HeritageTag heritage;
+  final String homeCountryCode;
 
   const AppContext({
     required this.countryCode,
     required this.cityId,
     required this.squad,
-    required this.heritage,
+    required this.homeCountryCode,
   });
 
   HostCountry get country => DiasporaData.countryByCode(countryCode)!;
   HostCity get city => DiasporaData.cityById(cityId)!;
+  HomeCountry get homeCountry => DiasporaData.homeCountryByCode(homeCountryCode)!;
 
   int get sundayMatchesNearby => DiasporaData.sundayMatchesInCountry(countryCode);
 
@@ -25,13 +26,13 @@ class AppContext {
     String? countryCode,
     String? cityId,
     SquadInfo? squad,
-    HeritageTag? heritage,
+    String? homeCountryCode,
   }) {
     return AppContext(
       countryCode: countryCode ?? this.countryCode,
       cityId: cityId ?? this.cityId,
       squad: squad ?? this.squad,
-      heritage: heritage ?? this.heritage,
+      homeCountryCode: homeCountryCode ?? this.homeCountryCode,
     );
   }
 }
@@ -42,7 +43,7 @@ class AppContextNotifier extends StateNotifier<AppContext> {
           countryCode: 'JP',
           cityId: 'okinawa',
           squad: DiasporaData.defaultSquad,
-          heritage: HeritageTag.nepali,
+          homeCountryCode: 'NP',
         ));
 
   void setLocation(String countryCode, String cityId) {
@@ -63,8 +64,8 @@ class AppContextNotifier extends StateNotifier<AppContext> {
     );
   }
 
-  void setHeritage(HeritageTag heritage) {
-    state = state.copyWith(heritage: heritage);
+  void setHomeCountry(String code) {
+    state = state.copyWith(homeCountryCode: code);
   }
 }
 

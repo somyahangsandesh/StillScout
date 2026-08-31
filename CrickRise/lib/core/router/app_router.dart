@@ -30,13 +30,12 @@ import '../../features/scorer/screens/witness_screen.dart';
 import '../../features/story/screens/sunday_story_screen.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/welcome',
+  initialLocation: '/splash',
   debugLogDiagnostics: false,
   routes: [
-    // Skip splash — instant redirect so users never sit on a loading bar
     GoRoute(
       path: '/',
-      redirect: (context, state) => '/welcome',
+      redirect: (context, state) => '/splash',
     ),
     GoRoute(
       path: '/splash',

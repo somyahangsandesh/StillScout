@@ -103,7 +103,7 @@ class SundayStoryCard extends StatelessWidget {
                           children: [
                             CRBadge('Won by ${story.margin}', color: CR.brass),
                             const SizedBox(height: 6),
-                            Text(story.heritage.label.toUpperCase(),
+                            Text(story.homeCountryName.toUpperCase(),
                                 style: CRType.overline(size: 7, color: CR.fog)),
                           ],
                         ),

@@ -216,7 +216,7 @@ class _CityPulse extends StatelessWidget {
                   style: CRType.body(weight: FontWeight.w600, size: 15),
                 ),
                 Text(
-                  'Across ${ctx.country.name} · ${ctx.heritage.label} crews playing abroad',
+                  'Across ${ctx.country.name} · ${ctx.homeCountry.flag} ${ctx.homeCountry.name} crews abroad',
                   style: CRType.caption(size: 12),
                 ),
               ],

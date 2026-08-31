@@ -16,7 +16,8 @@ class SundayStory {
   final String cityName;
   final String countryName;
   final String countryFlag;
-  final HeritageTag heritage;
+  final String homeCountryName;
+  final String homeCountryFlag;
   final String shareUrl;
   final int storyNumber;
 
@@ -35,7 +36,8 @@ class SundayStory {
     required this.cityName,
     required this.countryName,
     required this.countryFlag,
-    required this.heritage,
+    required this.homeCountryName,
+    required this.homeCountryFlag,
     required this.shareUrl,
     required this.storyNumber,
   });
@@ -57,6 +59,7 @@ class SundayStory {
     final s = squad ?? DiasporaData.defaultSquad;
     final country = DiasporaData.countryByCode(s.countryCode)!;
     final city = DiasporaData.cityById(s.cityId)!;
+    final home = DiasporaData.homeCountryByCode(s.homeCountryCode)!;
     return SundayStory(
       id: 'story-12',
       matchDate: DateTime.now(),
@@ -72,7 +75,8 @@ class SundayStory {
       cityName: city.name,
       countryName: country.name,
       countryFlag: country.flag,
-      heritage: s.heritage,
+      homeCountryName: home.name,
+      homeCountryFlag: home.flag,
       shareUrl: 'https://crickrise.app/s/${s.inviteSlug}',
       storyNumber: 12,
     );

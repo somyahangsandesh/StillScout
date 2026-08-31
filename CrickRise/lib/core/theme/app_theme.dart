@@ -143,30 +143,30 @@ class CrickRiseColors {
   static const List<Color> primaryGradient = CR.greenGradient;
 }
 
-/// Playfair editorial + JetBrains scoreboard + Outfit body.
+/// Instrument Serif headlines + DM Sans body + Barlow Condensed scores.
 class CRType {
   CRType._();
 
   static TextStyle display({double size = 42, Color color = CR.chalk, FontStyle style = FontStyle.normal}) =>
-      GoogleFonts.playfairDisplay(color: color, fontSize: size, height: 1.05, fontWeight: FontWeight.w700, fontStyle: style);
+      GoogleFonts.instrumentSerif(color: color, fontSize: size, height: 1.05, fontWeight: FontWeight.w400, fontStyle: style);
 
   static TextStyle headline({double size = 28, Color color = CR.chalk}) =>
-      GoogleFonts.playfairDisplay(color: color, fontSize: size, height: 1.1, fontWeight: FontWeight.w600);
+      GoogleFonts.instrumentSerif(color: color, fontSize: size, height: 1.1, fontWeight: FontWeight.w400);
 
   static TextStyle score({double size = 48, Color color = CR.brass}) =>
-      GoogleFonts.jetBrainsMono(color: color, fontSize: size, fontWeight: FontWeight.w700, height: 0.95);
+      GoogleFonts.barlowCondensed(color: color, fontSize: size, fontWeight: FontWeight.w700, height: 0.92, letterSpacing: 0.5);
 
   static TextStyle body({double size = 15, Color color = CR.chalk, FontWeight weight = FontWeight.w400}) =>
-      GoogleFonts.outfit(color: color, fontSize: size, fontWeight: weight, height: 1.5);
+      GoogleFonts.dmSans(color: color, fontSize: size, fontWeight: weight, height: 1.5);
 
   static TextStyle label({double size = 13, Color color = CR.chalk}) =>
-      GoogleFonts.outfit(color: color, fontSize: size, fontWeight: FontWeight.w600, letterSpacing: 0.8);
+      GoogleFonts.dmSans(color: color, fontSize: size, fontWeight: FontWeight.w600, letterSpacing: 0.6);
 
   static TextStyle overline({double size = 10, Color color = CR.ink}) =>
-      GoogleFonts.outfit(color: color, fontSize: size, fontWeight: FontWeight.w600, letterSpacing: 2.4);
+      GoogleFonts.dmSans(color: color, fontSize: size, fontWeight: FontWeight.w600, letterSpacing: 2.2);
 
   static TextStyle caption({double size = 13, Color color = CR.ink}) =>
-      GoogleFonts.outfit(color: color, fontSize: size, height: 1.45);
+      GoogleFonts.dmSans(color: color, fontSize: size, height: 1.45);
 }
 
 class AppTheme {

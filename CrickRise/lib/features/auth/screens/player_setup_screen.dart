@@ -6,6 +6,7 @@ import '../../../core/models/community.dart';
 import '../../../core/providers/app_context_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/cr_matchday.dart';
+import '../../../core/widgets/cr_select_sheet.dart';
 
 class PlayerSetupScreen extends ConsumerStatefulWidget {
   const PlayerSetupScreen({super.key});
@@ -18,9 +19,9 @@ class _PlayerSetupScreenState extends ConsumerState<PlayerSetupScreen> {
   final _name = TextEditingController();
   String? _role;
   String _jersey = '';
-  String _countryCode = 'JP';
+  String _hostCountryCode = 'JP';
   String _cityId = 'okinawa';
-  HeritageTag _heritage = HeritageTag.nepali;
+  String _homeCountryCode = 'NP';
 
   static const _roles = ['BATTER', 'BOWLER', 'ALL-ROUNDER', 'KEEPER', 'BAT AR'];
 
@@ -32,10 +33,68 @@ class _PlayerSetupScreenState extends ConsumerState<PlayerSetupScreen> {
 
   bool get _ok => _name.text.trim().isNotEmpty && _role != null;
 
+  HostCountry get _host => DiasporaData.countryByCode(_hostCountryCode)!;
+  HostCity get _city => DiasporaData.cityById(_cityId)!;
+  HomeCountry get _home => DiasporaData.homeCountryByCode(_homeCountryCode)!;
+
+  Future<void> _pickHostCountry() async {
+    final picked = await showCRSelectSheet<String>(
+      context: context,
+      title: 'Where do you play?',
+      selected: _hostCountryCode,
+      items: DiasporaData.countries
+          .map((c) => CRSelectItem(
+                value: c.code,
+                label: c.name,
+                leading: c.flag,
+                subtitle: '${c.cities.length} cities · ${DiasporaData.sundayMatchesInCountry(c.code)} Sunday matches',
+              ))
+          .toList(),
+    );
+    if (picked != null) {
+      final country = DiasporaData.countryByCode(picked)!;
+      setState(() {
+        _hostCountryCode = picked;
+        _cityId = country.cities.first.id;
+      });
+    }
+  }
+
+  Future<void> _pickCity() async {
+    final picked = await showCRSelectSheet<String>(
+      context: context,
+      title: 'Your city',
+      selected: _cityId,
+      items: _host.cities
+          .map((c) => CRSelectItem(
+                value: c.id,
+                label: c.name,
+                subtitle: '${c.sundayMatchCount} Sunday matches nearby',
+              ))
+          .toList(),
+    );
+    if (picked != null) setState(() => _cityId = picked);
+  }
+
+  Future<void> _pickHomeCountry() async {
+    final picked = await showCRSelectSheet<String>(
+      context: context,
+      title: 'Your home country',
+      selected: _homeCountryCode,
+      items: DiasporaData.homeCountries
+          .map((c) => CRSelectItem(
+                value: c.code,
+                label: c.name,
+                leading: c.flag,
+                subtitle: 'Heritage & identity on your passport',
+              ))
+          .toList(),
+    );
+    if (picked != null) setState(() => _homeCountryCode = picked);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final country = DiasporaData.countryByCode(_countryCode)!;
-
     return Scaffold(
       backgroundColor: CR.bg,
       body: CRProgrammeBg(
@@ -47,86 +106,29 @@ class _PlayerSetupScreenState extends ConsumerState<PlayerSetupScreen> {
               children: [
                 Text('Where do you\nplay Sunday?', style: CRType.display(size: 34)),
                 const SizedBox(height: 8),
-                Text('Diaspora cricket — Japan, Australia, Canada & more.', style: CRType.caption()),
-                const SizedBox(height: 28),
-                Text('HOST COUNTRY', style: CRType.overline()),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 44,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: DiasporaData.countries.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (_, i) {
-                      final c = DiasporaData.countries[i];
-                      final on = c.code == _countryCode;
-                      return GestureDetector(
-                        onTap: () => setState(() {
-                          _countryCode = c.code;
-                          _cityId = c.cities.first.id;
-                        }),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: on ? CR.terracotta : CR.card,
-                            borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: on ? CR.terracotta : CR.fog.withValues(alpha: 0.3)),
-                          ),
-                          child: Text(
-                            '${c.flag} ${c.name}',
-                            style: CRType.label(size: 12, color: on ? CR.chalk : CR.ink),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                Text('Diaspora cricket across Japan, Australia, UK, Canada, USA & more.', style: CRType.caption()),
+                const SizedBox(height: 24),
+                CRSelectField(
+                  label: 'Host country',
+                  value: _host.name,
+                  leading: _host.flag,
+                  subtitle: 'Where you live and play cricket abroad',
+                  onTap: _pickHostCountry,
                 ),
-                const SizedBox(height: 20),
-                Text('CITY', style: CRType.overline()),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: country.cities.map((city) {
-                    final on = city.id == _cityId;
-                    return GestureDetector(
-                      onTap: () => setState(() => _cityId = city.id),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: on ? CR.moss : CR.card,
-                          borderRadius: BorderRadius.circular(3),
-                          border: Border.all(color: on ? CR.mossLight : CR.fog.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(
-                          city.name,
-                          style: CRType.overline(size: 8, color: on ? CR.chalk : CR.ink),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                const SizedBox(height: 12),
+                CRSelectField(
+                  label: 'City',
+                  value: _city.name,
+                  subtitle: '${_city.sundayMatchCount} Sunday matches in this city',
+                  onTap: _pickCity,
                 ),
-                const SizedBox(height: 20),
-                Text('HERITAGE (optional)', style: CRType.overline()),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: HeritageTag.values.map((h) {
-                    final on = h == _heritage;
-                    return GestureDetector(
-                      onTap: () => setState(() => _heritage = h),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: on ? CR.brassDim : CR.card,
-                          borderRadius: BorderRadius.circular(3),
-                          border: Border.all(color: on ? CR.brass : CR.fog.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(h.label, style: CRType.overline(size: 8, color: on ? CR.brass : CR.ink)),
-                      ),
-                    );
-                  }).toList(),
+                const SizedBox(height: 12),
+                CRSelectField(
+                  label: 'Home country',
+                  value: _home.name,
+                  leading: _home.flag,
+                  subtitle: 'Nepal, India, Pakistan & South Asia',
+                  onTap: _pickHomeCountry,
                 ),
                 const SizedBox(height: 28),
                 const CRProgrammeRule(label: 'Your passport'),
@@ -191,8 +193,8 @@ class _PlayerSetupScreenState extends ConsumerState<PlayerSetupScreen> {
                   onTap: _ok
                       ? () {
                           ref.read(appContextProvider.notifier)
-                            ..setLocation(_countryCode, _cityId)
-                            ..setHeritage(_heritage);
+                            ..setLocation(_hostCountryCode, _cityId)
+                            ..setHomeCountry(_homeCountryCode);
                           context.push('/auth/join-or-build');
                         }
                       : null,

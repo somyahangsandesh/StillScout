@@ -4,12 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crickrise/app.dart';
 
 void main() {
-  testWidgets('Welcome screen loads', (WidgetTester tester) async {
+  testWidgets('Splash screen loads', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(child: CrickRiseApp()),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
 
-    expect(find.textContaining('Sunday'), findsWidgets);
+    expect(find.text('CRICKRISE'), findsOneWidget);
+    expect(find.textContaining('Warming'), findsOneWidget);
+
+    // Drain splash timers so the test exits cleanly.
+    await tester.pump(const Duration(seconds: 4));
   });
 }
