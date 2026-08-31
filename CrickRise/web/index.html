@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrickRise</title>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <style>
+    body { margin: 0; background: #0F0B08; }
+    #boot-loader {
+      position: fixed; inset: 0;
+      background: #0F0B08;
+      z-index: 9999;
+      transition: opacity 0.35s ease;
+    }
+    #boot-loader.hide { opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="boot-loader"></div>
+  <script>
+    function hideBootLoader() {
+      var el = document.getElementById('boot-loader');
+      if (el) { el.classList.add('hide'); setTimeout(function () { el.remove(); }, 400); }
+    }
+    window.addEventListener('flutter-first-frame', hideBootLoader);
+    setTimeout(hideBootLoader, 8000);
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
