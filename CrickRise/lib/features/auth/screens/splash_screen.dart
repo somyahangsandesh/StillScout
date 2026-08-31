@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../widgets/splash_cinema.dart';
 
+/// Splash driven by wall-clock elapsed time — reliable on Flutter web release builds.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -13,26 +14,40 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late final AnimationController _master;
+  static const _durationMs = 4500;
+
+  late final Ticker _ticker;
+  int _startMs = -1;
+  double _progress = 0;
+  bool _done = false;
 
   @override
   void initState() {
     super.initState();
-    _master = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3800),
-    );
-
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _master.forward().whenComplete(() {
-        if (mounted) context.go('/welcome');
-      });
+    _ticker = createTicker(_onTick);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _ticker.start();
     });
+  }
+
+  void _onTick(Duration elapsed) {
+    if (_startMs < 0) _startMs = elapsed.inMilliseconds;
+
+    final t = ((elapsed.inMilliseconds - _startMs) / _durationMs).clamp(0.0, 1.0);
+    if (t != _progress) {
+      setState(() => _progress = t);
+    }
+
+    if (t >= 1.0 && !_done) {
+      _done = true;
+      _ticker.stop();
+      if (mounted) context.go('/welcome');
+    }
   }
 
   @override
   void dispose() {
-    _master.dispose();
+    _ticker.dispose();
     super.dispose();
   }
 
@@ -40,10 +55,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: CR.bg,
-      body: AnimatedBuilder(
-        animation: _master,
-        builder: (_, __) => SplashCinema(progress: _master.value),
-      ),
+      body: SplashCinema(progress: _progress),
     );
   }
 }
