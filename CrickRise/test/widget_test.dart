@@ -13,6 +13,6 @@ void main() {
     expect(find.text('CRICKRISE'), findsOneWidget);
     expect(find.textContaining('Warming'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 4500));
+    await tester.pump(const Duration(milliseconds: 4000));
   });
 }

@@ -6,267 +6,259 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/cr_matchday.dart';
 
-/// Cinematic splash: stadium → physics bounce → delivery → bat swing → ball engulfs screen.
+/// Splash timeline — one continuous ball path, no teleports, scale from center.
 class SplashCinema extends StatelessWidget {
-  final double progress; // 0.0 – 1.0 master timeline
+  final double progress;
 
   const SplashCinema({super.key, required this.progress});
+
+  static const _ballSize = 48.0;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final pitchY = size.height * 0.72;
+    final pitchY = size.height * 0.74;
+    final scene = _computeScene(size, pitchY, progress);
 
-    final bounceT = _clampMap(progress, 0.0, 0.38);
-    final deliveryT = _clampMap(progress, 0.36, 0.58);
-    final swingT = _clampMap(progress, 0.54, 0.72);
-    final impactT = _clampMap(progress, 0.70, 0.82);
-    final zoomT = _clampMap(progress, 0.78, 1.0);
-
-    final shake = impactT > 0 && impactT < 1
-        ? math.sin(impactT * math.pi * 14) * (1 - impactT) * 6
-        : 0.0;
-
-    final ballPos = zoomT > 0.05
-        ? _impactBallPos(size, zoomT)
-        : deliveryT > 0.01
-            ? _deliveryBallPos(size, pitchY, deliveryT, swingT)
-            : _bounceBallPos(size, pitchY, bounceT);
-
-    final ballScale = zoomT > 0
-        ? 1.0 + Curves.easeInExpo.transform(zoomT) * 42
-        : _squashScale(bounceT, deliveryT);
-    final ballVisible = progress < 0.995;
-
-    final batsmanOpacity = Curves.easeOut.transform(_clampMap(progress, 0.30, 0.48));
-    final batSwing = Curves.easeInOutCubic.transform(swingT);
-    final flash = impactT > 0 ? math.pow(math.sin(impactT * math.pi), 0.7).toDouble() * 0.92 : 0.0;
-
-    return Transform.translate(
-      offset: Offset(shake, shake * 0.4),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const _StadiumSky(),
-          _Floodlights(pulse: progress),
-          CustomPaint(painter: _PitchPainter(pitchY: pitchY)),
-          if (batsmanOpacity > 0.01 && zoomT < 0.35)
-            Positioned(
-              right: size.width * 0.06,
-              bottom: pitchY - 8,
-              child: Opacity(
-                opacity: batsmanOpacity * (1 - zoomT * 2.5).clamp(0.0, 1.0),
-                child: _BatsmanSilhouette(swing: batSwing, height: size.height * 0.28),
-              ),
-            ),
-          if (deliveryT > 0.08 && deliveryT < 0.95 && zoomT < 0.1)
-            ..._motionTrail(size, pitchY, deliveryT, swingT),
-          if (ballVisible) ...[
-            Positioned(
-              left: ballPos.dx + 4,
-              top: pitchY - 6,
-              child: Opacity(
-                opacity: (1 - zoomT) * (0.35 + _bounceContacts(bounceT) * 0.25),
-                child: Transform.scale(
-                  scaleX: 0.8 + (1 - _ballHeightNorm(size, pitchY, ballPos)) * 0.5,
-                  child: Container(
-                    width: 36,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: ballPos.dx,
-              top: ballPos.dy,
-              child: Transform.scale(
-                scale: ballScale,
-                child: _CricketBallHero(
-                  rotation: zoomT * 3.2 + deliveryT * 2,
-                  glow: 0.6 + zoomT * 0.4,
-                ),
-              ),
-            ),
-          ],
-          if (flash > 0.02)
-            Container(color: CR.chalk.withValues(alpha: flash)),
-          if (zoomT > 0.55)
-            Container(
-              color: CR.terracotta.withValues(
-                alpha: Curves.easeIn.transform(_clampMap(zoomT, 0.55, 1.0)) * 0.95,
-              ),
-            ),
-          _Vignette(intensity: 0.55 - zoomT * 0.3),
-          SafeArea(
-            child: Column(
-              children: [
-                const Spacer(),
-                Opacity(
-                  opacity: (1 - zoomT * 1.8).clamp(0.0, 1.0),
-                  child: Column(
-                    children: [
-                      Text('CRICKRISE', style: CRType.overline(color: CR.brass, size: 11)),
-                      const SizedBox(height: 8),
-                      Text(_statusText(progress), style: CRType.caption()),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-              ],
+    return Stack(
+      clipBehavior: Clip.none,
+      fit: StackFit.expand,
+      children: [
+        const _StadiumBg(),
+        CustomPaint(painter: _PitchPainter(pitchY: pitchY)),
+        if (scene.batsmanOpacity > 0.01)
+          Positioned(
+            right: size.width * 0.07,
+            bottom: pitchY - 6,
+            child: Opacity(
+              opacity: scene.batsmanOpacity,
+              child: _BatsmanFigure(swing: scene.batSwing, height: size.height * 0.26),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  String _statusText(double t) {
-    if (t < 0.38) return 'Warming up…';
-    if (t < 0.68) return 'Play!';
-    if (t < 0.85) return '';
-    return '';
-  }
-
-  double _squashScale(double bounceT, double deliveryT) {
-    if (deliveryT > 0) return 1.0;
-    final contact = _bounceContacts(bounceT);
-    return 1.0 + contact * 0.35 - (contact > 0 ? 0.18 : 0);
-  }
-
-  List<Widget> _motionTrail(Size size, double pitchY, double deliveryT, double swingT) {
-    final widgets = <Widget>[];
-    for (var i = 1; i <= 4; i++) {
-      final lag = (deliveryT - i * 0.06).clamp(0.0, 1.0);
-      if (lag <= 0) continue;
-      final pos = _deliveryBallPos(size, pitchY, lag, swingT);
-      widgets.add(
+        if (scene.showShadow)
+          Positioned(
+            left: scene.ballCenter.dx - 20,
+            top: pitchY - 4,
+            child: Opacity(
+              opacity: scene.shadowOpacity,
+              child: Transform.scale(
+                scaleX: scene.shadowScaleX,
+                child: Container(
+                  width: 40,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                ),
+              ),
+            ),
+          ),
         Positioned(
-          left: pos.dx,
-          top: pos.dy,
-          child: Opacity(
-            opacity: 0.12 / i,
-            child: Transform.scale(
-              scale: 0.7,
-              child: const _CricketBallHero(rotation: 0, glow: 0.2),
+          left: scene.ballCenter.dx - (_ballSize * scene.ballScale) / 2,
+          top: scene.ballCenter.dy - (_ballSize * scene.ballScale) / 2,
+          child: Transform.scale(
+            scale: scene.ballScale,
+            alignment: Alignment.center,
+            child: Transform.rotate(
+              angle: scene.ballRotation,
+              child: const _Ball(size: _ballSize),
             ),
           ),
         ),
+        if (scene.flash > 0)
+          ColoredBox(color: CR.chalk.withValues(alpha: scene.flash)),
+        if (scene.wipe > 0)
+          ColoredBox(color: CR.terracotta.withValues(alpha: scene.wipe)),
+        _Vignette(strength: 0.45 - scene.wipe * 0.2),
+        SafeArea(
+          child: Column(
+            children: [
+              const Spacer(),
+              Opacity(
+                opacity: (1 - scene.wipe * 2).clamp(0.0, 1.0),
+                child: Column(
+                  children: [
+                    Text('CRICKRISE', style: CRType.overline(color: CR.brass, size: 11)),
+                    const SizedBox(height: 8),
+                    if (scene.label.isNotEmpty)
+                      Text(scene.label, style: CRType.caption()),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  _Scene _computeScene(Size size, double pitchY, double t) {
+    final w = size.width;
+    final h = size.height;
+    final creaseBallY = pitchY - 28;
+
+    // ── Phase 1: bounce (0 → 0.36) ─────────────────────────────────────
+    if (t < 0.36) {
+      final p = t / 0.36;
+      final bounce = _bouncePhysics(p);
+      final cx = w * 0.5;
+      final cy = creaseBallY - bounce.height;
+      final squash = 1.0 + bounce.squash * 0.22;
+      return _Scene(
+        ballCenter: Offset(cx, cy),
+        ballScale: squash,
+        ballRotation: p * math.pi * 4,
+        shadowOpacity: bounce.shadow,
+        shadowScaleX: 0.5 + bounce.shadow * 0.5,
+        showShadow: true,
+        label: 'Warming up…',
       );
     }
-    return widgets;
-  }
 
-  Offset _bounceBallPos(Size size, double pitchY, double t) {
-    if (t <= 0) return Offset(size.width * 0.5 - 20, pitchY - 120);
-    final contact = _bounceContacts(t);
-    final bounceIndex = (t * 3.2).floor();
-    final localT = (t * 3.2) - bounceIndex;
-    final damp = math.pow(0.55, bounceIndex).toDouble();
-    final height = math.sin(localT * math.pi) * 140 * damp;
-    final x = size.width * 0.5 + math.sin(t * math.pi * 2) * 18;
-    return Offset(x - 20, pitchY - 24 - height);
-  }
+    // ── Phase 2: ball travels to batsman (0.36 → 0.62) ──────────────────
+    if (t < 0.62) {
+      final p = (t - 0.36) / 0.26;
+      final batX = w * 0.76;
+      final batY = creaseBallY - 118;
 
-  double _bounceContacts(double t) {
-    final phase = (t * 3.2) % 1.0;
-    return phase < 0.08 ? (1 - phase / 0.08) : 0.0;
-  }
+      // Continue from bounce end (center) — no teleport
+      final startX = w * 0.5;
+      final startY = creaseBallY - 6;
+      final eased = Curves.easeInOut.transform(p);
+      final cx = _lerp(startX, batX, eased);
+      final arc = math.sin(p * math.pi) * 80;
+      final cy = _lerp(startY, batY, eased) - arc;
 
-  Offset _deliveryBallPos(Size size, double pitchY, double t, double swingT) {
-    final eased = Curves.easeInOut.transform(t);
-    final start = Offset(size.width * 0.08, pitchY - 100);
-    final mid = Offset(size.width * 0.42, pitchY - 60);
-    final end = Offset(size.width * 0.72, pitchY - 130);
-    if (eased < 0.5) {
-      final u = eased * 2;
-      return _lerpOffset(_lerpOffset(start, mid, u), mid, u * 0.3);
+      return _Scene(
+        ballCenter: Offset(cx, cy),
+        ballScale: 1.0,
+        ballRotation: p * math.pi * 6,
+        shadowOpacity: (1 - p) * 0.25,
+        shadowScaleX: 0.7,
+        showShadow: p < 0.85,
+        batsmanOpacity: Curves.easeOut.transform(_clamp((t - 0.38) / 0.12)),
+        batSwing: 0,
+        label: 'Play!',
+      );
     }
-    final u = (eased - 0.5) * 2;
-    final hit = Offset(size.width * 0.76, pitchY - 145 - swingT * 20);
-    return _lerpOffset(mid, hit, Curves.easeIn.transform(u));
+
+    // ── Phase 3: bat swing + contact (0.62 → 0.74) ──────────────────────
+    if (t < 0.74) {
+      final p = (t - 0.62) / 0.12;
+      final batX = w * 0.76;
+      final batY = creaseBallY - 118;
+      final swing = Curves.easeInOutCubic.transform(p);
+
+      return _Scene(
+        ballCenter: Offset(batX - 8 + swing * 6, batY - swing * 8),
+        ballScale: 1.0,
+        ballRotation: swing * math.pi * 2,
+        showShadow: false,
+        batsmanOpacity: 1,
+        batSwing: swing,
+        flash: p > 0.72 ? math.sin(((p - 0.72) / 0.28) * math.pi) * 0.75 : 0,
+        label: '',
+      );
+    }
+
+    // ── Phase 4: zoom to camera (0.74 → 1.0) ────────────────────────────
+    final p = (t - 0.74) / 0.26;
+    final ease = Curves.easeInCubic.transform(p);
+    final start = Offset(w * 0.76, creaseBallY - 118);
+    final end = Offset(w * 0.5, h * 0.44);
+    final center = Offset(
+      _lerp(start.dx, end.dx, math.min(p * 2.2, 1.0)),
+      _lerp(start.dy, end.dy, math.min(p * 2.2, 1.0)),
+    );
+
+    return _Scene(
+      ballCenter: center,
+      ballScale: 1.0 + ease * 36,
+      ballRotation: ease * math.pi * 3,
+      showShadow: false,
+      batsmanOpacity: (1 - p * 3).clamp(0.0, 1.0),
+      batSwing: 1,
+      flash: p < 0.12 ? (1 - p / 0.12) * 0.5 : 0,
+      wipe: p > 0.55 ? Curves.easeIn.transform((p - 0.55) / 0.45) * 0.98 : 0,
+      label: '',
+    );
   }
 
-  Offset _impactBallPos(Size size, double t) {
-    final cx = size.width * 0.5 - 22;
-    final cy = size.height * 0.48 - 22;
-    return Offset(cx, cy - t * 40);
+  _Bounce _bouncePhysics(double t) {
+    const bounces = 3;
+    final phase = (t * bounces).clamp(0.0, bounces - 0.001);
+    final idx = phase.floor();
+    final local = phase - idx;
+    final damp = math.pow(0.52, idx).toDouble();
+    final height = math.sin(local * math.pi) * 130 * damp;
+    final squash = local < 0.1 ? (1 - local / 0.1) : 0.0;
+    final shadow = (1 - height / (130 * damp + 1)).clamp(0.15, 1.0);
+    return _Bounce(height: height, squash: squash, shadow: shadow);
   }
 
-  Offset _lerpOffset(Offset a, Offset b, double t) =>
-      Offset(lerpDouble(a.dx, b.dx, t)!, lerpDouble(a.dy, b.dy, t)!);
-
-  double _clampMap(double t, double a, double b) {
-    if (t <= a) return 0;
-    if (t >= b) return 1;
-    return (t - a) / (b - a);
-  }
-
-  double _ballHeightNorm(Size size, double pitchY, Offset ballPos) {
-    return ((pitchY - 24) - ballPos.dy).clamp(0.0, 160.0) / 160.0;
-  }
+  double _lerp(double a, double b, double t) => a + (b - a) * t;
+  double _clamp(double v) => v.clamp(0.0, 1.0);
 }
 
-class _StadiumSky extends StatelessWidget {
-  const _StadiumSky();
+class _Scene {
+  final Offset ballCenter;
+  final double ballScale;
+  final double ballRotation;
+  final double shadowOpacity;
+  final double shadowScaleX;
+  final bool showShadow;
+  final double batsmanOpacity;
+  final double batSwing;
+  final double flash;
+  final double wipe;
+  final String label;
+
+  const _Scene({
+    required this.ballCenter,
+    this.ballScale = 1,
+    this.ballRotation = 0,
+    this.shadowOpacity = 0,
+    this.shadowScaleX = 1,
+    this.showShadow = false,
+    this.batsmanOpacity = 0,
+    this.batSwing = 0,
+    this.flash = 0,
+    this.wipe = 0,
+    this.label = '',
+  });
+}
+
+class _Bounce {
+  final double height;
+  final double squash;
+  final double shadow;
+  const _Bounce({required this.height, required this.squash, required this.shadow});
+}
+
+// ─── Visual layers ───────────────────────────────────────────────────────────
+
+class _StadiumBg extends StatelessWidget {
+  const _StadiumBg();
 
   @override
   Widget build(BuildContext context) {
     return const DecoratedBox(
       decoration: BoxDecoration(
         gradient: RadialGradient(
-          center: Alignment(0, -0.55),
-          radius: 1.35,
-          colors: [
-            Color(0xFF1F3D2E),
-            Color(0xFF0F0B08),
-            Color(0xFF050403),
-          ],
-          stops: [0.0, 0.55, 1.0],
+          center: Alignment(0, -0.5),
+          radius: 1.3,
+          colors: [Color(0xFF1A3328), Color(0xFF0F0B08), Color(0xFF050403)],
         ),
       ),
-    );
-  }
-}
-
-class _Floodlights extends StatelessWidget {
-  final double pulse;
-  const _Floodlights({required this.pulse});
-
-  @override
-  Widget build(BuildContext context) {
-    final glow = 0.12 + math.sin(pulse * math.pi * 4) * 0.04;
-    return Stack(
-      children: [
-        Positioned(
-          top: -40,
-          left: -20,
-          child: _lightCone(glow, Alignment.bottomRight),
-        ),
-        Positioned(
-          top: -40,
-          right: -20,
-          child: _lightCone(glow, Alignment.bottomLeft),
-        ),
-      ],
-    );
-  }
-
-  Widget _lightCone(double opacity, Alignment align) {
-    return Container(
-      width: 200,
-      height: 280,
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: align,
-          radius: 1.0,
-          colors: [
-            CR.brass.withValues(alpha: opacity),
-            Colors.transparent,
-          ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0x18D4A574), Colors.transparent, Color(0x10D4A574)],
+          ),
         ),
       ),
     );
@@ -279,36 +271,26 @@ class _PitchPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, pitchY - 20, size.width, size.height - pitchY + 40);
+    final grass = Rect.fromLTWH(0, pitchY - 8, size.width, size.height - pitchY + 20);
     canvas.drawRect(
-      rect,
+      grass,
       Paint()
-        ..shader = LinearGradient(
+        ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            CR.mossLight.withValues(alpha: 0.22),
-            CR.moss.withValues(alpha: 0.35),
-          ],
-        ).createShader(rect),
+          colors: [Color(0xFF2D6A4F), Color(0xFF1B4332)],
+        ).createShader(grass),
     );
 
-    final stripe = Paint()..color = CR.mossLight.withValues(alpha: 0.06);
-    for (var x = 0.0; x < size.width; x += 28) {
-      canvas.drawRect(Rect.fromLTWH(x, pitchY, 14, size.height - pitchY), stripe);
+    final stripe = Paint()..color = const Color(0x0FFFFFFF);
+    for (var x = 0.0; x < size.width; x += 32) {
+      canvas.drawRect(Rect.fromLTWH(x, pitchY, 16, size.height), stripe);
     }
 
     final crease = Paint()
-      ..color = CR.chalk.withValues(alpha: 0.35)
+      ..color = CR.chalk.withValues(alpha: 0.4)
       ..strokeWidth = 2;
     canvas.drawLine(Offset(0, pitchY), Offset(size.width, pitchY), crease);
-
-    final popping = Paint()
-      ..color = CR.chalk.withValues(alpha: 0.5)
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-    final popX = size.width * 0.78;
-    canvas.drawLine(Offset(popX, pitchY - 18), Offset(popX, pitchY + 4), popping);
   }
 
   @override
@@ -316,8 +298,8 @@ class _PitchPainter extends CustomPainter {
 }
 
 class _Vignette extends StatelessWidget {
-  final double intensity;
-  const _Vignette({required this.intensity});
+  final double strength;
+  const _Vignette({required this.strength});
 
   @override
   Widget build(BuildContext context) {
@@ -325,11 +307,8 @@ class _Vignette extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: RadialGradient(
-            colors: [
-              Colors.transparent,
-              CR.voidBlack.withValues(alpha: intensity),
-            ],
-            radius: 1.1,
+            colors: [Colors.transparent, CR.voidBlack.withValues(alpha: strength)],
+            radius: 1.05,
           ),
         ),
       ),
@@ -337,38 +316,31 @@ class _Vignette extends StatelessWidget {
   }
 }
 
-class _CricketBallHero extends StatelessWidget {
-  final double rotation;
-  final double glow;
-
-  const _CricketBallHero({required this.rotation, required this.glow});
+class _Ball extends StatelessWidget {
+  final double size;
+  const _Ball({required this.size});
 
   @override
   Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: rotation,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: CR.terracotta.withValues(alpha: glow * 0.55),
-              blurRadius: 24,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: const CustomPaint(painter: _HeroBallPainter()),
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: CR.terracotta.withValues(alpha: 0.5),
+            blurRadius: 20,
+            spreadRadius: 1,
+          ),
+        ],
       ),
+      child: CustomPaint(painter: _BallPainter()),
     );
   }
 }
 
-class _HeroBallPainter extends CustomPainter {
-  const _HeroBallPainter();
-
+class _BallPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
@@ -377,21 +349,21 @@ class _HeroBallPainter extends CustomPainter {
       c,
       r,
       Paint()
-        ..shader = RadialGradient(
-          colors: const [Color(0xFFFF6B6B), CR.terracotta, const Color(0xFF7F1D1D)],
-          stops: const [0.15, 0.55, 1.0],
+        ..shader = const RadialGradient(
+          colors: [Color(0xFFFF7070), CR.terracotta, Color(0xFF7F1D1D)],
+          stops: [0.2, 0.6, 1.0],
         ).createShader(Rect.fromCircle(center: c, radius: r)),
     );
     final seam = Paint()
-      ..color = CR.chalk.withValues(alpha: 0.8)
+      ..color = CR.chalk.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2;
+      ..strokeWidth = 2;
     final path = Path();
-    for (var i = 0; i <= 360; i += 3) {
+    for (var i = 0; i <= 360; i += 4) {
       final rad = i * math.pi / 180;
-      final wobble = math.sin(rad * 2.2) * r * 0.14;
-      final x = c.dx + (r * 0.52 + wobble) * math.cos(rad);
-      final y = c.dy + r * 0.52 * math.sin(rad);
+      final wobble = math.sin(rad * 2) * r * 0.13;
+      final x = c.dx + (r * 0.5 + wobble) * math.cos(rad);
+      final y = c.dy + r * 0.5 * math.sin(rad);
       i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
     }
     path.close();
@@ -402,20 +374,17 @@ class _HeroBallPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _BatsmanSilhouette extends StatelessWidget {
+class _BatsmanFigure extends StatelessWidget {
   final double swing;
   final double height;
-
-  const _BatsmanSilhouette({required this.swing, required this.height});
+  const _BatsmanFigure({required this.swing, required this.height});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: height * 0.55,
+      width: height * 0.5,
       height: height,
-      child: CustomPaint(
-        painter: _BatsmanPainter(swing: swing),
-      ),
+      child: CustomPaint(painter: _BatsmanPainter(swing: swing)),
     );
   }
 }
@@ -426,56 +395,32 @@ class _BatsmanPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final body = Paint()..color = CR.chalk.withValues(alpha: 0.92);
     final w = size.width;
     final h = size.height;
-    final cx = w * 0.42;
+    final cx = w * 0.45;
+    final body = Paint()..color = CR.chalk;
 
-    canvas.drawCircle(Offset(cx, h * 0.12), h * 0.09, body);
+    canvas.drawCircle(Offset(cx, h * 0.1), h * 0.085, body);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(cx, h * 0.38), width: w * 0.34, height: h * 0.34),
-        const Radius.circular(6),
+        Rect.fromCenter(center: Offset(cx, h * 0.36), width: w * 0.36, height: h * 0.32),
+        const Radius.circular(5),
       ),
       body,
     );
-    canvas.drawRect(
-      Rect.fromLTWH(cx - w * 0.28, h * 0.52, w * 0.22, h * 0.38),
-      body,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(cx + w * 0.06, h * 0.52, w * 0.22, h * 0.38),
-      body,
-    );
+    canvas.drawRect(Rect.fromLTWH(cx - w * 0.26, h * 0.5, w * 0.2, h * 0.42), body);
+    canvas.drawRect(Rect.fromLTWH(cx + w * 0.06, h * 0.5, w * 0.2, h * 0.42), body);
 
-    final batAngle = lerpDouble(-2.1, 0.35, swing)!;
-    final batPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [CR.brass, const Color(0xFFE8C9A0)],
-      ).createShader(Rect.fromLTWH(0, 0, w, h))
-      ..strokeWidth = 7
+    final angle = lerpDouble(-2.0, 0.5, swing)!;
+    final bat = Paint()
+      ..color = CR.brass
+      ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
-
     canvas.save();
-    canvas.translate(cx + w * 0.18, h * 0.36);
-    canvas.rotate(batAngle);
-    canvas.drawLine(const Offset(0, 0), Offset(0, -h * 0.52), batPaint);
-    canvas.drawCircle(Offset(0, -h * 0.52), 5, Paint()..color = CR.brass);
+    canvas.translate(cx + w * 0.15, h * 0.34);
+    canvas.rotate(angle);
+    canvas.drawLine(Offset.zero, Offset(0, -h * 0.5), bat);
     canvas.restore();
-
-    if (swing > 0.35) {
-      final arc = Paint()
-        ..color = CR.brass.withValues(alpha: (swing - 0.35) * 0.35)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3;
-      canvas.drawArc(
-        Rect.fromCircle(center: Offset(cx, h * 0.36), radius: h * 0.38),
-        -2.4 + swing,
-        1.6,
-        false,
-        arc,
-      );
-    }
   }
 
   @override
