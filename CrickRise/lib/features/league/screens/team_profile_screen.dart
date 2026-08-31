@@ -32,7 +32,7 @@ class TeamProfileScreen extends StatelessWidget {
   ];
 
   static const _form = ['W', 'W', 'L', 'W', 'L'];
-  static const _nextMatch = 'Saturday vs Fukuoka Tigers';
+  static const _nextMatch = 'Sunday vs Fukuoka Tigers';
 
   @override
   Widget build(BuildContext context) {

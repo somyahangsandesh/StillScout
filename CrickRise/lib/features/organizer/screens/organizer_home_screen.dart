@@ -102,7 +102,7 @@ class _OrganizerDashboard extends StatelessWidget {
             _NextActionCard(
               urgency: _Urgency.warning,
               title: 'Upcoming match has no scorer assigned',
-              detail: 'Warriors vs Rhinos · Saturday',
+              detail: 'Warriors vs Rhinos · Sunday',
               actionLabel: 'ASSIGN SCORER →',
               onAction: () => _toast(context, 'Assign scorer — coming soon'),
             ).animate().fadeIn(delay: 80.ms),
@@ -113,7 +113,7 @@ class _OrganizerDashboard extends StatelessWidget {
             _sectionLabel('THIS WEEK'),
             const SizedBox(height: 10),
             _WeekMatchItem(
-              day: 'Saturday',
+              day: 'Sunday',
               teams: 'Warriors vs Rhinos',
               scorerAssigned: false,
               onAssign: () => _toast(context, 'Assign scorer — coming soon'),

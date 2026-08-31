@@ -27,6 +27,7 @@ import '../../features/scorer/screens/innings_transition_screen.dart';
 import '../../features/scorer/screens/post_match_screen.dart';
 import '../../features/scorer/screens/mvp_screen.dart';
 import '../../features/scorer/screens/witness_screen.dart';
+import '../../features/story/screens/sunday_story_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/welcome',
@@ -96,6 +97,10 @@ final appRouter = GoRouter(
     ),
 
     // Full-screen routes — no nav
+    GoRoute(
+      path: '/story',
+      builder: (context, state) => const SundayStoryScreen(),
+    ),
     GoRoute(
       path: '/organizer',
       builder: (context, state) => OrganizerHomeScreen(

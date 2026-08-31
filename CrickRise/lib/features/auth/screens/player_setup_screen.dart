@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/models/community.dart';
+import '../../../core/providers/app_context_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/cr_matchday.dart';
 
-class PlayerSetupScreen extends StatefulWidget {
+class PlayerSetupScreen extends ConsumerStatefulWidget {
   const PlayerSetupScreen({super.key});
 
   @override
-  State<PlayerSetupScreen> createState() => _PlayerSetupScreenState();
+  ConsumerState<PlayerSetupScreen> createState() => _PlayerSetupScreenState();
 }
 
-class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
+class _PlayerSetupScreenState extends ConsumerState<PlayerSetupScreen> {
   final _name = TextEditingController();
   String? _role;
   String _jersey = '';
+  String _countryCode = 'JP';
+  String _cityId = 'okinawa';
+  HeritageTag _heritage = HeritageTag.nepali;
 
   static const _roles = ['BATTER', 'BOWLER', 'ALL-ROUNDER', 'KEEPER', 'BAT AR'];
 
@@ -28,6 +34,8 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final country = DiasporaData.countryByCode(_countryCode)!;
+
     return Scaffold(
       backgroundColor: CR.bg,
       body: CRProgrammeBg(
@@ -37,10 +45,92 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Issue your\npassport.', style: CRType.display(size: 36)),
+                Text('Where do you\nplay Sunday?', style: CRType.display(size: 34)),
                 const SizedBox(height: 8),
-                Text('This is your permanent cricket identity.', style: CRType.caption()),
-                const SizedBox(height: 32),
+                Text('Diaspora cricket — Japan, Australia, Canada & more.', style: CRType.caption()),
+                const SizedBox(height: 28),
+                Text('HOST COUNTRY', style: CRType.overline()),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: DiasporaData.countries.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (_, i) {
+                      final c = DiasporaData.countries[i];
+                      final on = c.code == _countryCode;
+                      return GestureDetector(
+                        onTap: () => setState(() {
+                          _countryCode = c.code;
+                          _cityId = c.cities.first.id;
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: on ? CR.terracotta : CR.card,
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(color: on ? CR.terracotta : CR.fog.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            '${c.flag} ${c.name}',
+                            style: CRType.label(size: 12, color: on ? CR.chalk : CR.ink),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text('CITY', style: CRType.overline()),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: country.cities.map((city) {
+                    final on = city.id == _cityId;
+                    return GestureDetector(
+                      onTap: () => setState(() => _cityId = city.id),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: on ? CR.moss : CR.card,
+                          borderRadius: BorderRadius.circular(3),
+                          border: Border.all(color: on ? CR.mossLight : CR.fog.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          city.name,
+                          style: CRType.overline(size: 8, color: on ? CR.chalk : CR.ink),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                Text('HERITAGE (optional)', style: CRType.overline()),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: HeritageTag.values.map((h) {
+                    final on = h == _heritage;
+                    return GestureDetector(
+                      onTap: () => setState(() => _heritage = h),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: on ? CR.brassDim : CR.card,
+                          borderRadius: BorderRadius.circular(3),
+                          border: Border.all(color: on ? CR.brass : CR.fog.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(h.label, style: CRType.overline(size: 8, color: on ? CR.brass : CR.ink)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 28),
+                const CRProgrammeRule(label: 'Your passport'),
+                const SizedBox(height: 20),
                 Text('FULL NAME', style: CRType.overline()),
                 const SizedBox(height: 8),
                 TextField(
@@ -55,7 +145,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                     focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: CR.brass, width: 1.5)),
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
                 Text('ROLE', style: CRType.overline()),
                 const SizedBox(height: 10),
                 Wrap(
@@ -77,11 +167,11 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
                 Text('JERSEY (optional)', style: CRType.overline()),
-                const SizedBox(height: 12),
-                Center(child: Text(_jersey.isEmpty ? '—' : _jersey, style: CRType.score(size: 48))),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                Center(child: Text(_jersey.isEmpty ? '—' : _jersey, style: CRType.score(size: 40))),
+                const SizedBox(height: 8),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -97,8 +187,15 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                 ),
                 const SizedBox(height: 36),
                 CRProgrammeButton(
-                  label: 'Create passport',
-                  onTap: _ok ? () => context.push('/auth/join-or-build') : null,
+                  label: 'Continue',
+                  onTap: _ok
+                      ? () {
+                          ref.read(appContextProvider.notifier)
+                            ..setLocation(_countryCode, _cityId)
+                            ..setHeritage(_heritage);
+                          context.push('/auth/join-or-build');
+                        }
+                      : null,
                 ),
               ],
             ),

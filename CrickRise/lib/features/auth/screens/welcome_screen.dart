@@ -27,27 +27,35 @@ class WelcomeScreen extends StatelessWidget {
                 const CRCricketBall(size: 88, glow: true),
                 const SizedBox(height: 32),
                 Text(
-                  'Every innings\nbelongs to you.',
+                  'Every Sunday,\na story worth\nsending home.',
                   textAlign: TextAlign.center,
-                  style: CRType.display(size: 40, style: FontStyle.italic),
+                  style: CRType.display(size: 38, style: FontStyle.italic),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Your cricket passport. Every match remembered.\nEvery run counted. Wherever you play.',
+                  'Cricket abroad for Nepal, India & Pakistan.\nJoin your squad. Share your Sunday.',
                   textAlign: TextAlign.center,
                   style: CRType.body(size: 16, color: CR.ink),
                 ),
+                const SizedBox(height: 20),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  children: ['🇯🇵', '🇦🇺', '🇨🇦', '🇬🇧', '🇺🇸', '🇦🇪']
+                      .map((f) => Text(f, style: const TextStyle(fontSize: 22)))
+                      .toList(),
+                ),
                 const Spacer(),
                 CRProgrammeButton(
-                  label: 'Get your passport',
+                  label: 'Join your Sunday squad',
                   onTap: () => context.push('/auth/phone'),
                 ),
                 const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () => context.push('/auth/phone'),
                   child: Text(
-                    'Continue with Google',
-                    style: CRType.caption(color: CR.fog),
+                    'Already have a squad invite?',
+                    style: CRType.caption(color: CR.brass),
                   ),
                 ),
                 const SizedBox(height: 28),

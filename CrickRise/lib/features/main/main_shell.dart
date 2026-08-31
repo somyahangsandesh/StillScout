@@ -37,10 +37,10 @@ class MainShell extends StatelessWidget {
           top: false,
           child: Row(
             children: [
-              _Tab(Icons.home_outlined, 'Home', i == 0, () => context.go('/home')),
+              _Tab(Icons.home_outlined, 'Sunday', i == 0, () => context.go('/home')),
               _Tab(Icons.emoji_events_outlined, 'League', i == 1, () => context.go('/league')),
               _Play(i == 2, () => context.go('/play')),
-              _Tab(Icons.people_outline, 'Club', i == 3, () => context.go('/community')),
+              _Tab(Icons.public, 'Cities', i == 3, () => context.go('/community')),
               _Tab(Icons.person_outline, 'Passport', i == 4, () => context.go('/me')),
             ],
           ),

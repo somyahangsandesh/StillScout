@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/models/community.dart';
+import '../../../core/providers/app_context_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/cr_matchday.dart';
 import '../../player/providers/player_provider.dart';
@@ -34,6 +36,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
+    final ctx = ref.watch(appContextProvider);
 
     return Scaffold(
       backgroundColor: CR.bg,
@@ -42,39 +45,63 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text('The Community', style: CRType.display(size: 28)),
-                  const Spacer(),
-                  // Region dropdown
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: CR.card,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'JAPAN',
-                          style: GoogleFonts.inter(
-                            color: CR.t2,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.keyboard_arrow_down, color: CR.t3, size: 14),
+                        Text('Diaspora cricket', style: CRType.display(size: 26)),
+                        Text('${ctx.city.name} · ${ctx.country.name}', style: CRType.caption(size: 12)),
                       ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _showRegionPicker(context, ref, ctx),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: CR.card,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: CR.chalk.withValues(alpha: 0.1)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(ctx.country.flag, style: const TextStyle(fontSize: 14)),
+                          const SizedBox(width: 6),
+                          Text(
+                            ctx.country.name.toUpperCase(),
+                            style: CRType.overline(size: 8, color: CR.ink),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.keyboard_arrow_down, color: CR.fog, size: 14),
+                        ],
+                      ),
                     ),
                   ).animate().fadeIn(delay: 80.ms),
                 ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: CRPaper(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    const CRLiveDot(),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${ctx.sundayMatchesNearby} Sunday matches in ${ctx.country.name}',
+                        style: CRType.body(size: 13, weight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -129,6 +156,45 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
             const _TheMovementSection(),
           ],
         ),
+        ),
+      ),
+    );
+  }
+
+  void _showRegionPicker(BuildContext context, WidgetRef ref, AppContext ctx) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: CR.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Choose region', style: CRType.headline(size: 22)),
+            const SizedBox(height: 16),
+            ...DiasporaData.countries.map((country) {
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Text(country.flag, style: const TextStyle(fontSize: 24)),
+                title: Text(country.name, style: CRType.body(weight: FontWeight.w600)),
+                subtitle: Text(
+                  '${DiasporaData.sundayMatchesInCountry(country.code)} Sunday matches',
+                  style: CRType.caption(size: 12),
+                ),
+                trailing: ctx.countryCode == country.code
+                    ? const Icon(Icons.check, color: CR.brass, size: 18)
+                    : null,
+                onTap: () {
+                  ref.read(appContextProvider.notifier).setCountry(country.code);
+                  Navigator.pop(context);
+                },
+              );
+            }),
+          ],
         ),
       ),
     );

@@ -29,9 +29,9 @@ class _OpenSessionScreenState extends State<OpenSessionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Start session', style: CRType.display(size: 34)),
+                Text('Sunday match', style: CRType.display(size: 34)),
                 const SizedBox(height: 6),
-                Text('What are you playing today?', style: CRType.caption()),
+                Text('Start scoring — then create your Sunday Story.', style: CRType.caption()),
                 const SizedBox(height: 28),
                 _TypeCard(
                   stamp: 'OFFICIAL',
