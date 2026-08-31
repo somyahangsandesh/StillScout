@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/models/player.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/cr_matchday.dart';
 import '../../../core/widgets/cr_widgets.dart';
 import '../providers/player_provider.dart';
 
@@ -91,27 +92,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     return Scaffold(
       backgroundColor: CR.bg,
-      body: Stack(
-        children: [
-          // Atmospheric radial glow
-          Positioned(
-            top: -120,
-            right: -80,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    CR.green.withOpacity(0.04),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          CustomScrollView(
+      body: CRProgrammeBg(
+        child: Stack(
+          children: [
+            CustomScrollView(
         slivers: [
           // App bar
           SliverAppBar(
@@ -120,14 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             elevation: 0,
             scrolledUnderElevation: 0,
             automaticallyImplyLeading: false,
-            title: Text(
-              'Me',
-              style: GoogleFonts.inter(
-                color: CR.t1,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            title: Text('Passport', style: CRType.headline(size: 20)),
             actions: [
               GestureDetector(
                 onTap: () => context.push('/player/${player.id}/card'),
@@ -239,8 +216,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
           ),
         ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

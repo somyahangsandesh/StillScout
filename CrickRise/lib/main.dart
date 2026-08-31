@@ -10,9 +10,9 @@ void main() async {
 
   // Preload fonts so text doesn't pop in and feel like it's still loading
   await GoogleFonts.pendingFonts([
-    GoogleFonts.bebasNeue(),
-    GoogleFonts.dmMono(),
-    GoogleFonts.sourceSans3(),
+    GoogleFonts.playfairDisplay(),
+    GoogleFonts.jetBrainsMono(),
+    GoogleFonts.outfit(),
   ]);
 
   // Lock to portrait

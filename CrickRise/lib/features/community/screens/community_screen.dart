@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/cr_matchday.dart';
 import '../../player/providers/player_provider.dart';
 
 class CommunityScreen extends ConsumerStatefulWidget {
@@ -36,8 +37,9 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
 
     return Scaffold(
       backgroundColor: CR.bg,
-      body: SafeArea(
-        child: Column(
+      body: CRProgrammeBg(
+        child: SafeArea(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
@@ -46,15 +48,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    'THE COMMUNITY',
-                    style: GoogleFonts.oswald(
-                      color: CR.t1,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1,
-                    ),
-                  ).animate().fadeIn(duration: 300.ms),
+                  Text('The Community', style: CRType.display(size: 28)),
                   const Spacer(),
                   // Region dropdown
                   Container(
@@ -134,6 +128,7 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen>
             // The Movement
             const _TheMovementSection(),
           ],
+        ),
         ),
       ),
     );

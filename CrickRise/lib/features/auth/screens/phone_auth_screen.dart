@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/cr_atmosphere.dart';
+import '../../../core/theme/cr_matchday.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key});
@@ -15,34 +15,30 @@ class PhoneAuthScreen extends StatefulWidget {
 }
 
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
-  bool _showOtp = false;
-  String _phoneNumber = '';
-  Timer? _resendTimer;
-  int _resendCountdown = 30;
+  bool _otp = false;
+  String _phone = '';
+  Timer? _timer;
+  int _count = 30;
   bool _canResend = false;
 
   @override
   void dispose() {
-    _resendTimer?.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
-  void _sendCode(String phone) {
+  void _send(String phone) {
     if (phone.trim().isEmpty) return;
-    _phoneNumber = phone.trim();
-    setState(() => _showOtp = true);
-    _startResendTimer();
-  }
-
-  void _startResendTimer() {
-    _resendCountdown = 30;
+    _phone = phone.trim();
+    setState(() => _otp = true);
+    _count = 30;
     _canResend = false;
-    _resendTimer?.cancel();
-    _resendTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) return;
       setState(() {
-        _resendCountdown--;
-        if (_resendCountdown <= 0) {
+        _count--;
+        if (_count <= 0) {
           _canResend = true;
           t.cancel();
         }
@@ -50,35 +46,28 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     });
   }
 
-  void _verifyOtp(String otp) {
-    if (otp.length == 6) context.go('/auth/setup');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: CR.bg,
-      body: CRAtmosphere(
-        showPitch: false,
+      body: CRProgrammeBg(
         child: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: _showOtp
-                ? _OtpView(
-                    key: const ValueKey('otp'),
-                    phone: _phoneNumber,
-                    onVerify: _verifyOtp,
-                    canResend: _canResend,
-                    countdown: _resendCountdown,
-                    onResend: _startResendTimer,
-                    onBack: () => setState(() => _showOtp = false),
-                  )
-                : _PhoneView(
-                    key: const ValueKey('phone'),
-                    onSend: _sendCode,
-                    onBack: () => context.pop(),
-                  ),
-          ),
+          child: _otp
+              ? _OtpView(
+                  phone: _phone,
+                  count: _count,
+                  canResend: _canResend,
+                  onResend: () => _send(_phone),
+                  onBack: () => setState(() => _otp = false),
+                  onDone: (c) {
+                    if (c.length == 6) context.go('/auth/setup');
+                  },
+                )
+              : _PhoneView(
+                  onSend: _send,
+                  onBack: () => context.pop(),
+                  onSkip: () => context.go('/auth/setup'),
+                ),
         ),
       ),
     );
@@ -88,106 +77,64 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 class _PhoneView extends StatefulWidget {
   final ValueChanged<String> onSend;
   final VoidCallback onBack;
-
-  const _PhoneView({super.key, required this.onSend, required this.onBack});
+  final VoidCallback onSkip;
+  const _PhoneView({required this.onSend, required this.onBack, required this.onSkip});
 
   @override
   State<_PhoneView> createState() => _PhoneViewState();
 }
 
 class _PhoneViewState extends State<_PhoneView> {
-  final _ctrl = TextEditingController();
+  final _c = TextEditingController();
 
   @override
   void dispose() {
-    _ctrl.dispose();
+    _c.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          IconButton(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back, color: CR.ink)),
+          const SizedBox(height: 24),
+          Text('Your number', style: CRType.display(size: 32)),
           const SizedBox(height: 8),
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: CR.mist, size: 18),
-            onPressed: widget.onBack,
+          Text('We\'ll send a 6-digit code.', style: CRType.caption()),
+          const SizedBox(height: 32),
+          CRPaper(
             padding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 40),
-          Text('YOUR NUMBER', style: CRType.label(color: CR.flood)),
-          const SizedBox(height: 8),
-          Text('We\'ll text a code.', style: CRType.headline(size: 32)),
-          const SizedBox(height: 36),
-          CRGlassPanel(
-            padding: EdgeInsets.zero,
-            radius: 14,
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                  child: Text('+81', style: CRType.body(weight: FontWeight.w600)),
-                ),
-                Container(width: 1, height: 24, color: CR.cream.withValues(alpha: 0.08)),
-                Expanded(
-                  child: TextField(
-                    controller: _ctrl,
-                    keyboardType: TextInputType.phone,
-                    autofocus: true,
-                    style: CRType.score(size: 18, color: CR.cream),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                      hintText: '090 0000 0000',
-                      hintStyle: CRType.caption(color: CR.fog),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: _ctrl,
-            builder: (_, val, __) {
-              final enabled = val.text.isNotEmpty;
-              return GestureDetector(
-                onTap: enabled ? () => widget.onSend(val.text) : null,
-                child: Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: enabled ? const LinearGradient(colors: CR.floodGradient) : null,
-                    color: enabled ? null : CR.card,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'SEND CODE',
-                      style: CRType.headline(
-                        size: 20,
-                        color: enabled ? CR.inv : CR.fog,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: TextButton(
-              onPressed: () => context.go('/auth/setup'),
-              child: Text(
-                'Skip for now',
-                style: CRType.caption(color: CR.fog),
+            child: TextField(
+              controller: _c,
+              keyboardType: TextInputType.phone,
+              autofocus: true,
+              style: CRType.score(size: 18, color: CR.chalk),
+              decoration: InputDecoration(
+                prefixText: '+81  ',
+                prefixStyle: CRType.body(color: CR.ink),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.all(16),
+                hintText: '090 0000 0000',
+                hintStyle: CRType.caption(color: CR.fog),
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const Spacer(),
+          ValueListenableBuilder(
+            valueListenable: _c,
+            builder: (_, v, __) => CRProgrammeButton(
+              label: 'Send code',
+              onTap: v.text.isNotEmpty ? () => widget.onSend(v.text) : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: TextButton(onPressed: widget.onSkip, child: Text('Skip for now', style: CRType.caption())),
+          ),
         ],
       ),
     );
@@ -196,74 +143,59 @@ class _PhoneViewState extends State<_PhoneView> {
 
 class _OtpView extends StatelessWidget {
   final String phone;
-  final ValueChanged<String> onVerify;
+  final int count;
   final bool canResend;
-  final int countdown;
   final VoidCallback onResend;
   final VoidCallback onBack;
+  final ValueChanged<String> onDone;
 
   const _OtpView({
-    super.key,
     required this.phone,
-    required this.onVerify,
+    required this.count,
     required this.canResend,
-    required this.countdown,
     required this.onResend,
     required this.onBack,
+    required this.onDone,
   });
 
   @override
   Widget build(BuildContext context) {
-    final pinTheme = PinTheme(
-      width: 48,
-      height: 52,
-      textStyle: CRType.score(size: 20, color: CR.cream),
+    final theme = PinTheme(
+      width: 46,
+      height: 50,
+      textStyle: CRType.score(size: 18, color: CR.chalk),
       decoration: BoxDecoration(
         color: CR.card,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CR.cream.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: CR.chalk.withValues(alpha: 0.1)),
       ),
     );
-
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: CR.mist, size: 18),
-            onPressed: onBack,
-            padding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 40),
-          Text('CHECK YOUR PHONE', style: CRType.label(color: CR.flood)),
-          const SizedBox(height: 8),
-          Text('Enter the code.', style: CRType.headline(size: 32)),
-          const SizedBox(height: 8),
-          Text('+81 $phone', style: CRType.caption()),
-          const SizedBox(height: 40),
-          Center(
-            child: Pinput(
-              length: 6,
-              defaultPinTheme: pinTheme,
-              focusedPinTheme: pinTheme.copyWith(
-                decoration: pinTheme.decoration?.copyWith(
-                  border: Border.all(color: CR.flood, width: 2),
-                ),
+          IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back, color: CR.ink)),
+          const SizedBox(height: 24),
+          Text('Enter code', style: CRType.display(size: 32)),
+          Text('Sent to +81 $phone', style: CRType.caption()),
+          const SizedBox(height: 36),
+          Pinput(
+            length: 6,
+            defaultPinTheme: theme,
+            focusedPinTheme: theme.copyWith(
+              decoration: theme.decoration?.copyWith(
+                border: Border.all(color: CR.brass, width: 1.5),
               ),
-              onCompleted: onVerify,
-              autofocus: true,
             ),
+            onCompleted: onDone,
+            autofocus: true,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           Center(
             child: canResend
-                ? GestureDetector(
-                    onTap: onResend,
-                    child: Text('Resend code', style: CRType.body(color: CR.flood, weight: FontWeight.w600)),
-                  )
-                : Text('Resend in ${countdown}s', style: CRType.caption()),
+                ? GestureDetector(onTap: onResend, child: Text('Resend', style: CRType.body(color: CR.brass)))
+                : Text('Resend in ${count}s', style: CRType.caption()),
           ),
         ],
       ),

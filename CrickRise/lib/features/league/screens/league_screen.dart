@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/cr_matchday.dart';
 
 class LeagueScreen extends StatefulWidget {
   const LeagueScreen({super.key});
@@ -33,8 +34,10 @@ class _LeagueScreenState extends State<LeagueScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: CR.bg,
-      body: SafeArea(
-        child: _inLeague ? _LeagueView(tabCtrl: _tabCtrl) : const _EmptyState(),
+      body: CRProgrammeBg(
+        child: SafeArea(
+          child: _inLeague ? _LeagueView(tabCtrl: _tabCtrl) : const _EmptyState(),
+        ),
       ),
     );
   }
@@ -55,37 +58,17 @@ class _EmptyState extends StatelessWidget {
           children: [
             const Text('🏆', style: TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
-            Text(
-              'No league yet',
-              style: GoogleFonts.inter(
-                color: CR.text1,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            Text('No league yet', style: CRType.headline(size: 22)),
             const SizedBox(height: 8),
             Text(
               'Ask your organiser for an invite code, or create your own league.',
-              style: GoogleFonts.inter(color: CR.text2, fontSize: 14, height: 1.5),
+              style: CRType.caption(),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () => context.go('/auth/invite'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: CR.green,
-                  foregroundColor: CR.textInv,
-                ),
-                child: Text('JOIN A LEAGUE',
-                    style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700, fontSize: 14, color: CR.textInv)),
-              ),
-            ),
+            CRProgrammeButton(label: 'Join a league', onTap: () => context.go('/auth/invite')),
           ],
-        ).animate().fadeIn(duration: 400.ms),
+        ),
       ),
     );
   }
@@ -103,59 +86,36 @@ class _LeagueView extends StatelessWidget {
       children: [
         // Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'OKINAWA NEPALI CRICKET LEAGUE',
-                style: GoogleFonts.oswald(
-                  color: CR.text1,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ).animate().fadeIn(duration: 300.ms),
-              const SizedBox(height: 2),
-              Text(
-                'Season 2026  ·  Week 8 of 12  ·  3 matches remaining',
-                style: GoogleFonts.inter(color: CR.text2, fontSize: 12),
-              ),
+              Text('Okinawa Nepali Cricket League', style: CRType.display(size: 26)),
+              const SizedBox(height: 4),
+              Text('Season 2026  ·  Week 8 of 12  ·  3 matches left', style: CRType.caption()),
               const SizedBox(height: 16),
             ],
           ),
         ),
-        // Tab bar
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
+          margin: const EdgeInsets.symmetric(horizontal: 22),
           decoration: BoxDecoration(
-            color: CR.card,
-            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: CR.chalk.withValues(alpha: 0.08)),
+            borderRadius: BorderRadius.circular(3),
           ),
           child: TabBar(
             controller: tabCtrl,
-            labelColor: CR.inv,
-            unselectedLabelColor: CR.text3,
-            indicator: BoxDecoration(
-              color: CR.green,
-              borderRadius: BorderRadius.circular(8),
-            ),
+            labelColor: CR.chalk,
+            unselectedLabelColor: CR.fog,
+            indicator: BoxDecoration(color: CR.terracotta, borderRadius: BorderRadius.circular(2)),
             indicatorSize: TabBarIndicatorSize.tab,
             dividerColor: Colors.transparent,
-            labelStyle: GoogleFonts.oswald(
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              letterSpacing: 1.5,
-            ),
-            unselectedLabelStyle: GoogleFonts.oswald(
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-              letterSpacing: 1.5,
-            ),
+            labelStyle: CRType.overline(size: 9, color: CR.chalk),
+            unselectedLabelStyle: CRType.overline(size: 9),
             tabs: const [
-              Tab(text: 'SEASON'),
-              Tab(text: 'FIXTURES'),
-              Tab(text: 'STATS'),
+              Tab(text: 'Season'),
+              Tab(text: 'Fixtures'),
+              Tab(text: 'Stats'),
             ],
           ),
         ),
