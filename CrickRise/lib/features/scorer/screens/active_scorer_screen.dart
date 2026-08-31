@@ -22,17 +22,15 @@ class ActiveScorerScreen extends ConsumerStatefulWidget {
 class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
   final ConnectivityStatus _connectivity = ConnectivityStatus.online;
   bool _isDemoMatch = false;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with sample data if no match in progress
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = ref.read(scorerProvider);
-      if (state == null) {
-        _initSampleMatch();
-      }
-    });
+    if (ref.read(scorerProvider) == null) {
+      _initSampleMatch();
+    }
+    _initialized = true;
   }
 
   void _initSampleMatch() {
@@ -64,9 +62,12 @@ class _ActiveScorerScreenState extends ConsumerState<ActiveScorerScreen> {
   Widget build(BuildContext context) {
     final matchState = ref.watch(scorerProvider);
 
-    if (matchState == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+    if (!_initialized || matchState == null) {
+      return Scaffold(
+        backgroundColor: CR.bg,
+        body: Center(
+          child: Text('Setting up scorer…', style: CRType.caption(color: CR.mist)),
+        ),
       );
     }
 

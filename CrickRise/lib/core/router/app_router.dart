@@ -29,12 +29,16 @@ import '../../features/scorer/screens/mvp_screen.dart';
 import '../../features/scorer/screens/witness_screen.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/welcome',
   debugLogDiagnostics: false,
   routes: [
-    // Splash — no shell
+    // Skip splash — instant redirect so users never sit on a loading bar
     GoRoute(
       path: '/',
+      redirect: (context, state) => '/welcome',
+    ),
+    GoRoute(
+      path: '/splash',
       builder: (context, state) => const SplashScreen(),
     ),
 

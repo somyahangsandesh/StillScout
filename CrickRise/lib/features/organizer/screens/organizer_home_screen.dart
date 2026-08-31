@@ -21,7 +21,6 @@ class _OrganizerHomeScreenState extends State<OrganizerHomeScreen> {
     super.initState();
     _hasLeague = !widget.isNewOrganizer;
     if (!_hasLeague) {
-      // Redirect new organizers to the setup wizard after the first frame
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.go('/organizer/setup');
       });
@@ -31,10 +30,7 @@ class _OrganizerHomeScreenState extends State<OrganizerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_hasLeague) {
-      return const Scaffold(
-        backgroundColor: CR.bg,
-        body: Center(child: CircularProgressIndicator(color: CR.green)),
-      );
+      return const Scaffold(backgroundColor: CR.bg, body: SizedBox.shrink());
     }
     return const _OrganizerDashboard();
   }

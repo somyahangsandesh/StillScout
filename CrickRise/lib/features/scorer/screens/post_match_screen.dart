@@ -20,7 +20,10 @@ class PostMatchScreen extends ConsumerWidget {
     final stats = ref.watch(currentPlayerStatsProvider);
 
     if (state == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go('/play');
+      });
+      return const Scaffold(backgroundColor: CR.bg, body: SizedBox.shrink());
     }
 
     final chasingTeamWon = state.currentInnings == 2 &&

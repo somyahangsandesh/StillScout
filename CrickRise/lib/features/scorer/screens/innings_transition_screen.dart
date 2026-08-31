@@ -14,7 +14,10 @@ class InningsTransitionScreen extends ConsumerWidget {
     final state = ref.watch(scorerProvider);
 
     if (state == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go('/play');
+      });
+      return const Scaffold(backgroundColor: CR.bg, body: SizedBox.shrink());
     }
 
     return PopScope(

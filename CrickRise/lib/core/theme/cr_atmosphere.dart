@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
@@ -36,7 +37,8 @@ class CRAtmosphere extends StatelessWidget {
           const Positioned.fill(child: CustomPaint(painter: _FloodlightPainter())),
         if (showPitch)
           const Positioned.fill(child: CustomPaint(painter: _PitchDiagonalPainter())),
-        const Positioned.fill(child: CustomPaint(painter: _GrainPainter())),
+        if (!kIsWeb)
+          const Positioned.fill(child: CustomPaint(painter: _GrainPainter())),
         if (child != null) child!,
       ],
     );
@@ -147,39 +149,46 @@ class CRGlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final panel = Container(
+      padding: padding ?? const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: highlight
+              ? [CR.cardHigh, CR.card]
+              : [CR.card, CR.surface],
+        ),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: highlight
+              ? CR.flood.withValues(alpha: 0.28)
+              : CR.cream.withValues(alpha: 0.07),
+          width: highlight ? 1.5 : 1,
+        ),
+        boxShadow: highlight
+            ? [
+                BoxShadow(
+                  color: CR.flood.withValues(alpha: 0.12),
+                  blurRadius: 32,
+                  offset: const Offset(0, 12),
+                ),
+              ]
+            : null,
+      ),
+      child: child,
+    );
+
+    // BackdropFilter tanks web performance and looks like endless loading
+    if (kIsWeb) {
+      return ClipRRect(borderRadius: BorderRadius.circular(radius), child: panel);
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: padding ?? const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: highlight
-                  ? [CR.cardHigh.withValues(alpha: 0.92), CR.card.withValues(alpha: 0.88)]
-                  : [CR.card.withValues(alpha: 0.82), CR.surface.withValues(alpha: 0.78)],
-            ),
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: highlight
-                  ? CR.flood.withValues(alpha: 0.28)
-                  : CR.cream.withValues(alpha: 0.07),
-              width: highlight ? 1.5 : 1,
-            ),
-            boxShadow: highlight
-                ? [
-                    BoxShadow(
-                      color: CR.flood.withValues(alpha: 0.12),
-                      blurRadius: 32,
-                      offset: const Offset(0, 12),
-                    ),
-                  ]
-                : null,
-          ),
-          child: child,
-        ),
+        child: panel,
       ),
     );
   }

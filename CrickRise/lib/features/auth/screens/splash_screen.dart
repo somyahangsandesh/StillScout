@@ -19,11 +19,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     _ctrl.forward();
 
-    Future.delayed(const Duration(milliseconds: 2200), () {
+    Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted && !_navigated) {
         _navigated = true;
         context.go('/welcome');
@@ -51,19 +51,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               children: [
                 Text('CRICKRISE', style: CRType.display(size: 52, color: CR.cream)),
                 const SizedBox(height: 12),
-                Text(
-                  'every ball counts.',
-                  style: CRType.caption(color: CR.mist, size: 14),
-                ),
-                const SizedBox(height: 48),
-                SizedBox(
-                  width: 32,
-                  height: 2,
-                  child: LinearProgressIndicator(
-                    backgroundColor: CR.cardHigh,
-                    valueColor: AlwaysStoppedAnimation(CR.flood.withValues(alpha: 0.8)),
-                  ),
-                ),
+                Text('every ball counts.', style: CRType.caption(color: CR.mist, size: 14)),
               ],
             ),
           ),

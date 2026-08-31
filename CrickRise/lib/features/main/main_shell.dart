@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -35,61 +36,65 @@ class _FloatingNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final nav = Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: kIsWeb ? CR.card : CR.card.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: CR.cream.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _NavItem(
+            icon: Icons.home_rounded,
+            label: 'Home',
+            selected: currentIndex == 0,
+            onTap: () => context.go('/home'),
+          ),
+          _NavItem(
+            icon: Icons.emoji_events_outlined,
+            label: 'League',
+            selected: currentIndex == 1,
+            onTap: () => context.go('/league'),
+          ),
+          _PlayButton(
+            selected: currentIndex == 2,
+            onTap: () => context.go('/play'),
+          ),
+          _NavItem(
+            icon: Icons.groups_outlined,
+            label: 'Club',
+            selected: currentIndex == 3,
+            onTap: () => context.go('/community'),
+          ),
+          _NavItem(
+            icon: Icons.person_outline_rounded,
+            label: 'Me',
+            selected: currentIndex == 4,
+            onTap: () => context.go('/me'),
+          ),
+        ],
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            height: 72,
-            decoration: BoxDecoration(
-              color: CR.card.withValues(alpha: 0.88),
+      child: kIsWeb
+          ? nav
+          : ClipRRect(
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: CR.cream.withValues(alpha: 0.08)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: nav,
+              ),
             ),
-            child: Row(
-              children: [
-                _NavItem(
-                  icon: Icons.home_rounded,
-                  label: 'Home',
-                  selected: currentIndex == 0,
-                  onTap: () => context.go('/home'),
-                ),
-                _NavItem(
-                  icon: Icons.emoji_events_outlined,
-                  label: 'League',
-                  selected: currentIndex == 1,
-                  onTap: () => context.go('/league'),
-                ),
-                _PlayButton(
-                  selected: currentIndex == 2,
-                  onTap: () => context.go('/play'),
-                ),
-                _NavItem(
-                  icon: Icons.groups_outlined,
-                  label: 'Club',
-                  selected: currentIndex == 3,
-                  onTap: () => context.go('/community'),
-                ),
-                _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Me',
-                  selected: currentIndex == 4,
-                  onTap: () => context.go('/me'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
