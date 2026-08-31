@@ -1,6 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -14,68 +15,78 @@ class MainShell extends StatelessWidget {
     if (location.startsWith('/play') || location.startsWith('/session')) return 2;
     if (location.startsWith('/community')) return 3;
     if (location.startsWith('/me')) return 4;
-    return 0; // /home
+    return 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    final current = _currentIndex(context);
-
     return Scaffold(
       backgroundColor: CR.bg,
+      extendBody: true,
       body: child,
-      bottomNavigationBar: _CRBottomNav(currentIndex: current),
+      bottomNavigationBar: _FloatingNav(currentIndex: _currentIndex(context)),
     );
   }
 }
 
-class _CRBottomNav extends StatelessWidget {
+class _FloatingNav extends StatelessWidget {
   final int currentIndex;
-  const _CRBottomNav({required this.currentIndex});
+  const _FloatingNav({required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: CR.bg,
-        border: Border(top: BorderSide(color: CR.card, width: 1)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: [
-              _NavItem(
-                icon: Icons.home_rounded,
-                label: 'HOME',
-                selected: currentIndex == 0,
-                onTap: () => context.go('/home'),
-              ),
-              _NavItem(
-                icon: Icons.emoji_events_rounded,
-                label: 'LEAGUE',
-                selected: currentIndex == 1,
-                onTap: () => context.go('/league'),
-              ),
-              // Center PLAY FAB
-              _PlayButton(
-                selected: currentIndex == 2,
-                onTap: () => context.go('/play'),
-              ),
-              _NavItem(
-                icon: Icons.public_rounded,
-                label: 'COMMUNITY',
-                selected: currentIndex == 3,
-                onTap: () => context.go('/community'),
-              ),
-              _NavItem(
-                icon: Icons.person_rounded,
-                label: 'ME',
-                selected: currentIndex == 4,
-                onTap: () => context.go('/me'),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            height: 72,
+            decoration: BoxDecoration(
+              color: CR.card.withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: CR.cream.withValues(alpha: 0.08)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _NavItem(
+                  icon: Icons.home_rounded,
+                  label: 'Home',
+                  selected: currentIndex == 0,
+                  onTap: () => context.go('/home'),
+                ),
+                _NavItem(
+                  icon: Icons.emoji_events_outlined,
+                  label: 'League',
+                  selected: currentIndex == 1,
+                  onTap: () => context.go('/league'),
+                ),
+                _PlayButton(
+                  selected: currentIndex == 2,
+                  onTap: () => context.go('/play'),
+                ),
+                _NavItem(
+                  icon: Icons.groups_outlined,
+                  label: 'Club',
+                  selected: currentIndex == 3,
+                  onTap: () => context.go('/community'),
+                ),
+                _NavItem(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Me',
+                  selected: currentIndex == 4,
+                  onTap: () => context.go('/me'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -98,7 +109,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? CR.green : CR.t3;
+    final color = selected ? CR.flood : CR.fog;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -106,32 +117,13 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Stack(
-              alignment: Alignment.topCenter,
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, color: color, size: 22),
-                if (selected)
-                  Positioned(
-                    top: -5,
-                    child: Container(
-                      width: 4,
-                      height: 4,
-                      decoration: const BoxDecoration(
-                        color: CR.green,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 3),
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 2),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: CRType.caption(
+                size: 10,
                 color: color,
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
               ),
             ),
           ],
@@ -154,24 +146,25 @@ class _PlayButton extends StatelessWidget {
         onTap: onTap,
         child: Center(
           child: Container(
-            width: 56,
-            height: 56,
+            width: 52,
+            height: 52,
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: CR.green,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: CR.floodGradient,
+              ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: CR.green.withOpacity(0.35),
-                  blurRadius: 16,
+                  color: CR.flood.withValues(alpha: selected ? 0.5 : 0.3),
+                  blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.sports_cricket,
-              color: CR.inv,
-              size: 24,
-            ),
+            child: const Icon(Icons.sports_cricket, color: CR.inv, size: 24),
           ),
         ),
       ),

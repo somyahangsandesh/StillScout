@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/cr_atmosphere.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,26 +11,29 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _fade;
+  bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _ctrl.forward();
 
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) context.go('/welcome');
+    Future.delayed(const Duration(milliseconds: 2200), () {
+      if (mounted && !_navigated) {
+        _navigated = true;
+        context.go('/welcome');
+      }
     });
   }
 
   @override
   void dispose() {
-    _pulseCtrl.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
@@ -39,36 +41,32 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: CR.bg,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'CRICKRISE',
-              style: GoogleFonts.oswald(
-                color: CR.green,
-                fontSize: 36,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 4,
-              ),
-            ).animate().fadeIn(duration: 600.ms),
-            const SizedBox(height: 20),
-            AnimatedBuilder(
-              animation: _pulseCtrl,
-              builder: (_, __) {
-                return Opacity(
-                  opacity: 0.5 + 0.5 * _pulseCtrl.value,
-                  child: const Text(
-                    '●',
-                    style: TextStyle(
-                      color: CR.green,
-                      fontSize: 18,
-                    ),
+      body: CRAtmosphere(
+        showPitch: false,
+        child: FadeTransition(
+          opacity: _fade,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('CRICKRISE', style: CRType.display(size: 52, color: CR.cream)),
+                const SizedBox(height: 12),
+                Text(
+                  'every ball counts.',
+                  style: CRType.caption(color: CR.mist, size: 14),
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: 32,
+                  height: 2,
+                  child: LinearProgressIndicator(
+                    backgroundColor: CR.cardHigh,
+                    valueColor: AlwaysStoppedAnimation(CR.flood.withValues(alpha: 0.8)),
                   ),
-                );
-              },
-            ).animate().fadeIn(delay: 400.ms),
-          ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

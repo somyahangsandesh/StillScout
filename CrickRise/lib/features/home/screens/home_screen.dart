@@ -1,13 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/models/match.dart';
 import '../../../core/models/player.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/cr_atmosphere.dart';
 import '../../player/providers/player_provider.dart';
 import '../../scorer/providers/scorer_provider.dart';
 
@@ -16,9 +15,9 @@ class HomeScreen extends ConsumerWidget {
 
   static String _greeting() {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Good morning,';
-    if (h < 17) return 'Good afternoon,';
-    return 'Good evening,';
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 
   @override
@@ -29,140 +28,93 @@ class HomeScreen extends ConsumerWidget {
     final rivalRating = ref.watch(rivalRatingProvider);
     final below = ref.watch(belowPlayerProvider);
     final belowRating = ref.watch(belowPlayerRatingProvider);
-    final matchState = ref.watch(scorerProvider);
 
     return Scaffold(
       backgroundColor: CR.bg,
-      body: Stack(
-        children: [
-          // Atmospheric radial glow — very subtle sports-app atmosphere
-          Positioned(
-            top: -120,
-            right: -80,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    CR.green.withOpacity(0.04),
-                    Colors.transparent,
+      body: CRAtmosphere(
+        child: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _ActiveMatchBannerSlot(),
+                const SizedBox(height: 8),
+                Text(_greeting(), style: CRType.caption(color: CR.mist, size: 14)),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        player.name.split(' ').first.toUpperCase(),
+                        style: CRType.display(size: 44),
+                      ),
+                    ),
+                    Text(player.crDisplay, style: CRType.label(color: CR.fog, size: 10)),
                   ],
                 ),
-              ),
+                if (player.roles.length > 1) ...[
+                  const SizedBox(height: 12),
+                  _RoleBadgeRow(player: player),
+                ],
+                const SizedBox(height: 28),
+                if (rating.matchesPlayed < 5)
+                  _OvrUnlockCard(matchesPlayed: rating.matchesPlayed)
+                else
+                  _BroadcastOvrCard(
+                    rating: rating,
+                    player: player,
+                    onTap: () => context.push('/me'),
+                  ),
+                const SizedBox(height: 28),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const CRSectionLabel('The Gap'),
+                    Text('League', style: CRType.caption(size: 12, color: CR.fog)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _RivalryStrip(
+                  player: player,
+                  rating: rating,
+                  rival: rival,
+                  rivalRating: rivalRating,
+                  below: below,
+                  belowRating: belowRating,
+                ),
+                const SizedBox(height: 28),
+                _PlayTodayButton(onTap: () => context.go('/play')),
+                const SizedBox(height: 28),
+                const CRSectionLabel('Next Up'),
+                const SizedBox(height: 12),
+                _NextMatchCard(canScore: player.canScore),
+                const SizedBox(height: 20),
+                _CommunityWhisper(),
+              ],
             ),
           ),
-          SafeArea(
-            child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Live match banner — appears when scorer has active match
-              if (matchState != null)
-                _LiveMatchBanner(state: matchState)
-                    .animate()
-                    .fadeIn(duration: 300.ms),
-              if (matchState != null) const SizedBox(height: 16),
-              // Greeting — time-aware
-              Text(
-                _greeting(),
-                style: GoogleFonts.inter(
-                  color: CR.t2,
-                  fontSize: 14,
-                ),
-              ).animate().fadeIn(duration: 300.ms),
-              const SizedBox(height: 2),
-              Text(
-                player.name.split(' ').first,
-                style: GoogleFonts.oswald(
-                  color: CR.t1,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ).animate().fadeIn(delay: 80.ms),
-              if (player.roles.length > 1) ...[
-                const SizedBox(height: 12),
-                _RoleBadgeRow(player: player)
-                    .animate()
-                    .fadeIn(delay: 120.ms),
-              ],
-              const SizedBox(height: 24),
-
-              // OVR Card — show progress card for new players (<5 matches)
-              if (rating.matchesPlayed < 5)
-                _OvrProgressCard(matchesPlayed: rating.matchesPlayed)
-                    .animate()
-                    .fadeIn(delay: 150.ms)
-                    .slideY(begin: 0.05)
-              else
-                _OvrCard(
-                  rating: rating,
-                  player: player,
-                  onTap: () => context.push('/me'),
-                ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.05),
-              const SizedBox(height: 20),
-
-              // HUNTING LIST
-              _HuntingListHeader(),
-              const SizedBox(height: 12),
-              _PositionCard(
-                player: player,
-                rating: rating,
-                rival: rival,
-                rivalRating: rivalRating,
-                below: below,
-                belowRating: belowRating,
-              ).animate().fadeIn(delay: 250.ms),
-              const SizedBox(height: 24),
-
-              // START MATCH
-              _StartMatchButton(onTap: () => context.go('/play'))
-                  .animate()
-                  .fadeIn(delay: 320.ms),
-              const SizedBox(height: 24),
-
-              // UPCOMING
-              const CRSectionLabel('Upcoming'),
-              const SizedBox(height: 12),
-              _UpcomingMatchCard(canScore: player.canScore)
-                  .animate()
-                  .fadeIn(delay: 380.ms),
-              const SizedBox(height: 24),
-
-              // LAST MATCH
-              const CRSectionLabel('Last Match'),
-              const SizedBox(height: 12),
-              _LastMatchCard()
-                  .animate()
-                  .fadeIn(delay: 420.ms),
-              const SizedBox(height: 24),
-
-              // IN THE COMMUNITY
-              const CRSectionLabel('In the Community'),
-              const SizedBox(height: 12),
-              _CommunityTeaser()
-                  .animate()
-                  .fadeIn(delay: 460.ms),
-              const SizedBox(height: 24),
-
-              // LOOKING FOR OPPONENTS — ultra-compact stub
-              _LookingForChip()
-                  .animate()
-                  .fadeIn(delay: 500.ms),
-            ],
-          ),
         ),
-          ),
-        ],
       ),
     );
   }
 }
 
-// ─── Role Badge Row ────────────────────────────────────────────────────────────
+class _ActiveMatchBannerSlot extends ConsumerWidget {
+  const _ActiveMatchBannerSlot();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matchState = ref.watch(scorerProvider);
+    if (matchState == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: _LiveMatchBanner(state: matchState),
+    );
+  }
+}
 
 class _RoleBadgeRow extends StatelessWidget {
   final Player player;
@@ -172,356 +124,182 @@ class _RoleBadgeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const CRRoleBadge('PLAYER', CR.green, active: true),
+        const CRRoleBadge('PLAYER', CR.grass, active: true),
         if (player.isOrganizer) ...[
-          const SizedBox(width: 6),
-          CRRoleBadge(
-            'ORGANIZER',
-            CR.gold,
-            active: false,
-            onTap: () => context.push('/organizer'),
-          ),
-        ],
-        if (player.canScore && !player.isOrganizer) ...[
-          const SizedBox(width: 6),
-          const CRRoleBadge('SCORER', CR.orange, active: false),
+          const SizedBox(width: 8),
+          CRRoleBadge('ORGANIZER', CR.flood, onTap: () => context.push('/organizer')),
         ],
       ],
     );
   }
 }
 
-// ─── OVR Progress Card (new players, <5 matches) ──────────────────────────────
-
-class _OvrProgressCard extends StatelessWidget {
+class _OvrUnlockCard extends StatelessWidget {
   final int matchesPlayed;
-  const _OvrProgressCard({required this.matchesPlayed});
+  const _OvrUnlockCard({required this.matchesPlayed});
 
   @override
   Widget build(BuildContext context) {
     final remaining = 5 - matchesPlayed;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: CR.card,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return CRGlassPanel(
+      highlight: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'YOUR FIRST OVR',
-            style: GoogleFonts.inter(
-              color: CR.t3,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Play $remaining more ${remaining == 1 ? 'match' : 'matches'} to unlock',
-            style: GoogleFonts.inter(
-              color: CR.t1,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text('FIRST OVR UNLOCK', style: CRType.label(color: CR.flood)),
           const SizedBox(height: 12),
+          Text(
+            '$remaining more ${remaining == 1 ? 'match' : 'matches'}',
+            style: CRType.headline(size: 32),
+          ),
+          const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(2),
             child: LinearProgressIndicator(
               value: matchesPlayed / 5,
               backgroundColor: CR.cardHigh,
-              valueColor: const AlwaysStoppedAnimation<Color>(CR.green),
-              minHeight: 6,
+              valueColor: const AlwaysStoppedAnimation(CR.flood),
+              minHeight: 4,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            '$matchesPlayed / 5 matches played',
-            style: GoogleFonts.inter(
-              color: CR.t2,
-              fontSize: 12,
-            ),
-          ),
+          Text('$matchesPlayed / 5 played', style: CRType.caption()),
         ],
       ),
     );
   }
 }
 
-// ─── OVR Card ─────────────────────────────────────────────────────────────────
-
-class _OvrCard extends StatelessWidget {
+class _BroadcastOvrCard extends StatelessWidget {
   final PlayerRating rating;
   final Player player;
   final VoidCallback onTap;
 
-  const _OvrCard({
+  const _BroadcastOvrCard({
     required this.rating,
     required this.player,
     required this.onTap,
   });
 
-  static const _formData = [72.0, 76.0, 79.0, 77.0, 86.0];
+  static const _form = [72.0, 76.0, 79.0, 77.0, 86.0];
 
   @override
   Widget build(BuildContext context) {
-    final trending = _formData.last >= _formData.first;
-
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0.0, 0.5, 1.0],
-            colors: [Color(0xFF0D1A0F), Color(0xFF101810), Color(0xFF080E08)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: CR.green.withOpacity(0.2), width: 1.5),
-          boxShadow: [
-            BoxShadow(color: CR.green.withOpacity(0.08), blurRadius: 24, spreadRadius: -4, offset: const Offset(0, 8)),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Stack(
-            children: [
-              // Atmospheric seam texture
-              Positioned.fill(child: CustomPaint(painter: SeamCurvePainter(opacity: 0.06))),
-              // Gold glow behind OVR number
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  width: 200,
-                  height: 160,
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: [CR.gold.withOpacity(0.07), Colors.transparent],
-                    ),
-                  ),
+      child: CRGlassPanel(
+        highlight: true,
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -20,
+              top: -30,
+              child: Text(
+                player.jerseyNumber?.toString() ?? '7',
+                style: CRType.display(
+                  size: 140,
+                  color: CR.cream.withValues(alpha: 0.03),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
+            ),
+            Positioned.fill(child: CustomPaint(painter: SeamCurvePainter())),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left: player identity
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                player.name.toUpperCase(),
-                                style: GoogleFonts.oswald(
-                                  color: CR.t1,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                player.crDisplay,
-                                style: GoogleFonts.spaceGrotesk(
-                                  color: CR.t3,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                              if (rating.hasHotStreak) ...[
-                                const SizedBox(height: 10),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: CR.amber.withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: CR.amber.withOpacity(0.3)),
-                                  ),
-                                  child: Text(
-                                    '🔥 ${rating.hotStreakCount}-match streak',
-                                    style: GoogleFonts.inter(
-                                      color: CR.amber,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        // Right: gold OVR — the hero number
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'OVR',
-                              style: GoogleFonts.oswald(
-                                color: CR.gold.withOpacity(0.5),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 3,
-                              ),
-                            ),
-                            ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: CR.goldGradient,
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ).createShader(bounds),
-                              child: Text(
-                                rating.ovr.round().toString(),
-                                style: GoogleFonts.spaceGrotesk(
-                                  color: Colors.white,
-                                  fontSize: 80,
-                                  fontWeight: FontWeight.w900,
-                                  height: 0.9,
-                                ),
-                              ),
-                            ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(player.name.toUpperCase(), style: CRType.headline(size: 22)),
+                          const SizedBox(height: 4),
+                          Text(player.crDisplay, style: CRType.label(size: 10, color: CR.fog)),
+                          if (rating.hasHotStreak) ...[
+                            const SizedBox(height: 10),
+                            CRBadge('${rating.hotStreakCount}-match streak', color: CR.flood),
                           ],
-                        ),
-                      ],
-                    ),
-                    // Gradient divider
-                    Container(
-                      height: 1,
-                      margin: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [CR.green.withOpacity(0.4), Colors.transparent],
-                        ),
+                        ],
                       ),
                     ),
-                    // BAT / BOWL / FIELD as inline columns + form sparkline
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _DomainInline('BAT', rating.bat.round(), CR.green),
-                        _DomainInline('BOWL', rating.bowl.round(), CR.gold),
-                        _DomainInline('FIELD', rating.field.round(), CR.blue),
-                        // Form sparkline
-                        SizedBox(
-                          width: 80,
-                          height: 36,
-                          child: LineChart(
-                            LineChartData(
-                              gridData: const FlGridData(show: false),
-                              titlesData: const FlTitlesData(show: false),
-                              borderData: FlBorderData(show: false),
-                              lineTouchData: const LineTouchData(enabled: false),
-                              minX: 0,
-                              maxX: 4,
-                              minY: _formData.reduce((a, b) => a < b ? a : b) - 5,
-                              maxY: _formData.reduce((a, b) => a > b ? a : b) + 5,
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: _formData.asMap().entries
-                                      .map((e) => FlSpot(e.key.toDouble(), e.value))
-                                      .toList(),
-                                  isCurved: true,
-                                  color: trending ? CR.green : CR.ballRed,
-                                  barWidth: 2,
-                                  isStrokeCapRound: true,
-                                  dotData: const FlDotData(show: false),
-                                  belowBarData: BarAreaData(
-                                    show: true,
-                                    color: trending
-                                        ? CR.green.withOpacity(0.08)
-                                        : CR.ballRed.withOpacity(0.08),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                    CRBroadcastNumber(
+                      value: rating.ovr.round().toString(),
+                      label: 'OVR',
+                      size: 80,
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(height: 20),
+                Container(height: 1, color: CR.cream.withValues(alpha: 0.08)),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _StatPill('BAT', rating.bat.round(), CR.grass),
+                    const SizedBox(width: 16),
+                    _StatPill('BOWL', rating.bowl.round(), CR.flood),
+                    const SizedBox(width: 16),
+                    _StatPill('FIELD', rating.field.round(), CR.sky),
+                    const Spacer(),
+                    SizedBox(
+                      width: 72,
+                      height: 32,
+                      child: LineChart(
+                        LineChartData(
+                          gridData: const FlGridData(show: false),
+                          titlesData: const FlTitlesData(show: false),
+                          borderData: FlBorderData(show: false),
+                          lineTouchData: const LineTouchData(enabled: false),
+                          minX: 0,
+                          maxX: 4,
+                          minY: 68,
+                          maxY: 90,
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: _form.asMap().entries
+                                  .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                  .toList(),
+                              isCurved: true,
+                              color: CR.flood,
+                              barWidth: 2,
+                              dotData: const FlDotData(show: false),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// Inline domain display (number above label)
-class _DomainInline extends StatelessWidget {
+class _StatPill extends StatelessWidget {
   final String label;
   final int value;
   final Color color;
-  const _DomainInline(this.label, this.value, this.color);
+
+  const _StatPill(this.label, this.value, this.color);
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          value.toString(),
-          style: GoogleFonts.spaceGrotesk(color: color, fontSize: 24, fontWeight: FontWeight.w800, height: 1),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.oswald(color: CR.t2, fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 1),
-        ),
+        Text(value.toString(), style: CRType.score(size: 22, color: color)),
+        Text(label, style: CRType.label(size: 9, color: CR.fog)),
       ],
     );
   }
 }
 
-// ─── Hunting List Header ─────────────────────────────────────────────────────
-
-class _HuntingListHeader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const CRSectionLabel('Hunting List'),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: CR.card,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: CR.glass),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'League',
-                style: GoogleFonts.inter(
-                  color: CR.t3,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.keyboard_arrow_down, color: CR.t3, size: 14),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Position Card ────────────────────────────────────────────────────────────
-
-class _PositionCard extends StatelessWidget {
+class _RivalryStrip extends StatelessWidget {
   final Player player;
   final PlayerRating rating;
   final Player rival;
@@ -529,7 +307,7 @@ class _PositionCard extends StatelessWidget {
   final Player below;
   final PlayerRating belowRating;
 
-  const _PositionCard({
+  const _RivalryStrip({
     required this.player,
     required this.rating,
     required this.rival,
@@ -541,51 +319,34 @@ class _PositionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gapAbove = (rivalRating.ovr - rating.ovr).round();
-    final gapBelow = (rating.ovr - belowRating.ovr).round();
-    // Player rank derived from gap (sample: player is #3)
-    const playerRank = 3;
+    const rank = 3;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: CR.card,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return CRGlassPanel(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
-          _PositionRow(
-            rank: '#${playerRank - 1}',
-            jersey: rival.jerseyDisplay,
+          _RivalRow(
+            rank: rank - 1,
             name: rival.name,
-            team: rival.teamName ?? '',
             ovr: rivalRating.ovr.round(),
-            sub: '↑ $gapAbove OVR ahead',
-            highlighted: false,
-            showGapIndicator: gapAbove <= 5,
-            gapPoints: gapAbove,
+            note: '$gapAbove ahead',
+            highlight: false,
           ),
-          Container(height: 1, color: CR.cardHigh),
-          _PositionRow(
-            rank: '#$playerRank',
-            jersey: player.jerseyDisplay,
+          Divider(height: 1, color: CR.cream.withValues(alpha: 0.06)),
+          _RivalRow(
+            rank: rank,
             name: player.name,
-            team: player.teamName ?? '',
             ovr: rating.ovr.round(),
-            sub: rating.hasHotStreak ? '🔥 ${rating.hotStreakDisplay}' : 'YOU',
-            highlighted: true,
-            showGapIndicator: false,
-            gapPoints: 0,
+            note: 'YOU',
+            highlight: true,
           ),
-          Container(height: 1, color: CR.cardHigh),
-          _PositionRow(
-            rank: '#${playerRank + 1}',
-            jersey: below.jerseyDisplay,
+          Divider(height: 1, color: CR.cream.withValues(alpha: 0.06)),
+          _RivalRow(
+            rank: rank + 1,
             name: below.name,
-            team: below.teamName ?? '',
             ovr: belowRating.ovr.round(),
-            sub: '↓ $gapBelow OVR behind you',
-            highlighted: false,
-            showGapIndicator: false,
-            gapPoints: gapBelow,
+            note: '${(rating.ovr - belowRating.ovr).round()} behind',
+            highlight: false,
           ),
         ],
       ),
@@ -593,202 +354,102 @@ class _PositionCard extends StatelessWidget {
   }
 }
 
-class _PositionRow extends StatelessWidget {
-  final String rank;
-  final String jersey;
+class _RivalRow extends StatelessWidget {
+  final int rank;
   final String name;
-  final String team;
   final int ovr;
-  final String sub;
-  final bool highlighted;
-  final bool showGapIndicator;
-  final int gapPoints;
+  final String note;
+  final bool highlight;
 
-  const _PositionRow({
+  const _RivalRow({
     required this.rank,
-    required this.jersey,
     required this.name,
-    required this.team,
     required this.ovr,
-    required this.sub,
-    required this.highlighted,
-    required this.showGapIndicator,
-    required this.gapPoints,
+    required this.note,
+    required this.highlight,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: highlighted ? CR.green.withOpacity(0.06) : Colors.transparent,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      color: highlight ? CR.flood.withValues(alpha: 0.06) : null,
+      child: Row(
         children: [
-          Row(
-            children: [
-              if (highlighted)
-                Container(
-                  width: 3,
-                  height: 44,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: CR.greenGradient,
-                    ),
-                    borderRadius: BorderRadius.circular(2),
-                    boxShadow: [BoxShadow(color: CR.green.withOpacity(0.5), blurRadius: 8)],
+          Text('#$rank', style: CRType.label(size: 11, color: CR.fog)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: CRType.body(
+                    size: 15,
+                    weight: highlight ? FontWeight.w600 : FontWeight.w400,
+                    color: highlight ? CR.cream : CR.mist,
                   ),
-                )
-              else
-                const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '$rank  $jersey',
-                          style: GoogleFonts.spaceGrotesk(
-                            color: CR.t3,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            team.isNotEmpty ? '$name · $team' : name,
-                            style: GoogleFonts.oswald(
-                              color: highlighted ? CR.t1 : CR.t2,
-                              fontWeight: highlighted ? FontWeight.w500 : FontWeight.w400,
-                              fontSize: 15,
-                              letterSpacing: 0.3,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      sub,
-                      style: GoogleFonts.inter(
-                        color: highlighted ? CR.green : CR.t3,
-                        fontSize: 11,
-                        fontWeight: highlighted ? FontWeight.w600 : FontWeight.w400,
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    ovr.toString(),
-                    style: GoogleFonts.spaceGrotesk(
-                      color: highlighted ? CR.gold : CR.t2,
-                      fontSize: highlighted ? 28 : 22,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
+                Text(
+                  note,
+                  style: CRType.caption(
+                    size: 11,
+                    color: highlight ? CR.flood : CR.fog,
                   ),
-                  Text(
-                    'OVR',
-                    style: GoogleFonts.inter(
-                      color: CR.t3,
-                      fontSize: 9,
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Gap closeable indicator for rival-above row
-          if (showGapIndicator && gapPoints <= 5) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(left: 15),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: CR.gold.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'Gap closeable — play well this weekend',
-                      style: GoogleFonts.inter(
-                        color: CR.gold,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
+          Text(
+            ovr.toString(),
+            style: CRType.score(
+              size: highlight ? 28 : 22,
+              color: highlight ? CR.flood : CR.mist,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// ─── Start Match Button ───────────────────────────────────────────────────────
-
-class _StartMatchButton extends StatefulWidget {
+class _PlayTodayButton extends StatefulWidget {
   final VoidCallback onTap;
-  const _StartMatchButton({required this.onTap});
+  const _PlayTodayButton({required this.onTap});
 
   @override
-  State<_StartMatchButton> createState() => _StartMatchButtonState();
+  State<_PlayTodayButton> createState() => _PlayTodayButtonState();
 }
 
-class _StartMatchButtonState extends State<_StartMatchButton>
+class _PlayTodayButtonState extends State<_PlayTodayButton>
     with SingleTickerProviderStateMixin {
-  late AnimationController _glowCtrl;
-  late Animation<double> _glowAnim;
+  late AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _glowCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _glowAnim = Tween<double>(begin: 0.2, end: 0.5).animate(
-      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut),
-    );
+    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))
+      ..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _glowCtrl.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _glowAnim,
+      animation: _ctrl,
       builder: (_, child) => Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: CR.green.withOpacity(_glowAnim.value * 0.7),
-              blurRadius: 28,
-              spreadRadius: -4,
-              offset: const Offset(0, 8),
+              color: CR.flood.withValues(alpha: 0.15 + _ctrl.value * 0.2),
+              blurRadius: 32,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -798,13 +459,9 @@ class _StartMatchButtonState extends State<_StartMatchButton>
         onTap: widget.onTap,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF00B248), Color(0xFF00E676)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: const LinearGradient(colors: CR.floodGradient),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -813,36 +470,22 @@ class _StartMatchButtonState extends State<_StartMatchButton>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'START SESSION',
-                      style: GoogleFonts.oswald(
-                        color: CR.inv,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
+                    Text('PLAY TODAY', style: CRType.headline(size: 28, color: CR.inv)),
                     Text(
                       'Friendly · League · Tournament',
-                      style: GoogleFonts.inter(
-                        color: CR.inv.withOpacity(0.6),
-                        fontSize: 13,
-                      ),
+                      style: CRType.caption(size: 13, color: CR.inv.withValues(alpha: 0.65)),
                     ),
                   ],
                 ),
               ),
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: CR.inv.withOpacity(0.15),
+                  color: CR.inv.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
-                  child: Text('🏏', style: TextStyle(fontSize: 24)),
-                ),
+                child: const Center(child: Text('🏏', style: TextStyle(fontSize: 22))),
               ),
             ],
           ),
@@ -852,544 +495,104 @@ class _StartMatchButtonState extends State<_StartMatchButton>
   }
 }
 
-// ─── Upcoming Match Card ──────────────────────────────────────────────────────
-
-class _UpcomingMatchCard extends StatelessWidget {
+class _NextMatchCard extends StatelessWidget {
   final bool canScore;
-  const _UpcomingMatchCard({this.canScore = false});
+  const _NextMatchCard({this.canScore = false});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: CR.card,
-        borderRadius: BorderRadius.circular(16),
-        border: const Border(left: BorderSide(color: CR.green, width: 3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Match header: next match · countdown
-          Row(
-            children: [
-              Text(
-                'NEXT MATCH',
-                style: GoogleFonts.inter(
-                  color: CR.t3,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: 3,
-                height: 3,
-                decoration:
-                    const BoxDecoration(color: CR.t3, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'SAT  ·  4 DAYS',
-                style: GoogleFonts.inter(
-                  color: CR.green,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Teams + OVR
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Okinawa Warriors',
-                      style: GoogleFonts.inter(
-                        color: CR.t1,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'OVR 74',
-                      style: GoogleFonts.spaceGrotesk(
-                        color: CR.gold,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                'vs',
-                style: GoogleFonts.inter(color: CR.t3, fontSize: 13),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Tokyo Rhinos',
-                      style: GoogleFonts.inter(
-                        color: CR.t2,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'OVR 71',
-                      style: GoogleFonts.spaceGrotesk(
-                        color: CR.t3,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Venue + format
-          Container(height: 1, color: CR.cardHigh),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(Icons.place_outlined, color: CR.t3, size: 14),
-              const SizedBox(width: 4),
-              Text(
-                'Okinawa Sports Park',
-                style: GoogleFonts.inter(color: CR.t3, fontSize: 12),
-              ),
-              const SizedBox(width: 8),
-              Container(width: 1, height: 10, color: CR.cardHigh),
-              const SizedBox(width: 8),
-              Text(
-                'T20',
-                style: GoogleFonts.inter(
-                  color: CR.t3,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // YOUR STAKES
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: CR.cardHigh,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'YOUR STAKES',
-                  style: GoogleFonts.inter(
-                    color: CR.t3,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const _StakeLine(
-                  icon: Icons.arrow_upward_rounded,
-                  text: 'Win and you climb to #2 in batting',
-                ),
-                const SizedBox(height: 8),
-                const _StakeLine(
-                  icon: Icons.flag_outlined,
-                  text: '13 runs from your season 500',
-                ),
-              ],
-            ),
-          ),
-
-          if (canScore) ...[
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => context.go('/play'),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: CR.green,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    'SCORE THIS MATCH →',
-                    style: GoogleFonts.inter(
-                      color: CR.inv,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _StakeLine extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _StakeLine({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: CR.gold, size: 13),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            '"$text"',
-            style: GoogleFonts.inter(
-              color: CR.t1,
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Last Match Card ──────────────────────────────────────────────────────────
-
-class _LastMatchCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: CR.card,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return CRGlassPanel(
       child: Row(
         children: [
+          Column(
+            children: [
+              Text('SAT', style: CRType.label(size: 10, color: CR.fog)),
+              Text('14', style: CRType.score(size: 28, color: CR.cream)),
+              Text('SEP', style: CRType.label(size: 10, color: CR.fog)),
+            ],
+          ),
           Container(
-            width: 4,
+            width: 1,
             height: 48,
-            margin: const EdgeInsets.only(right: 14),
-            decoration: BoxDecoration(
-              color: CR.green,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            color: CR.cream.withValues(alpha: 0.08),
           ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      'vs Tokyo Rhinos',
-                      style: GoogleFonts.inter(
-                        color: CR.t1,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'WON',
-                      style: GoogleFonts.inter(
-                        color: CR.green,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: CR.gold.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '⭐ MVP',
-                        style: GoogleFonts.inter(
-                          color: CR.gold,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '58*(39)  ·  3/24',
-                  style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
-                ),
+                Text('Okinawa Warriors vs Tokyo Rhinos', style: CRType.body(weight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Yomitan Ground · 2:00 PM · T20', style: CRType.caption()),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '+2',
-                style: GoogleFonts.spaceGrotesk(
-                  color: CR.green,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  height: 1,
-                ),
+          if (canScore)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: CR.grassDim,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: CR.grass.withValues(alpha: 0.3)),
               ),
-              Text(
-                'OVR',
-                style: GoogleFonts.inter(
-                  color: CR.t3,
-                  fontSize: 9,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+              child: Text('SCORER', style: CRType.label(size: 9, color: CR.grass)),
+            ),
         ],
       ),
     );
   }
 }
 
-// ─── Community Teaser ─────────────────────────────────────────────────────────
-
-class _CommunityTeaser extends StatelessWidget {
+class _CommunityWhisper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    const items = [
-      ('⚡', '3 matches in progress across Japan right now'),
-      ('🏆', 'Amit KC (Osaka) just crossed 500 career runs'),
-      ('🔥', 'Bikash Rai is on a 6-match hot streak'),
-    ];
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: CR.card,
-        borderRadius: BorderRadius.circular(14),
+        border: Border(
+          left: BorderSide(color: CR.flood.withValues(alpha: 0.5), width: 2),
+        ),
       ),
-      child: Column(
-        children: items.map((entry) {
-          final (emoji, text) = entry;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(emoji, style: const TextStyle(fontSize: 14)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: GoogleFonts.inter(
-                      color: CR.t2,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+      child: Text(
+        '⚡ 3 matches live across Japan  ·  Amit KC just crossed 500 runs',
+        style: CRType.caption(size: 13, color: CR.mist),
       ),
     );
   }
 }
 
-// ─── Live Match Banner ────────────────────────────────────────────────────────
-
-class _LiveMatchBanner extends StatefulWidget {
+class _LiveMatchBanner extends StatelessWidget {
   final MatchState state;
   const _LiveMatchBanner({required this.state});
 
   @override
-  State<_LiveMatchBanner> createState() => _LiveMatchBannerState();
-}
-
-class _LiveMatchBannerState extends State<_LiveMatchBanner>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final state = widget.state;
     return GestureDetector(
       onTap: () => context.go('/match/scorer'),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: CR.red.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: CR.red.withOpacity(0.25)),
-        ),
+      child: CRGlassPanel(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        radius: 14,
         child: Row(
           children: [
-            AnimatedBuilder(
-              animation: _pulseCtrl,
-              builder: (_, __) => Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: CR.red.withOpacity(
-                      0.5 + _pulseCtrl.value * 0.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: CR.red.withOpacity(
-                          0.3 * _pulseCtrl.value),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'LIVE',
-              style: GoogleFonts.inter(
-                color: CR.red,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.5,
-              ),
-            ),
-            const SizedBox(width: 12),
+            const CRLiveBadge(),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        state.battingTeamName.toUpperCase(),
-                        style: GoogleFonts.inter(
-                          color: CR.t1,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        state.scoreDisplay,
-                        style: GoogleFonts.spaceGrotesk(
-                          color: CR.t1,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        state.oversDisplay,
-                        style: GoogleFonts.inter(
-                          color: CR.t3,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '${state.battingTeamName.toUpperCase()}  ${state.scoreDisplay}  ${state.oversDisplay}',
+                    style: CRType.body(size: 13, weight: FontWeight.w600),
                   ),
                   if (state.striker != null)
                     Text(
                       '${state.striker!.player.jerseyDisplay} ${state.striker!.player.displayName}  ${state.striker!.runs}*',
-                      style: GoogleFonts.inter(
-                        color: CR.t2,
-                        fontSize: 11,
-                      ),
+                      style: CRType.caption(size: 12),
                     ),
                 ],
               ),
             ),
-            Text(
-              'VIEW →',
-              style: GoogleFonts.inter(
-                color: CR.green,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Looking For Chip ─────────────────────────────────────────────────────────
-// Ultra-compact one-liner stub — full opponent matching coming in a future release
-
-class _LookingForChip extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Find opponents — coming soon'),
-          backgroundColor: CR.cardHigh,
-          behavior: SnackBarBehavior.floating,
-        ),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: CR.card,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Text('🔍', style: TextStyle(fontSize: 16)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Looking for opponents? Post availability',
-                style: GoogleFonts.inter(color: CR.t2, fontSize: 13),
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: CR.t3, size: 18),
+            Text('→', style: CRType.body(color: CR.flood, weight: FontWeight.w600)),
           ],
         ),
       ),

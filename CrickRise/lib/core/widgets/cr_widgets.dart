@@ -4,6 +4,60 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_theme.dart';
 
+/// Fade-in that runs once on mount — safe inside screens that rebuild often.
+class CRFadeInOnce extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+  final double slideY;
+
+  const CRFadeInOnce({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 300),
+    this.slideY = 0,
+  });
+
+  @override
+  State<CRFadeInOnce> createState() => _CRFadeInOnceState();
+}
+
+class _CRFadeInOnceState extends State<CRFadeInOnce>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+  late Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: widget.duration);
+    _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: Offset(0, widget.slideY),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    Future.delayed(widget.delay, () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
 /// Shows a brief full-screen milestone toast that auto-dismisses after 3 seconds.
 /// Call this after key achievements (500 runs, first century, etc.).
 void showMilestoneToast(
