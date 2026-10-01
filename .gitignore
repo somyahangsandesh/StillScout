@@ -73,3 +73,7 @@ secrets.asc.env
 android/key.properties
 android/app/*.jks
 android/app/*.keystore
+
+# Large App Store screenshot exports (regenerate with tool/render_asc_screenshots.ts)
+docs/asc_assets/screenshots_67/
+docs/asc_assets/screenshots_ipad_129/
