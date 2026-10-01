@@ -31,15 +31,6 @@ Built for **Shipathon 2026**. iPhone and iPad only — this repo is the canonica
 
 Details, quotas, and server limits: **[Developer guide →](docs/DEVELOPMENT.md)**
 
-## Screenshots
-
-<p align="center">
-  <img src="docs/asc_assets/screenshots/iphone_67/01_hero.png" alt="StillScout hero screen" width="220" />
-  <img src="docs/asc_assets/screenshots/iphone_67/02_results.png" alt="Ranked keeper frames" width="220" />
-  <img src="docs/asc_assets/screenshots/iphone_67/03_ai_pro.png" alt="AI Pro scouting" width="220" />
-  <img src="docs/asc_assets/screenshots/iphone_67/04_export.png" alt="Export and polish" width="220" />
-</p>
-
 ## Quick start (developers)
 
 **Requirements:** Flutter 3.24+, Xcode, an Apple Developer team for device builds.
