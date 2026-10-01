@@ -10,6 +10,17 @@ I made it because I kept scrubbing through clips trying to find one frame that l
 
 Site (privacy, terms, support): https://somyahangsandesh.github.io/StillScout/
 
+There is no public App Store link in this repo yet. Version 1.0 (build 26) was submitted for review in August 2026; check `docs/APP_STORE_LAUNCH.md` for the latest ops notes.
+
+## Screenshots
+
+<p>
+  <img src="docs/asc_assets/screenshots/iphone_67/01_hero.png" alt="Home screen" width="200" />
+  <img src="docs/asc_assets/screenshots/iphone_67/02_results.png" alt="Ranked frames" width="200" />
+  <img src="docs/asc_assets/screenshots/iphone_67/03_ai_pro.png" alt="AI Pro" width="200" />
+  <img src="docs/asc_assets/screenshots/iphone_67/04_export.png" alt="Export" width="200" />
+</p>
+
 ## What it does
 
 - Import a video from the photo library (or camera where supported).
@@ -60,6 +71,13 @@ flutter test
 ```
 
 Edge function unit tests run in CI under `supabase/functions/*/lib_test.ts`.
+
+## What I learned
+
+- How to structure a Flutter app with a clear split between UI, domain rules, and services.
+- On-device ML with Apple Vision before calling any paid cloud API.
+- Shipping constraints: privacy policy URLs, in-app legal copy, RevenueCat + IAP, and keeping secrets out of release builds (`tool/check_release_secrets.dart`).
+- Basic edge-function testing with Deno and quota logic on the server.
 
 ## Repo layout
 
