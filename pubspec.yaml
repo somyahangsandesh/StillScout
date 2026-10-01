@@ -1,10 +1,10 @@
 name: stillscout
-description: StillScout — AI-powered video frame extractor for creators.
+description: StillScout — find post-ready still frames from video on iOS.
 publish_to: 'none'
 version: 1.0.0+26
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
   flutter:

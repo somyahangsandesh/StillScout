@@ -31,7 +31,7 @@ Much of the listing metadata was applied via the App Store Connect API (2026-07-
 | Content rights | `DOES_NOT_USE_THIRD_PARTY_CONTENT` |
 | App Review contact + notes (Restore on paywall/Settings) | Set (phone is placeholder — update) |
 | Version 1.0 build | Attached **build 26** (`VALID`) |
-| iPhone 6.7" screenshots (5×, en-GB + en-US) | `COMPLETE` — premium redesign in `docs/asc_assets/screenshots_67/` |
+| iPhone 6.7" screenshots (5×, en-GB + en-US) | Regenerate into `docs/asc_assets/screenshots_67/` via `tool/render_asc_screenshots.ts` (not stored in git) |
 | IAP `stillscout_pro_monthly` | **READY_TO_SUBMIT** (review screenshot `COMPLETE`) |
 | IAP `stillscout_pro_yearly` | **READY_TO_SUBMIT** (review screenshot `COMPLETE`) |
 | Paid Apps Agreement / bank / W-8BEN | **Active** (UI) |
