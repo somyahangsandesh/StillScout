@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/somyahangsandesh/StillScout/actions/workflows/ci.yml/badge.svg)](https://github.com/somyahangsandesh/StillScout/actions/workflows/ci.yml)
 [![iOS](https://img.shields.io/badge/platform-iOS-000000?style=flat&logo=apple&logoColor=white)](https://github.com/somyahangsandesh/StillScout)
-[![Flutter](https://img.shields.io/badge/Flutter-3.24+-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Flutter](https://img.shields.io/badge/Flutter-stable-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev)
 
 **Scout the perfect still.**  
 An iOS app for creators who shoot video but post photos — find the frame you’d actually share, without scrubbing forever.
@@ -33,7 +33,7 @@ Details, quotas, and server limits: **[Developer guide →](docs/DEVELOPMENT.md)
 
 ## Quick start (developers)
 
-**Requirements:** Flutter 3.24+, Xcode, an Apple Developer team for device builds.
+**Requirements:** Recent stable Flutter (Dart 3.10+), Xcode, an Apple Developer team for device builds.
 
 ```bash
 git clone https://github.com/somyahangsandesh/StillScout.git

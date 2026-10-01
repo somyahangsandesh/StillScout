@@ -7,7 +7,7 @@ Technical reference for the canonical StillScout iOS codebase. For a quick start
 
 ## Setup
 
-1. Install Flutter 3.24+ and run `flutter pub get`.
+1. Install recent stable Flutter (Dart 3.10+) and run `flutter pub get`.
 2. Copy secrets template:
    ```bash
    cp lib/config/secrets.local.example.dart lib/config/secrets.local.dart

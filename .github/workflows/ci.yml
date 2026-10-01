@@ -14,7 +14,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: "3.24.0"
+          # Match pubspec (wakelock_plus 1.5+ needs Dart SDK 3.10+).
 
       - name: Stub local secrets for CI
         run: |
