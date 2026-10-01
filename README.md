@@ -29,7 +29,7 @@ Built for **Shipathon 2026**. iPhone and iPad only — this repo is the canonica
 | Cloud ranking | One complimentary AI scout when online | StillScout AI via secure edge proxy |
 | Polish & 4K export | Limited | Full Auto Polish + native re-extract |
 
-Details, quotas, and server limits: **[Developer guide →](docs/DEVELOPER.md)**
+Details, quotas, and server limits: **[Developer guide →](docs/DEVELOPMENT.md)**
 
 ## Screenshots
 
@@ -53,13 +53,13 @@ cp lib/config/secrets.local.example.dart lib/config/secrets.local.dart
 flutter run
 ```
 
-Full setup, architecture, Supabase deploy, TestFlight, and App Store checklists: **[docs/DEVELOPER.md](docs/DEVELOPER.md)**
+Full setup, architecture, Supabase deploy, TestFlight, and App Store checklists: **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**
 
 ## Documentation
 
 | Topic | Link |
 |--------|------|
-| Developer / ops | [docs/DEVELOPER.md](docs/DEVELOPER.md) |
+| Developer / ops | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
 | TestFlight | [docs/TESTFLIGHT.md](docs/TESTFLIGHT.md) |
 | App Store launch | [docs/APP_STORE_LAUNCH.md](docs/APP_STORE_LAUNCH.md) |
 | Privacy · Terms · Support | [docs/legal/](docs/legal/) |
