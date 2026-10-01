@@ -1,146 +1,81 @@
 # StillScout
 
-**Shipathon 2026** · iOS-only Flutter app for creators
+[![CI](https://github.com/somyahangsandesh/StillScout/actions/workflows/ci.yml/badge.svg)](https://github.com/somyahangsandesh/StillScout/actions/workflows/ci.yml)
+[![iOS](https://img.shields.io/badge/platform-iOS-000000?style=flat&logo=apple&logoColor=white)](https://github.com/somyahangsandesh/StillScout)
+[![Flutter](https://img.shields.io/badge/Flutter-3.24+-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev)
 
-AI-powered frame scouting for creators. Extract, rank, polish, and export the best stills from any video clip.
+**Scout the perfect still.**  
+An iOS app for creators who shoot video but post photos — find the frame you’d actually share, without scrubbing forever.
 
-> **This is the canonical StillScout codebase.**  
-> **Platform:** iOS only (iPhone + iPad). No Android / Play Store target.  
-> **Path:** `/Users/sandeshsomyahang/stillscout`  
-> **Bundle ID:** `com.stillscout.stillscout`
+🌐 **Site & legal:** [somyahangsandesh.github.io/StillScout](https://somyahangsandesh.github.io/StillScout/)  
+📬 **Support:** [stillscout.support@gmail.com](mailto:stillscout.support@gmail.com) · [GitHub Issues](https://github.com/somyahangsandesh/StillScout/issues)
 
-## Setup
+---
 
-1. Install Flutter 3.24+ and run `flutter pub get`.
-2. Copy secrets template:
-   ```bash
-   cp lib/config/secrets.local.example.dart lib/config/secrets.local.dart
-   ```
-3. Fill in `StillScoutSecrets` in `secrets.local.dart` (gitignored):
-   - **Supabase** URL + anon key for the `vision-score` Edge Function (required for AI Pro in release).
-   - **RevenueCat** `appl_…` public SDK key for AI Pro subscriptions.
-   - Optional direct Gemini key for **debug only** — never ship in App Store builds.
+## Why this exists
 
-## Run (iOS)
+You already captured the moment on video. The still you want is in there — buried between blinks, half-smiles, and motion blur. StillScout imports a short clip, pulls candidate frames, ranks the keepers with on-device Apple Vision (and optional **StillScout AI Pro** in the cloud), then lets you polish and export post-ready stills.
 
-```bash
-flutter run
-```
+No watermarks. No “AI sludge” UI. Just a calm tool that respects your camera roll.
 
-Optional dart-defines:
+Built for **Shipathon 2026**. iPhone and iPad only — this repo is the canonical StillScout codebase.
 
-```bash
-flutter run \
-  --dart-define=SUPABASE_URL=... \
-  --dart-define=SUPABASE_ANON_KEY=... \
-  --dart-define=RC_APPLE_KEY=appl_...
-```
-
-## Architecture
-
-| Stage | Behavior |
-|-------|----------|
-| **Extract** | `video_thumbnail` every **1 second** (max **180** frames per clip, 4 parallel workers) |
-| **Dedup** | Perceptual hash in isolate — drops near-duplicate frames |
-| **On-device** | Apple **Vision** face/eye analysis — gates obvious rejects before cloud spend |
-| **Score (free)** | Vision + heuristics — no network |
-| **Score (AI Pro)** | Supabase `vision-score` → Gemini batch (release-safe; keys server-side) |
-| **Rank** | Context-weighted scores (portrait / action / landscape / event) |
-| **Persist** | Full gallery + frame files in Hive history (`stillscout_cache/<sessionId>/`) |
-| **Export** | Auto Polish, crop ratios, Photos save (`gal`), share sheet |
-
-**AI Pro** requires Supabase cloud scoring. Release builds never embed Gemini keys — the edge proxy is the only production path.
-
-## Monetization
+## What you get
 
 | | Free | AI Pro |
 |---|------|--------|
-| Scouts | **5 / day** (UTC) | Unlimited |
-| Cloud AI | **1×** complimentary Gemini scout (needs internet; not consumed if Gemini never reaches) | Gemini via Supabase, fair-use capped (~20 full scouts/device/day), then falls back to on-device scoring |
-| Visible keepers | Top **5** ranks (**8** on first successful free scout) | **20** ranks |
-| AI Auto Polish | Locked | Unlocked |
-| Polished exports / scout | **3** | Unlimited |
-| Timestamps | Hidden (rank labels) | Exact timecodes |
-| Timeline view | Locked | Unlocked |
-| Export quality | Thumbnail res | Native **4K** re-extract |
+| Scouts | 5 / day (UTC) | Unlimited on-device scouts |
+| Keeper picks shown | Top 5 (8 on your first successful scout) | Top 20 |
+| Cloud ranking | One complimentary AI scout when online | StillScout AI via secure edge proxy |
+| Polish & 4K export | Limited | Full Auto Polish + native re-extract |
 
-No watermarks on exports. Free AI trial unlocks Gemini scoring only — polish stays Pro.
+Details, quotas, and server limits: **[Developer guide →](docs/DEVELOPER.md)**
 
-RevenueCat entitlement: `pro` · Products: `stillscout_pro_monthly`, `stillscout_pro_yearly`
+## Screenshots
 
-## Quotas & cache
+<p align="center">
+  <img src="docs/asc_assets/screenshots/iphone_67/01_hero.png" alt="StillScout hero screen" width="220" />
+  <img src="docs/asc_assets/screenshots/iphone_67/02_results.png" alt="Ranked keeper frames" width="220" />
+  <img src="docs/asc_assets/screenshots/iphone_67/03_ai_pro.png" alt="AI Pro scouting" width="220" />
+  <img src="docs/asc_assets/screenshots/iphone_67/04_export.png" alt="Export and polish" width="220" />
+</p>
 
-- **Cloud AI:** up to **20** keeper picks/scout; **48** frames sent per Gemini batch; **400** picks/device/day server cap (UTC) — a fair-use ceiling (~20 full AI Pro scouts/day), not unlimited. Past the cap, scouts silently fall back to on-device Vision scoring instead of failing.
-- **Session history:** max **20** scouts in Hive; LRU eviction
-- **Frame cache:** max **512 MB** on disk — oldest sessions evicted when over budget
+## Quick start (developers)
 
-## Security notes (server-side entitlement)
-
-`vision-score` is a shared-key proxy, not a fully authenticated backend on every call:
-
-- **RevenueCat webhook + `pro_entitlements` (shipped).** `revenuecat-webhook` Edge Function verifies bearer auth, upserts `pro_entitlements` on purchase/renewal/expiration, and `vision-score` checks `isVerifiedProEntitlement(app_user_id)` before applying the Pro daily cap (5000 vs 400 picks/device/day UTC). See `docs/REVENUECAT_WEBHOOK_SETUP.md` and `supabase/migrations/20260728000001_pro_entitlements_and_global_cap.sql`.
-- **Global spend ceiling (shipped).** `usage-alert` tracks daily Gemini pick volume; `vision-score` returns `GLOBAL_CAP_REACHED` (429) when the project ceiling is hit. See `docs/USAGE_ALERTS_SETUP.md`.
-- **Per-device + per-IP limits.** Atomic `try_reserve_vision_quota` RPC (fails closed) plus soft IP throttle (`isIpRateLimited`, 429 above 90 req/min/IP) in `vision-score/lib.ts`.
-- **Residual risk:** callers still use the shipped Supabase anon key; spend is bounded by device caps, global ceiling, and IP throttle — not by Apple receipt verification on every `vision-score` request. A modified client could call the proxy until caps apply.
-- **If abuse grows:** add signed device attestation on `vision-score` and/or App Store Server API receipt checks (heavier than Shipaton scope).
-
-## Supabase proxy
-
-AI Pro scoring runs through the `vision-score` Edge Function (`supabase/functions/vision-score/`). Deploy to your Supabase project; the app only needs the public anon key.
+**Requirements:** Flutter 3.24+, Xcode, an Apple Developer team for device builds.
 
 ```bash
-supabase functions deploy vision-score
-supabase secrets set GEMINI_API_KEY=...
+git clone https://github.com/somyahangsandesh/StillScout.git
+cd StillScout
+flutter pub get
+cp lib/config/secrets.local.example.dart lib/config/secrets.local.dart
+# Add Supabase + RevenueCat keys in secrets.local.dart — see the example file.
+flutter run
 ```
 
-Supports single-frame `{ image }` and batch `{ images, pick_count }` for AI Pro.
+Full setup, architecture, Supabase deploy, TestFlight, and App Store checklists: **[docs/DEVELOPER.md](docs/DEVELOPER.md)**
 
-## App Store compliance
+## Documentation
 
-Before submitting to App Store Connect:
+| Topic | Link |
+|--------|------|
+| Developer / ops | [docs/DEVELOPER.md](docs/DEVELOPER.md) |
+| TestFlight | [docs/TESTFLIGHT.md](docs/TESTFLIGHT.md) |
+| App Store launch | [docs/APP_STORE_LAUNCH.md](docs/APP_STORE_LAUNCH.md) |
+| Privacy · Terms · Support | [docs/legal/](docs/legal/) |
+| Marketing (Stories / Reels) | [docs/marketing/](docs/marketing/) |
 
-1. **Hosted legal pages** — defaults in `stillscout_config.dart` point to GitHub Pages (`somyahangsandesh.github.io/StillScout/legal/*.html`). Paste the same URLs into ASC (see `docs/legal/HOSTED_URLS.txt`).
-2. **In-app legal links** — Privacy Policy + Terms on empty state and paywall (Guideline 3.1.2).
-3. **Release secrets** — `secrets.local.dart` must include Supabase + RevenueCat `appl_` only. No direct AI keys in release.
-   ```bash
-   dart run tool/check_release_secrets.dart
-   ```
-   See `docs/TESTFLIGHT.md` for the TestFlight upload path.
-4. **App Privacy nutrition labels** — Photos/Videos, Device ID, Purchase History (not tracking).
-5. **Privacy Manifest** — `ios/Runner/PrivacyInfo.xcprivacy` bundled with Runner.
-6. **Subscriptions** — ASC products + RevenueCat entitlement `pro` + Paid Apps Agreement.
+## Contributing & security
 
-See `docs/APP_STORE_LAUNCH.md` for the remaining RevenueCat / ASC checklist.
+Found a bug or have a thoughtful idea? **[Open an issue](https://github.com/somyahangsandesh/StillScout/issues)** — please don’t attach private videos; describe steps and iOS version instead.
 
-## iOS notes
+- [Contributing](CONTRIBUTING.md) — how we work in this repo  
+- [Security](SECURITY.md) — report vulnerabilities privately  
 
-- Portrait-locked on iPhone and iPad
-- `ITSAppUsesNonExemptEncryption = false` — standard HTTPS only
-- Photo library usage string covers **importing videos** and **saving exports**
-- No background execution — `WakelockPlus` keeps the screen awake during a scout
-- On-device face analysis uses a native **Vision** plugin (`VisionFaceDetectorPlugin.swift`)
-- Branded app icon + launch screen: `tool/generate_branding_assets.py`
+## License
 
-### Signing
+Source is published for transparency and collaboration around StillScout. **All rights reserved** — see [LICENSE](LICENSE). StillScout name, branding, and App Store distribution are not open-source grants.
 
-Open `ios/Runner.xcworkspace` in Xcode, select your **Team** under Signing & Capabilities for Runner (and RunnerTests if needed). After that, `flutter run --release` and TestFlight builds work normally.
+---
 
-## Tests
-
-```bash
-flutter analyze lib/
-flutter test
-```
-
-## Key paths
-
-```
-lib/stillscout/domain/stillscout_constants.dart
-lib/stillscout/services/frame_scoring_service.dart
-lib/stillscout/services/vision/providers/supabase_vision_client.dart
-lib/stillscout/presentation/providers/stillscout_notifier.dart
-lib/config/stillscout_config.dart
-supabase/functions/vision-score/index.ts
-ios/Runner/VisionFaceDetectorPlugin.swift
-lib/config/secrets.local.dart          # Gitignored keys
-```
+<p align="center"><sub>StillScout · Scout. Polish. Post.</sub></p>

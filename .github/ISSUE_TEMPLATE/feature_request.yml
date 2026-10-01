@@ -1,0 +1,31 @@
+name: Feature idea
+description: Suggest something that would make StillScout better
+title: "[Idea]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We read every idea. A clear problem statement beats a long spec.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you solving?
+      placeholder: e.g. I scout wedding clips and always want a 4:5 crop preset
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Who is this for?
+      options:
+        - Casual creators
+        - Pro / heavy scouts
+        - Developers integrating with StillScout
+        - Everyone

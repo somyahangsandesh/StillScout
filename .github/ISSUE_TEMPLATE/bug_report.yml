@@ -1,0 +1,43 @@
+name: Bug report
+description: Something broke or feels wrong in StillScout
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Do not attach private videos** — describe what happened instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      placeholder: e.g. Scout finished but top picks were empty on iOS 18.1
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: 1. Import clip… 2. Tap Scout…
+    validations:
+      required: true
+  - type: input
+    id: ios-version
+    attributes:
+      label: iOS version
+      placeholder: "18.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: plan
+    attributes:
+      label: Plan
+      options:
+        - Free
+        - AI Pro
+        - Not sure
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Diagnostics snippet from Settings → Copy diagnostics (redact if needed)

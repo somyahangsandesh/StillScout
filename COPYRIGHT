@@ -1,0 +1,31 @@
+StillScout — Copyright Notice
+==============================
+
+Copyright © 2026 StillScout. All rights reserved.
+
+StillScout (including this repository’s source code, documentation, assets, and
+associated trademarks) is proprietary software owned by the StillScout project
+and its licensors.
+
+Distribution
+------------
+The StillScout application is distributed to end users through the Apple App
+Store under Apple’s standard terms. This GitHub repository is not a grant of
+rights to redistribute, sublicense, or create derivative works for commercial
+use outside of contributions accepted by the maintainers.
+
+Contributions
+-------------
+By submitting a pull request or patch, you represent that you have the right
+to license your contribution and you grant the maintainers a non-exclusive,
+royalty-free license to use that contribution as part of StillScout.
+
+Third-party software
+--------------------
+StillScout incorporates open-source dependencies listed in `pubspec.yaml` and
+`pubspec.lock`. Those components remain under their respective licenses.
+
+Contact
+-------
+For licensing or partnership inquiries, use the support channel listed at:
+https://somyahangsandesh.github.io/StillScout/legal/support.html
